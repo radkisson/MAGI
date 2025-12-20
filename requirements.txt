@@ -1,0 +1,31 @@
+numpy>=1.24.0
+requests>=2.31.0
+pyyaml>=6.0.0
+python-dotenv>=1.0.0
+
+# Optional dependencies for full functionality
+# Uncomment as needed
+
+# Web browsing (Sensors)
+# playwright>=1.40.0
+# beautifulsoup4>=4.12.0
+# selenium>=4.15.0
+
+# Vector database (Memory)
+# chromadb>=0.4.0
+# sentence-transformers>=2.2.0
+# pinecone-client>=2.2.0
+
+# LLM providers
+# openai>=1.0.0
+# anthropic>=0.7.0
+
+# Web framework (if running as API)
+# fastapi>=0.104.0
+# uvicorn>=0.24.0
+
+# Development tools
+# pytest>=7.4.0
+# black>=23.11.0
+# flake8>=6.1.0
+# pylint>=3.0.0
