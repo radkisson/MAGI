@@ -63,7 +63,7 @@ services:
 
   # --- THE DIGESTION ---
   firecrawl:
-    image: mendableai/firecrawl:latest
+    image: mcp/firecrawl:latest
     container_name: rin-digestion
     restart: always
     ports:
