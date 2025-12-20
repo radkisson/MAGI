@@ -104,6 +104,7 @@ RIN includes **tool definitions** that connect the Cortex (Open WebUI) to the ot
 - 🔍 **SearXNG Search** - Anonymous web search via the Sensorium's Vision
 - 🔥 **FireCrawl Scraper** - Extract content from JavaScript-heavy websites
 - 💾 **Qdrant Memory** - Store and recall information with RAG
+- 🔄 **n8n Reflex** - Trigger autonomous workflows and external integrations
 
 The tools are automatically mounted into Open WebUI and appear in the Tools section. See [`tools/README.md`](tools/README.md) for detailed documentation.
 
@@ -115,6 +116,40 @@ RIN: [Uses SearXNG tool to search anonymously]
      [Stores summaries in Qdrant memory]
      [Generates comprehensive answer]
 ```
+
+### Autonomous Workflows (n8n)
+
+RIN comes with a **pre-configured Morning Briefing workflow** that runs autonomously at 8 AM daily. This is RIN's first "survival instinct" - waking up and checking the world without human intervention.
+
+#### Importing the Morning Briefing Workflow
+
+1. **Access n8n**: After running `./start.sh`, open http://localhost:5678
+2. **Create Account**: First-time setup will prompt you to create an owner account
+3. **Import Workflow**:
+   - Click "Add workflow" (+ button)
+   - Click the three dots menu (⋮) → "Import from File"
+   - Select `workflows/morning_briefing.json`
+4. **Activate**: Toggle the workflow to "Active" in the top-right corner
+
+The workflow will now:
+- Trigger at 8:00 AM daily
+- Query SearXNG for "top technology news today"
+- Send results to LiteLLM for summarization
+- Generate a 3-bullet morning briefing
+
+#### Creating Custom Workflows
+
+You can create your own workflows in the n8n visual editor:
+
+1. Use **Webhook** triggers to allow Open WebUI to trigger workflows
+2. Use **HTTP Request** nodes to connect to RIN services:
+   - `http://rin-cortex:8080` - Open WebUI API
+   - `http://rin-router:4000` - LiteLLM for AI processing
+   - `http://rin-vision:8080` - SearXNG for web search
+   - `http://rin-memory:6333` - Qdrant for vector storage
+3. Export your workflows as JSON to the `workflows/` directory
+
+See [`workflows/README.md`](workflows/README.md) for detailed architecture and examples.
 
 ### Managing the Organism
 

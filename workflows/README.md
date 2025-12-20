@@ -20,8 +20,21 @@ n8n is the "Nervous System" that gives RIN the ability to run scheduled tasks an
 
 ## Workflow Examples
 
-### morning_briefing.json (Coming Soon)
-Autonomous morning news summary delivered at scheduled time.
+### morning_briefing.json ✅ AVAILABLE
+**Autonomous morning news summary delivered at 8:00 AM daily.**
+
+This is RIN's first "survival instinct" - the organism wakes up, scans the world, and prepares a briefing without human intervention.
+
+**How it works:**
+1. **Trigger**: Cron node fires at 8:00 AM every day
+2. **Sensor**: HTTP Request to SearXNG (`http://rin-vision:8080/search?q=top+technology+news+today`)
+3. **Cognition**: HTTP Request to LiteLLM (`http://rin-router:4000/chat/completions`) with GPT-4o
+4. **Output**: 3-bullet summary of the day's top tech news
+
+**To activate:**
+1. Access n8n at http://localhost:5678
+2. Import `workflows/morning_briefing.json` via: Menu (⋮) → Import from File
+3. Toggle workflow to "Active"
 
 ### email_integration.json (Coming Soon)
 Webhook endpoint for sending emails from RIN conversations.
@@ -36,9 +49,9 @@ After running `./start.sh`, access the n8n editor at:
 
 ```
 workflows/
-├── README.md              # This file
-├── morning_briefing.json  # (Future) Scheduled news summary
-└── email_integration.json # (Future) Email webhook handler
+├── README.md                # This file
+├── morning_briefing.json    # ✅ Scheduled news summary (8 AM daily)
+└── email_integration.json   # (Future) Email webhook handler
 ```
 
 ## Creating Workflows
