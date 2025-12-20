@@ -22,14 +22,14 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "${GREEN}📂 Verifying biological directory structure...${NC}"
 
 # Create all volume paths
-mkdir -p "$BASE_DIR/data"/{open-webui,qdrant,redis,searxng,n8n}
+mkdir -p "$BASE_DIR/data"/{open-webui,qdrant,redis,searxng,n8n,litellm}
 mkdir -p "$BASE_DIR/config"/{litellm,searxng}
 mkdir -p "$BASE_DIR/workflows"
 
 # Fix Permissions (Critical for Redis/Qdrant on Linux)
 # Note: 777 is required for Docker volume permissions on many Linux systems
 # where the container UIDs don't match host UIDs. This is a known Docker limitation.
-chmod 777 "$BASE_DIR/data/redis" "$BASE_DIR/data/qdrant"
+chmod 777 "$BASE_DIR/data/redis" "$BASE_DIR/data/qdrant" "$BASE_DIR/data/litellm"
 
 # Fix Permissions for n8n (runs as user 1000 inside container)
 chown -R 1000:1000 "$BASE_DIR/data/n8n" 2>/dev/null || chmod 777 "$BASE_DIR/data/n8n"

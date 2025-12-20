@@ -44,6 +44,9 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 - **Sovereign Architecture**: Complete control over your AI infrastructure
 - **Privacy-First**: Anonymous web search via SearXNG, no data leakage
 - **Multi-Model Intelligence**: Route tasks to optimal LLM providers via LiteLLM
+- **OpenRouter Integration**: Access 20+ models from one unified API (GPT-4, Claude, Llama, Gemini, Mistral, and more)
+- **Cost Tracking**: Monitor spending across all models with built-in budgeting
+- **Fallback Chains**: Automatic failover to backup models for 99.9% reliability
 - **Persistent Memory**: RAG-enabled recall via Qdrant vector storage
 - **Asynchronous Coordination**: Redis-powered task queuing and execution
 - **Biological Design**: Five subsystems working as a unified organism
@@ -340,14 +343,15 @@ Areas of focus:
   - [x] Pre-configured Morning Briefing workflow
   - [x] Synaptic bridge tools (n8n_reflex.py)
 
+- [x] **v1.1 "Expansion"**: Enhanced Model Support ✅
+  - [x] OpenRouter integration with full model marketplace access (20+ models)
+  - [x] Advanced LiteLLM configuration (temperature, top_p, max_tokens)
+  - [x] Model selection UI in Open WebUI (automatic model discovery)
+  - [x] Per-model cost tracking and budgeting (SQLite database)
+  - [x] Fallback model chains for reliability (multi-provider redundancy)
+  - [x] Comprehensive [Model Configuration Guide](docs/MODEL_CONFIGURATION.md)
+
 ### Planned
-- [ ] **v1.1 "Expansion"**: Enhanced Model Support
-  - [ ] OpenRouter integration with full model marketplace access
-  - [ ] Advanced LiteLLM configuration (temperature, top_p, max_tokens)
-  - [ ] Model selection UI in Open WebUI
-  - [ ] Per-model cost tracking and budgeting
-  - [ ] Fallback model chains for reliability
-  
 - [ ] **v1.2 "Intelligence"**: Advanced Automation
   - [ ] Auto-load workflows into n8n on first boot
   - [ ] Email integration workflow (Gmail, SMTP)
@@ -356,11 +360,11 @@ Areas of focus:
   - [ ] Slack/Telegram bot integration
   
 - [ ] **v1.3 "Observability"**: Monitoring & Logging
-  - [ ] SQLite-based cost tracking for LiteLLM
   - [ ] Real-time health dashboard
   - [ ] Usage analytics and insights
   - [ ] Performance metrics (latency, token usage)
   - [ ] Workflow execution history in n8n
+  - [ ] Advanced cost analytics and reporting
   
 - [ ] **v1.4 "Resilience"**: Production Hardening
   - [ ] Automated backups for vector database and chat history

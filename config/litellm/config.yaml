@@ -1,33 +1,288 @@
-# LiteLLM Configuration for RIN
-# Multi-model routing configuration
+# LiteLLM Configuration for RIN v1.1
+# Enhanced Multi-model routing with OpenRouter integration
+# Supports: OpenAI, Anthropic, OpenRouter marketplace, cost tracking, and fallback chains
 
 model_list:
+  # ============================================================================
+  # OpenAI Models (Direct API)
+  # ============================================================================
+  
   - model_name: gpt-4o
     litellm_params:
       model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_vision: true
   
   - model_name: gpt-4o-mini
     litellm_params:
       model: openai/gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_vision: true
+  
+  # ============================================================================
+  # Anthropic Models (Direct API)
+  # ============================================================================
   
   - model_name: claude-3-5-sonnet
     litellm_params:
       model: anthropic/claude-3-5-sonnet-20241022
       api_key: os.environ/ANTHROPIC_API_KEY
+      temperature: 0.7
+      max_tokens: 8192
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_vision: true
   
   - model_name: claude-3-5-haiku
     litellm_params:
       model: anthropic/claude-3-5-haiku-20241022
       api_key: os.environ/ANTHROPIC_API_KEY
+      temperature: 0.7
+      max_tokens: 8192
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_vision: true
+  
+  # ============================================================================
+  # OpenRouter Integration - Full Model Marketplace Access
+  # ============================================================================
+  
+  # OpenRouter: OpenAI Models
+  - model_name: openrouter/gpt-4o
+    litellm_params:
+      model: openrouter/openai/gpt-4o
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_vision: true
+  
+  - model_name: openrouter/gpt-4-turbo
+    litellm_params:
+      model: openrouter/openai/gpt-4-turbo
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_vision: true
+  
+  # OpenRouter: Anthropic Models
+  - model_name: openrouter/claude-3-5-sonnet
+    litellm_params:
+      model: openrouter/anthropic/claude-3.5-sonnet
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 8192
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+  
+  - model_name: openrouter/claude-3-opus
+    litellm_params:
+      model: openrouter/anthropic/claude-3-opus
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_function_calling: true
+      supports_vision: true
+  
+  # OpenRouter: Meta Llama Models
+  - model_name: openrouter/llama-3.1-405b
+    litellm_params:
+      model: openrouter/meta-llama/llama-3.1-405b-instruct
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+  
+  - model_name: openrouter/llama-3.1-70b
+    litellm_params:
+      model: openrouter/meta-llama/llama-3.1-70b-instruct
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+  
+  # OpenRouter: Google Models
+  - model_name: openrouter/gemini-pro
+    litellm_params:
+      model: openrouter/google/gemini-pro-1.5
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 8192
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_vision: true
+  
+  - model_name: openrouter/gemini-flash
+    litellm_params:
+      model: openrouter/google/gemini-flash-1.5
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 8192
+      top_p: 1.0
+    model_info:
+      mode: chat
+      supports_vision: true
+  
+  # OpenRouter: Mistral Models
+  - model_name: openrouter/mistral-large
+    litellm_params:
+      model: openrouter/mistralai/mistral-large
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+  
+  - model_name: openrouter/mixtral-8x7b
+    litellm_params:
+      model: openrouter/mistralai/mixtral-8x7b-instruct
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+  
+  # OpenRouter: Cohere Models
+  - model_name: openrouter/command-r-plus
+    litellm_params:
+      model: openrouter/cohere/command-r-plus
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
+  
+  # OpenRouter: Perplexity Models
+  - model_name: openrouter/perplexity-online
+    litellm_params:
+      model: openrouter/perplexity/llama-3.1-sonar-large-128k-online
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      top_p: 1.0
+    model_info:
+      mode: chat
 
-# Router settings
+# ============================================================================
+# Router Settings - Enhanced with Fallback Chains
+# ============================================================================
 router_settings:
-  routing_strategy: simple-shuffle
+  routing_strategy: usage-based-routing-v2  # Intelligent load balancing
   enable_pre_call_checks: true
+  allowed_fails: 3  # Number of failures before removing model from rotation
+  cooldown_time: 60  # Seconds to wait before retrying a failed model
+  num_retries: 2  # Retry attempts per request
+  timeout: 60  # Request timeout in seconds
+  fallbacks:
+    # Primary GPT-4 with fallback chain
+    - gpt-4o:
+      - openrouter/gpt-4o
+      - claude-3-5-sonnet
+      - openrouter/llama-3.1-405b
+    
+    # Primary Claude with fallback chain
+    - claude-3-5-sonnet:
+      - openrouter/claude-3-5-sonnet
+      - gpt-4o
+      - openrouter/gpt-4-turbo
+    
+    # Mini models fallback
+    - gpt-4o-mini:
+      - claude-3-5-haiku
+      - openrouter/gemini-flash
+      - openrouter/mixtral-8x7b
 
-# General settings
+# ============================================================================
+# General Settings - Enhanced with Cost Tracking
+# ============================================================================
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  database_url: null  # No database needed for simplified setup
+  
+  # Cost tracking database (SQLite for persistent storage)
+  database_url: "sqlite:////app/data/litellm_cost_tracking.db"
+  
+  # Enable detailed logging for debugging
+  set_verbose: false
+  
+  # Cost and budget tracking
+  max_budget: 100  # Maximum budget in USD per month (adjust as needed)
+  budget_duration: "30d"  # Budget duration
+  
+  # Alert settings
+  alerting:
+    - webhook  # Can add webhook URLs for budget alerts
+  
+  # Cache settings for cost optimization
+  cache:
+    type: "redis"
+    host: "redis"
+    port: 6379
+    
+  # Success callback for cost tracking
+  success_callback: ["langfuse"]  # Track successful calls
+  
+  # Model-specific cost overrides (optional, LiteLLM has defaults)
+  model_cost:
+    # OpenAI pricing (per 1M tokens)
+    gpt-4o:
+      input_cost_per_token: 0.0000025
+      output_cost_per_token: 0.00001
+    gpt-4o-mini:
+      input_cost_per_token: 0.00000015
+      output_cost_per_token: 0.0000006
+    
+    # Anthropic pricing (per 1M tokens)
+    claude-3-5-sonnet:
+      input_cost_per_token: 0.000003
+      output_cost_per_token: 0.000015
+    claude-3-5-haiku:
+      input_cost_per_token: 0.0000008
+      output_cost_per_token: 0.000004
+
+# ============================================================================
+# Litellm Settings
+# ============================================================================
+litellm_settings:
+  # Drop unmapped parameters instead of failing
+  drop_params: true
+  
+  # Set default parameters for all models
+  default_max_tokens: 4096
+  default_temperature: 0.7
+  default_top_p: 1.0

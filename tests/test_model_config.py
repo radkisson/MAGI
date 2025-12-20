@@ -1,0 +1,406 @@
+#!/usr/bin/env python3
+"""
+Test script for v1.1 Enhanced Model Support
+Tests OpenRouter integration, cost tracking, and fallback chains
+"""
+
+import os
+import sys
+import yaml
+import json
+import time
+from pathlib import Path
+
+# Colors for terminal output
+GREEN = '\033[0;32m'
+BLUE = '\033[0;34m'
+YELLOW = '\033[1;33m'
+RED = '\033[0;31m'
+NC = '\033[0m'  # No Color
+
+
+def print_header(text):
+    """Print a formatted header"""
+    print(f"\n{BLUE}{'='*70}{NC}")
+    print(f"{BLUE}{text:^70}{NC}")
+    print(f"{BLUE}{'='*70}{NC}\n")
+
+
+def print_success(text):
+    """Print success message"""
+    print(f"{GREEN}✓ {text}{NC}")
+
+
+def print_error(text):
+    """Print error message"""
+    print(f"{RED}✗ {text}{NC}")
+
+
+def print_warning(text):
+    """Print warning message"""
+    print(f"{YELLOW}⚠ {text}{NC}")
+
+
+def print_info(text):
+    """Print info message"""
+    print(f"  {text}")
+
+
+def test_config_file():
+    """Test that the LiteLLM config file exists and is valid"""
+    print_header("TEST 1: Configuration File Validation")
+    
+    config_path = Path(__file__).parent.parent / "config" / "litellm" / "config.yaml"
+    
+    if not config_path.exists():
+        print_error(f"Config file not found: {config_path}")
+        return False
+    
+    print_success(f"Config file found: {config_path}")
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        print_success("Config file is valid YAML")
+    except Exception as e:
+        print_error(f"Config file is invalid YAML: {e}")
+        return False
+    
+    # Check required sections
+    required_sections = ['model_list', 'router_settings', 'general_settings']
+    for section in required_sections:
+        if section in config:
+            print_success(f"Section '{section}' present")
+        else:
+            print_error(f"Section '{section}' missing")
+            return False
+    
+    return True
+
+
+def test_model_definitions():
+    """Test that all models are properly defined"""
+    print_header("TEST 2: Model Definitions")
+    
+    config_path = Path(__file__).parent.parent / "config" / "litellm" / "config.yaml"
+    
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    models = config.get('model_list', [])
+    
+    if not models:
+        print_error("No models defined in config")
+        return False
+    
+    print_success(f"Found {len(models)} model definitions")
+    
+    # Check for OpenRouter models
+    openrouter_models = [m for m in models if 'openrouter' in m.get('litellm_params', {}).get('model', '')]
+    if openrouter_models:
+        print_success(f"OpenRouter integration: {len(openrouter_models)} models")
+    else:
+        print_warning("No OpenRouter models found")
+    
+    # Check for required parameters
+    models_with_temp = [m for m in models if 'temperature' in m.get('litellm_params', {})]
+    models_with_max_tokens = [m for m in models if 'max_tokens' in m.get('litellm_params', {})]
+    models_with_top_p = [m for m in models if 'top_p' in m.get('litellm_params', {})]
+    
+    print_success(f"Models with temperature: {len(models_with_temp)}/{len(models)}")
+    print_success(f"Models with max_tokens: {len(models_with_max_tokens)}/{len(models)}")
+    print_success(f"Models with top_p: {len(models_with_top_p)}/{len(models)}")
+    
+    # List model categories
+    print_info("\nModel categories:")
+    openai_models = [m['model_name'] for m in models if 'openai' in m.get('litellm_params', {}).get('model', '')]
+    anthropic_models = [m['model_name'] for m in models if 'anthropic' in m.get('litellm_params', {}).get('model', '')]
+    llama_models = [m['model_name'] for m in models if 'llama' in m.get('litellm_params', {}).get('model', '').lower()]
+    google_models = [m['model_name'] for m in models if 'google' in m.get('litellm_params', {}).get('model', '').lower() or 'gemini' in m.get('litellm_params', {}).get('model', '').lower()]
+    mistral_models = [m['model_name'] for m in models if 'mistral' in m.get('litellm_params', {}).get('model', '').lower()]
+    
+    if openai_models:
+        print_info(f"  OpenAI: {', '.join(openai_models)}")
+    if anthropic_models:
+        print_info(f"  Anthropic: {', '.join(anthropic_models)}")
+    if llama_models:
+        print_info(f"  Llama: {', '.join(llama_models)}")
+    if google_models:
+        print_info(f"  Google: {', '.join(google_models)}")
+    if mistral_models:
+        print_info(f"  Mistral: {', '.join(mistral_models)}")
+    
+    return True
+
+
+def test_cost_tracking():
+    """Test that cost tracking is properly configured"""
+    print_header("TEST 3: Cost Tracking Configuration")
+    
+    config_path = Path(__file__).parent.parent / "config" / "litellm" / "config.yaml"
+    
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    general_settings = config.get('general_settings', {})
+    
+    # Check database URL
+    db_url = general_settings.get('database_url')
+    if db_url and 'sqlite' in db_url:
+        print_success(f"Cost tracking database configured: {db_url}")
+    else:
+        print_error("Cost tracking database not configured")
+        return False
+    
+    # Check budget settings
+    max_budget = general_settings.get('max_budget')
+    if max_budget:
+        print_success(f"Budget limit set: ${max_budget}")
+    else:
+        print_warning("No budget limit configured")
+    
+    budget_duration = general_settings.get('budget_duration')
+    if budget_duration:
+        print_success(f"Budget duration: {budget_duration}")
+    else:
+        print_warning("No budget duration configured")
+    
+    # Check model costs
+    model_cost = general_settings.get('model_cost', {})
+    if model_cost:
+        print_success(f"Custom pricing for {len(model_cost)} models")
+        for model, pricing in model_cost.items():
+            input_cost = pricing.get('input_cost_per_token', 0) * 1_000_000
+            output_cost = pricing.get('output_cost_per_token', 0) * 1_000_000
+            print_info(f"  {model}: ${input_cost:.2f}/${output_cost:.2f} per 1M tokens")
+    else:
+        print_warning("No custom model pricing (will use LiteLLM defaults)")
+    
+    return True
+
+
+def test_fallback_chains():
+    """Test that fallback chains are properly configured"""
+    print_header("TEST 4: Fallback Chain Configuration")
+    
+    config_path = Path(__file__).parent.parent / "config" / "litellm" / "config.yaml"
+    
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    router_settings = config.get('router_settings', {})
+    
+    # Check routing strategy
+    strategy = router_settings.get('routing_strategy')
+    if strategy:
+        print_success(f"Routing strategy: {strategy}")
+    else:
+        print_error("No routing strategy configured")
+        return False
+    
+    # Check retry settings
+    num_retries = router_settings.get('num_retries')
+    if num_retries:
+        print_success(f"Retry attempts: {num_retries}")
+    else:
+        print_warning("No retry configuration")
+    
+    timeout = router_settings.get('timeout')
+    if timeout:
+        print_success(f"Request timeout: {timeout}s")
+    else:
+        print_warning("No timeout configuration")
+    
+    # Check fallback chains
+    fallbacks = router_settings.get('fallbacks', [])
+    if fallbacks:
+        print_success(f"Fallback chains configured: {len(fallbacks)} models")
+        for fallback in fallbacks:
+            for primary, backups in fallback.items():
+                print_info(f"  {primary} → {' → '.join(backups)}")
+    else:
+        print_warning("No fallback chains configured")
+    
+    # Check cooldown and health settings
+    cooldown = router_settings.get('cooldown_time')
+    if cooldown:
+        print_success(f"Cooldown period: {cooldown}s")
+    
+    allowed_fails = router_settings.get('allowed_fails')
+    if allowed_fails:
+        print_success(f"Allowed failures: {allowed_fails}")
+    
+    return True
+
+
+def test_docker_compose():
+    """Test Docker Compose configuration"""
+    print_header("TEST 5: Docker Compose Configuration")
+    
+    compose_path = Path(__file__).parent.parent / "docker-compose.yml"
+    
+    if not compose_path.exists():
+        print_error(f"docker-compose.yml not found: {compose_path}")
+        return False
+    
+    print_success(f"docker-compose.yml found: {compose_path}")
+    
+    with open(compose_path, 'r') as f:
+        compose = yaml.safe_load(f)
+    
+    services = compose.get('services', {})
+    
+    # Check LiteLLM service
+    litellm = services.get('litellm', {})
+    if not litellm:
+        print_error("LiteLLM service not defined")
+        return False
+    
+    print_success("LiteLLM service defined")
+    
+    # Check volumes
+    volumes = litellm.get('volumes', [])
+    config_volume = any('config.yaml' in v for v in volumes)
+    data_volume = any('data/litellm' in v for v in volumes)
+    
+    if config_volume:
+        print_success("Config volume mounted")
+    else:
+        print_error("Config volume not mounted")
+        return False
+    
+    if data_volume:
+        print_success("Data volume mounted (for cost tracking database)")
+    else:
+        print_error("Data volume not mounted")
+        return False
+    
+    # Check Redis dependency
+    depends_on = litellm.get('depends_on', [])
+    if 'redis' in depends_on:
+        print_success("Redis dependency configured")
+    else:
+        print_warning("Redis dependency not configured")
+    
+    # Check environment
+    environment = litellm.get('environment', [])
+    has_redis_config = any('REDIS' in str(env) for env in environment)
+    if has_redis_config:
+        print_success("Redis environment configured")
+    
+    return True
+
+
+def test_env_file():
+    """Test environment file configuration"""
+    print_header("TEST 6: Environment Configuration")
+    
+    env_example_path = Path(__file__).parent.parent / ".env.example"
+    
+    if not env_example_path.exists():
+        print_error(f".env.example not found: {env_example_path}")
+        return False
+    
+    print_success(f".env.example found: {env_example_path}")
+    
+    with open(env_example_path, 'r') as f:
+        env_content = f.read()
+    
+    # Check for required API keys
+    required_keys = [
+        'OPENAI_API_KEY',
+        'ANTHROPIC_API_KEY',
+        'OPENROUTER_API_KEY',
+        'LITELLM_MASTER_KEY',
+        'SEARXNG_SECRET',
+        'FIRECRAWL_API_KEY'
+    ]
+    
+    for key in required_keys:
+        if key in env_content:
+            print_success(f"{key} present in .env.example")
+        else:
+            print_error(f"{key} missing from .env.example")
+            return False
+    
+    return True
+
+
+def test_start_script():
+    """Test start.sh creates required directories"""
+    print_header("TEST 7: Start Script Configuration")
+    
+    start_script_path = Path(__file__).parent.parent / "start.sh"
+    
+    if not start_script_path.exists():
+        print_error(f"start.sh not found: {start_script_path}")
+        return False
+    
+    print_success(f"start.sh found: {start_script_path}")
+    
+    with open(start_script_path, 'r') as f:
+        start_content = f.read()
+    
+    # Check for litellm directory creation
+    if 'litellm' in start_content and 'mkdir' in start_content:
+        print_success("start.sh creates litellm data directory")
+    else:
+        print_error("start.sh doesn't create litellm data directory")
+        return False
+    
+    # Check for permissions
+    if 'chmod' in start_content and 'litellm' in start_content:
+        print_success("start.sh sets litellm directory permissions")
+    else:
+        print_warning("start.sh may not set litellm directory permissions")
+    
+    return True
+
+
+def main():
+    """Run all tests"""
+    print_header("RIN v1.1 Enhanced Model Support - Configuration Tests")
+    
+    tests = [
+        ("Configuration File", test_config_file),
+        ("Model Definitions", test_model_definitions),
+        ("Cost Tracking", test_cost_tracking),
+        ("Fallback Chains", test_fallback_chains),
+        ("Docker Compose", test_docker_compose),
+        ("Environment File", test_env_file),
+        ("Start Script", test_start_script),
+    ]
+    
+    results = []
+    for name, test_func in tests:
+        try:
+            result = test_func()
+            results.append((name, result))
+        except Exception as e:
+            print_error(f"Test failed with exception: {e}")
+            results.append((name, False))
+    
+    # Summary
+    print_header("Test Summary")
+    
+    passed = sum(1 for _, result in results if result)
+    total = len(results)
+    
+    for name, result in results:
+        if result:
+            print_success(f"{name}: PASSED")
+        else:
+            print_error(f"{name}: FAILED")
+    
+    print(f"\n{passed}/{total} tests passed")
+    
+    if passed == total:
+        print_success("\n✅ All tests passed! Configuration is ready.")
+        return 0
+    else:
+        print_error(f"\n❌ {total - passed} test(s) failed. Please review the configuration.")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
