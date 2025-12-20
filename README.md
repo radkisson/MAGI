@@ -46,26 +46,37 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- API keys for LLM providers (OpenAI, Anthropic) or local Ollama installation
+- Docker (automatically installed by start.sh if missing)
+- API keys for LLM providers (OpenAI, Anthropic) - Optional, can be added later
 
-### Installation
+### Installation (3 Steps)
 
+**1. Clone the Organism**
 ```bash
-# Clone the repository
 git clone https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-.git
 cd Rhyzomic-Intelligence-Node-RIN-
-
-# Configure your environment
-cp .env.example .env
-# Edit .env with your API keys
-
-# Launch the entire organism
-docker-compose up -d
-
-# Access the Cortex (Open WebUI)
-open http://localhost:3000
 ```
+
+**2. Ignite**
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+This automatically:
+- Generates all secure internal keys (you never need to see these)
+- Creates the required directory structure
+- Fixes permissions for Redis/Qdrant (critical on Linux/Azure)
+- Configures Docker DNS for cloud environments
+- Starts all containers
+
+**3. Connect (Optional)**
+
+If you have an OpenAI/Anthropic API key:
+- Open `.env` and add your keys
+- Run `./start.sh` again to apply
+
+Then open http://localhost:3000 to access the Cortex.
 
 ### Service Access Points
 

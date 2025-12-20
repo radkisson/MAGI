@@ -1,164 +1,95 @@
 version: '3.8'
 
-# Rhyzomic Intelligence Node (RIN) - Docker Compose
-# A sovereign AI organism composed of five biological subsystems
-
-networks:
-  rin-network:
-    driver: bridge
-
-volumes:
-  qdrant-storage:
-    driver: local
-  redis-data:
-    driver: local
-  searxng-config:
-    driver: local
-  open-webui-data:
-    driver: local
-
 services:
-  # ============================================================================
-  # A. THE CORTEX (Cognition)
-  # ============================================================================
-  
-  # Open WebUI - The unified interface for human-agent interaction
+  # --- THE CORTEX (Brain) ---
   open-webui:
-    image: ghcr.io/open-webui/open-webui:latest
-    container_name: rin-cortex-ui
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: rin-cortex
+    restart: always
     ports:
-      - "3000:8080"
-    environment:
-      - OPENAI_API_BASE_URL=http://litellm:4000/v1
-      - WEBUI_AUTH=${WEBUI_AUTH:-false}
-      - WEBUI_NAME=RIN Cortex
+      - "${PORT_WEBUI:-3000}:8080"
     volumes:
-      - open-webui-data:/app/backend/data
-      - ./tools:/app/backend/data/tools  # Synaptic wiring: Tool definitions
+      - ./data/open-webui:/app/backend/data
+      # Mount the tools directly so they are available immediately
+      - ./tools:/app/backend/data/tools
+    environment:
+      - OPENAI_API_BASE_URL=http://litellm:4000
+      - ENABLE_RAG_WEB_SEARCH=True
+      - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>
+    env_file: .env
     depends_on:
       - litellm
-    networks:
-      - rin-network
-    restart: unless-stopped
+      - qdrant
+      - searxng
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  # LiteLLM - API Gateway and Router for multi-model orchestration
+  # --- THE ROUTER ---
   litellm:
-    image: ghcr.io/berriai/litellm:latest
-    container_name: rin-cortex-router
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: rin-router
+    restart: always
     ports:
       - "4000:4000"
-    environment:
-      # LLM Provider API Keys
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
-      
-      # LiteLLM Configuration
-      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-1234}
-      - DATABASE_URL=postgresql://litellm:litellm@postgres:5432/litellm
-    networks:
-      - rin-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    volumes:
+      - ./config/litellm/config.yaml:/app/config.yaml
+    command: [ "--config", "/app/config.yaml", "--port", "4000" ]
+    env_file: .env
 
-  # ============================================================================
-  # B. THE SENSORIUM (Perception)
-  # ============================================================================
-  
-  # SearXNG - Privacy-respecting metasearch engine
+  # --- THE SENSORIUM (Vision) ---
   searxng:
     image: searxng/searxng:latest
-    container_name: rin-sensorium-search
+    container_name: rin-vision
+    restart: always
     ports:
       - "8080:8080"
     volumes:
-      - searxng-config:/etc/searxng
+      - ./config/searxng:/etc/searxng
+    env_file: .env
     environment:
       - SEARXNG_BASE_URL=http://localhost:8080
-      - SEARXNG_SECRET=${SEARXNG_SECRET:-changeme}
-    networks:
-      - rin-network
-    restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
 
-  # FireCrawl - Specialized web scraping with headless browser
+  # --- THE DIGESTION ---
   firecrawl:
     image: mendableai/firecrawl:latest
-    container_name: rin-sensorium-crawler
+    container_name: rin-digestion
+    restart: always
     ports:
       - "3002:3002"
     environment:
-      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY:-fc-dev-key}
       - REDIS_URL=redis://redis:6379
+      - PLAYWRIGHT_MICROSERVICE_URL=http://playwright:3000
+      # Automatically uses the key generated in start.sh
+      - TEST_API_KEY=${FIRECRAWL_API_KEY} 
     depends_on:
       - redis
-    networks:
-      - rin-network
-    restart: unless-stopped
+      - playwright
 
-  # ============================================================================
-  # C. THE MEMORY (Recall)
-  # ============================================================================
-  
-  # Qdrant - Vector Database for semantic storage and RAG
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.43.0-jammy
+    container_name: rin-browser
+    command: npx -y playwright run-server --port 3000
+    restart: always
+
+  # --- SUPPORT ---
+  redis:
+    image: redis:alpine
+    container_name: rin-reflex
+    restart: always
+    volumes:
+      - ./data/redis:/data
+
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant
     container_name: rin-memory
+    restart: always
     ports:
       - "6333:6333"
-      - "6334:6334"
     volumes:
-      - qdrant-storage:/qdrant/storage
-    environment:
-      - QDRANT_ALLOW_RECOVERY_MODE=true
-    networks:
-      - rin-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ============================================================================
-  # D. THE NERVOUS SYSTEM (Reflex)
-  # ============================================================================
-  
-  # Redis - High-speed message bus for async task coordination
-  redis:
-    image: redis:7-alpine
-    container_name: rin-nervous-system
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
-    networks:
-      - rin-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  # ============================================================================
-  # SUPPORTING INFRASTRUCTURE
-  # ============================================================================
-  
-  # PostgreSQL - Database for LiteLLM metadata
-  postgres:
-    image: postgres:15-alpine
-    container_name: rin-postgres
-    environment:
-      - POSTGRES_DB=litellm
-      - POSTGRES_USER=litellm
-      - POSTGRES_PASSWORD=litellm
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-    networks:
-      - rin-network
-    restart: unless-stopped
+      - ./data/qdrant:/qdrant/storage
