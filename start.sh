@@ -22,13 +22,17 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "${GREEN}📂 Verifying biological directory structure...${NC}"
 
 # Create all volume paths
-mkdir -p "$BASE_DIR/data"/{open-webui,qdrant,redis,searxng}
+mkdir -p "$BASE_DIR/data"/{open-webui,qdrant,redis,searxng,n8n}
 mkdir -p "$BASE_DIR/config"/{litellm,searxng}
+mkdir -p "$BASE_DIR/workflows"
 
 # Fix Permissions (Critical for Redis/Qdrant on Linux)
 # Note: 777 is required for Docker volume permissions on many Linux systems
 # where the container UIDs don't match host UIDs. This is a known Docker limitation.
 chmod 777 "$BASE_DIR/data/redis" "$BASE_DIR/data/qdrant"
+
+# Fix Permissions for n8n (runs as user 1000 inside container)
+chown -R 1000:1000 "$BASE_DIR/data/n8n" 2>/dev/null || chmod 777 "$BASE_DIR/data/n8n"
 
 # --- 4. INTERNAL KEY GENERATION (The Magic Step) ---
 # We auto-generate keys if .env doesn't exist. 
@@ -122,6 +126,7 @@ echo -e "${BLUE}✅ RIN IS ALIVE.${NC}"
 echo "------------------------------------------------"
 echo "🧠 Cortex (UI):   http://localhost:3000"
 echo "👁️  SearXNG:      http://localhost:8080"
+echo "🔄 n8n (Reflex):  http://localhost:5678"
 echo "------------------------------------------------"
 echo "👉 NEXT STEP: Edit '.env' to add your OpenAI/Anthropic keys if needed."
 echo "              Then restart with './start.sh'"

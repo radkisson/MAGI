@@ -8,12 +8,13 @@
 
 Commercial AI models (ChatGPT, Claude) are "Brains in a Jar"—intelligent but disconnected, censored, and reliant on their creators for input. RIN is a sovereign, self-hosted entity. It treats commercial APIs merely as "compute," while retaining its own memory, eyes, and agency on your infrastructure.
 
-Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a **sovereign organism** composed of five biological subsystems:
+Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a **sovereign organism** composed of biological subsystems:
 
 - 🧠 **The Cortex** (cognition) - Open WebUI + LiteLLM
 - 👁️ **The Sensorium** (perception) - SearXNG + FireCrawl
 - 💾 **The Memory** (recall) - Qdrant Vector Database
 - ⚡ **The Nervous System** (reflex) - Redis Message Bus
+- 🔄 **The Reflex Arc** (autonomy) - n8n Workflow Automation
 
 ## System Architecture
 
@@ -32,6 +33,11 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 
 ### The Nervous System (Reflex)
 - **Redis**: High-speed message bus coordinating asynchronous tasks
+
+### The Reflex Arc (Autonomy)
+- **n8n**: Workflow automation enabling scheduled tasks and external integrations
+- **Capabilities**: Email, Telegram, Slack integration without cloud dependencies
+- **Synaptic Bridges**: Webhooks connecting Cortex ↔ Reflex for autonomous actions
 
 ## Key Features
 
@@ -83,6 +89,7 @@ Then open http://localhost:3000 to access the Cortex.
 Once deployed, access the various subsystems:
 
 - **Open WebUI (Cortex)**: http://localhost:3000
+- **n8n (Reflex/Automation)**: http://localhost:5678
 - **LiteLLM API**: http://localhost:4000
 - **SearXNG (Search)**: http://localhost:8080
 - **FireCrawl API**: http://localhost:3002

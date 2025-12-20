@@ -77,10 +77,29 @@ services:
     command: npx -y playwright run-server --port 3000
     restart: always
 
+  # --- THE REFLEX (Autonomy) ---
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: rin-reflex-automation
+    restart: always
+    ports:
+      - "5678:5678"
+    volumes:
+      - ./data/n8n:/home/node/.n8n
+      - ./workflows:/workflows:ro
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678
+      - GENERIC_TIMEZONE=UTC
+      - N8N_EDITOR_BASE_URL=http://localhost:5678
+    env_file: .env
+
   # --- SUPPORT ---
   redis:
     image: redis:alpine
-    container_name: rin-reflex
+    container_name: rin-nervous-system
     restart: always
     volumes:
       - ./data/redis:/data
