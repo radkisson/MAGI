@@ -1,0 +1,60 @@
+# RIN System Configuration
+
+version: "1.2.0"
+status: "Active Development"
+classification: "Sovereign AI Infrastructure"
+
+# Agent Configuration
+agent:
+  name: "RIN"
+  description: "Rhyzomic Intelligence Node"
+  max_iterations: 10
+  thinking_time: 2  # seconds
+
+# Sensors Configuration
+sensors:
+  enabled: true
+  web_browser:
+    enabled: true
+    user_agent: "Mozilla/5.0 (compatible; RIN/1.2.0)"
+    max_page_size: 10485760  # 10MB
+    follow_redirects: true
+  api_connector:
+    enabled: true
+    retry_attempts: 3
+    retry_delay: 1  # seconds
+
+# Memory Configuration
+memory:
+  enabled: true
+  vector_store:
+    enabled: true
+    dimension: 768  # Embedding dimension
+    similarity_metric: "cosine"
+    index_type: "flat"
+  cache:
+    enabled: true
+    max_size: 1000
+    ttl: 3600  # seconds
+
+# Reflexes Configuration
+reflexes:
+  enabled: true
+  max_concurrent_workflows: 5
+  default_timeout: 60  # seconds
+  allow_parallel_execution: true
+
+# Safety and Constraints
+safety:
+  max_api_calls_per_minute: 60
+  max_storage_size: 1073741824  # 1GB
+  require_confirmation: false
+  sandbox_mode: false
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "./data/logs/rin.log"
+  max_file_size: 10485760  # 10MB
+  backup_count: 5
