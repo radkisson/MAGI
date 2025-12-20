@@ -8,12 +8,13 @@
 
 Commercial AI models (ChatGPT, Claude) are "Brains in a Jar"—intelligent but disconnected, censored, and reliant on their creators for input. RIN is a sovereign, self-hosted entity. It treats commercial APIs merely as "compute," while retaining its own memory, eyes, and agency on your infrastructure.
 
-Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a **sovereign organism** composed of five biological subsystems:
+Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a **sovereign organism** composed of biological subsystems:
 
 - 🧠 **The Cortex** (cognition) - Open WebUI + LiteLLM
 - 👁️ **The Sensorium** (perception) - SearXNG + FireCrawl
 - 💾 **The Memory** (recall) - Qdrant Vector Database
 - ⚡ **The Nervous System** (reflex) - Redis Message Bus
+- 🔄 **The Reflex Arc** (autonomy) - n8n Workflow Automation
 
 ## System Architecture
 
@@ -33,6 +34,11 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 ### The Nervous System (Reflex)
 - **Redis**: High-speed message bus coordinating asynchronous tasks
 
+### The Reflex Arc (Autonomy)
+- **n8n**: Workflow automation enabling scheduled tasks and external integrations
+- **Capabilities**: Email, Telegram, Slack integration without cloud dependencies
+- **Synaptic Bridges**: Webhooks connecting Cortex ↔ Reflex for autonomous actions
+
 ## Key Features
 
 - **Sovereign Architecture**: Complete control over your AI infrastructure
@@ -46,32 +52,44 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- API keys for LLM providers (OpenAI, Anthropic) or local Ollama installation
+- Docker (automatically installed by start.sh if missing)
+- API keys for LLM providers (OpenAI, Anthropic) - Optional, can be added later
 
-### Installation
+### Installation (3 Steps)
 
+**1. Clone the Organism**
 ```bash
-# Clone the repository
 git clone https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-.git
 cd Rhyzomic-Intelligence-Node-RIN-
-
-# Configure your environment
-cp .env.example .env
-# Edit .env with your API keys
-
-# Launch the entire organism
-docker-compose up -d
-
-# Access the Cortex (Open WebUI)
-open http://localhost:3000
 ```
+
+**2. Ignite**
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+This automatically:
+- Generates all secure internal keys (you never need to see these)
+- Creates the required directory structure
+- Fixes permissions for Redis/Qdrant (critical on Linux/Azure)
+- Configures Docker DNS for cloud environments
+- Starts all containers
+
+**3. Connect (Optional)**
+
+If you have an OpenAI/Anthropic API key:
+- Open `.env` and add your keys
+- Run `./start.sh` again to apply
+
+Then open http://localhost:3000 to access the Cortex.
 
 ### Service Access Points
 
 Once deployed, access the various subsystems:
 
 - **Open WebUI (Cortex)**: http://localhost:3000
+- **n8n (Reflex/Automation)**: http://localhost:5678
 - **LiteLLM API**: http://localhost:4000
 - **SearXNG (Search)**: http://localhost:8080
 - **FireCrawl API**: http://localhost:3002
@@ -86,6 +104,7 @@ RIN includes **tool definitions** that connect the Cortex (Open WebUI) to the ot
 - 🔍 **SearXNG Search** - Anonymous web search via the Sensorium's Vision
 - 🔥 **FireCrawl Scraper** - Extract content from JavaScript-heavy websites
 - 💾 **Qdrant Memory** - Store and recall information with RAG
+- 🔄 **n8n Reflex** - Trigger autonomous workflows and external integrations
 
 The tools are automatically mounted into Open WebUI and appear in the Tools section. See [`tools/README.md`](tools/README.md) for detailed documentation.
 
@@ -97,6 +116,40 @@ RIN: [Uses SearXNG tool to search anonymously]
      [Stores summaries in Qdrant memory]
      [Generates comprehensive answer]
 ```
+
+### Autonomous Workflows (n8n)
+
+RIN comes with a **pre-configured Morning Briefing workflow** that runs autonomously at 8 AM daily. This is RIN's first "survival instinct" - waking up and checking the world without human intervention.
+
+#### Importing the Morning Briefing Workflow
+
+1. **Access n8n**: After running `./start.sh`, open http://localhost:5678
+2. **Create Account**: First-time setup will prompt you to create an owner account
+3. **Import Workflow**:
+   - Click "Add workflow" (+ button)
+   - Click the three dots menu (⋮) → "Import from File"
+   - Select `workflows/morning_briefing.json`
+4. **Activate**: Toggle the workflow to "Active" in the top-right corner
+
+The workflow will now:
+- Trigger at 8:00 AM daily
+- Query SearXNG for "top technology news today"
+- Send results to LiteLLM for summarization
+- Generate a 3-bullet morning briefing
+
+#### Creating Custom Workflows
+
+You can create your own workflows in the n8n visual editor:
+
+1. Use **Webhook** triggers to allow Open WebUI to trigger workflows
+2. Use **HTTP Request** nodes to connect to RIN services:
+   - `http://rin-cortex:8080` - Open WebUI API
+   - `http://rin-router:4000` - LiteLLM for AI processing
+   - `http://rin-vision:8080` - SearXNG for web search
+   - `http://rin-memory:6333` - Qdrant for vector storage
+3. Export your workflows as JSON to the `workflows/` directory
+
+See [`workflows/README.md`](workflows/README.md) for detailed architecture and examples.
 
 ### Managing the Organism
 
@@ -274,12 +327,53 @@ Areas of focus:
 
 ## Roadmap
 
-- [x] v1.0: Foundation and architecture design
-- [ ] v1.1: The Cortex (Open WebUI + LiteLLM integration)
-- [ ] v1.2: The Sensorium (SearXNG + FireCrawl deployment) - Current
-- [ ] v1.3: The Memory (Qdrant RAG implementation)
-- [ ] v1.4: The Nervous System (Redis coordination)
-- [ ] v2.0: Full organism integration and optimization
+### Completed
+- [x] **v1.0 "Genesis"**: Foundation and architecture design ✅
+  - [x] Zero-config atomic deployment with `start.sh`
+  - [x] Auto-generated internal secrets (LITELLM, SEARXNG, FIRECRAWL)
+  - [x] Docker Compose orchestration with bind mounts
+  - [x] The Cortex (Open WebUI + LiteLLM integration)
+  - [x] The Sensorium (SearXNG + FireCrawl deployment)
+  - [x] The Memory (Qdrant RAG implementation)
+  - [x] The Nervous System (Redis coordination)
+  - [x] The Reflex Arc (n8n automation)
+  - [x] Pre-configured Morning Briefing workflow
+  - [x] Synaptic bridge tools (n8n_reflex.py)
+
+### Planned
+- [ ] **v1.1 "Expansion"**: Enhanced Model Support
+  - [ ] OpenRouter integration with full model marketplace access
+  - [ ] Advanced LiteLLM configuration (temperature, top_p, max_tokens)
+  - [ ] Model selection UI in Open WebUI
+  - [ ] Per-model cost tracking and budgeting
+  - [ ] Fallback model chains for reliability
+  
+- [ ] **v1.2 "Intelligence"**: Advanced Automation
+  - [ ] Auto-load workflows into n8n on first boot
+  - [ ] Email integration workflow (Gmail, SMTP)
+  - [ ] RSS feed monitoring and summarization
+  - [ ] GitHub notifications and PR summaries
+  - [ ] Slack/Telegram bot integration
+  
+- [ ] **v1.3 "Observability"**: Monitoring & Logging
+  - [ ] SQLite-based cost tracking for LiteLLM
+  - [ ] Real-time health dashboard
+  - [ ] Usage analytics and insights
+  - [ ] Performance metrics (latency, token usage)
+  - [ ] Workflow execution history in n8n
+  
+- [ ] **v1.4 "Resilience"**: Production Hardening
+  - [ ] Automated backups for vector database and chat history
+  - [ ] Health checks and auto-restart for failed services
+  - [ ] Rate limiting and quota management
+  - [ ] Multi-user authentication and access control
+  
+- [ ] **v2.0 "Evolution"**: Advanced Capabilities
+  - [ ] Voice interface (Whisper integration)
+  - [ ] Image generation (Stable Diffusion)
+  - [ ] Code execution sandbox
+  - [ ] Multi-agent orchestration
+  - [ ] Custom model fine-tuning pipeline
 
 ## Philosophy
 

@@ -67,3 +67,4 @@ htmlcov/
 # Logs
 logs/
 *.log
+config/searxng/settings.yml

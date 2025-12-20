@@ -1,0 +1,116 @@
+{
+  "name": "RIN - Morning Briefing Protocol",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Circadian Rhythm (8 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "id": "circadian-trigger"
+    },
+    {
+      "parameters": {
+        "url": "http://rin-vision:8080/search",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "top technology news today"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        }
+      },
+      "name": "Sensor: SearXNG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300],
+      "id": "sensor-searxng"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rin-router:4000/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-4o"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{\"role\": \"user\", \"content\": \"Summarize the following search results into a concise Morning Briefing with 3 key bullet points: \" + JSON.stringify($json.results) }] }}"
+            }
+          ]
+        }
+      },
+      "name": "Cortex: LiteLLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "id": "cortex-litellm"
+    }
+  ],
+  "connections": {
+    "Circadian Rhythm (8 AM)": {
+      "main": [
+        [
+          {
+            "node": "Sensor: SearXNG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sensor: SearXNG": {
+      "main": [
+        [
+          {
+            "node": "Cortex: LiteLLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-autonomous-briefing"
+  },
+  "tags": []
+}
