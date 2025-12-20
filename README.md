@@ -327,12 +327,53 @@ Areas of focus:
 
 ## Roadmap
 
-- [x] v1.0: Foundation and architecture design
-- [ ] v1.1: The Cortex (Open WebUI + LiteLLM integration)
-- [ ] v1.2: The Sensorium (SearXNG + FireCrawl deployment) - Current
-- [ ] v1.3: The Memory (Qdrant RAG implementation)
-- [ ] v1.4: The Nervous System (Redis coordination)
-- [ ] v2.0: Full organism integration and optimization
+### Completed
+- [x] **v1.0 "Genesis"**: Foundation and architecture design ✅
+  - [x] Zero-config atomic deployment with `start.sh`
+  - [x] Auto-generated internal secrets (LITELLM, SEARXNG, FIRECRAWL)
+  - [x] Docker Compose orchestration with bind mounts
+  - [x] The Cortex (Open WebUI + LiteLLM integration)
+  - [x] The Sensorium (SearXNG + FireCrawl deployment)
+  - [x] The Memory (Qdrant RAG implementation)
+  - [x] The Nervous System (Redis coordination)
+  - [x] The Reflex Arc (n8n automation)
+  - [x] Pre-configured Morning Briefing workflow
+  - [x] Synaptic bridge tools (n8n_reflex.py)
+
+### Planned
+- [ ] **v1.1 "Expansion"**: Enhanced Model Support
+  - [ ] OpenRouter integration with full model marketplace access
+  - [ ] Advanced LiteLLM configuration (temperature, top_p, max_tokens)
+  - [ ] Model selection UI in Open WebUI
+  - [ ] Per-model cost tracking and budgeting
+  - [ ] Fallback model chains for reliability
+  
+- [ ] **v1.2 "Intelligence"**: Advanced Automation
+  - [ ] Auto-load workflows into n8n on first boot
+  - [ ] Email integration workflow (Gmail, SMTP)
+  - [ ] RSS feed monitoring and summarization
+  - [ ] GitHub notifications and PR summaries
+  - [ ] Slack/Telegram bot integration
+  
+- [ ] **v1.3 "Observability"**: Monitoring & Logging
+  - [ ] SQLite-based cost tracking for LiteLLM
+  - [ ] Real-time health dashboard
+  - [ ] Usage analytics and insights
+  - [ ] Performance metrics (latency, token usage)
+  - [ ] Workflow execution history in n8n
+  
+- [ ] **v1.4 "Resilience"**: Production Hardening
+  - [ ] Automated backups for vector database and chat history
+  - [ ] Health checks and auto-restart for failed services
+  - [ ] Rate limiting and quota management
+  - [ ] Multi-user authentication and access control
+  
+- [ ] **v2.0 "Evolution"**: Advanced Capabilities
+  - [ ] Voice interface (Whisper integration)
+  - [ ] Image generation (Stable Diffusion)
+  - [ ] Code execution sandbox
+  - [ ] Multi-agent orchestration
+  - [ ] Custom model fine-tuning pipeline
 
 ## Philosophy
 
