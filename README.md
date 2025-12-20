@@ -78,6 +78,26 @@ Once deployed, access the various subsystems:
 - **Qdrant (Vector DB)**: http://localhost:6333
 - **Redis**: localhost:6379
 
+### Synaptic Wiring (Tool Definitions)
+
+RIN includes **tool definitions** that connect the Cortex (Open WebUI) to the other subsystems. These act as "nerve endings" allowing the brain to control the body:
+
+**Available Tools:**
+- 🔍 **SearXNG Search** - Anonymous web search via the Sensorium's Vision
+- 🔥 **FireCrawl Scraper** - Extract content from JavaScript-heavy websites
+- 💾 **Qdrant Memory** - Store and recall information with RAG
+
+The tools are automatically mounted into Open WebUI and appear in the Tools section. See [`tools/README.md`](tools/README.md) for detailed documentation.
+
+**Usage Example:**
+```
+User: "Search for the latest AI research papers and summarize them"
+RIN: [Uses SearXNG tool to search anonymously]
+     [Uses FireCrawl tool to scrape paper pages]
+     [Stores summaries in Qdrant memory]
+     [Generates comprehensive answer]
+```
+
 ### Managing the Organism
 
 ```bash

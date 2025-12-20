@@ -34,6 +34,7 @@ services:
       - WEBUI_NAME=RIN Cortex
     volumes:
       - open-webui-data:/app/backend/data
+      - ./tools:/app/backend/data/tools  # Synaptic wiring: Tool definitions
     depends_on:
       - litellm
     networks:

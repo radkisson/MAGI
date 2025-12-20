@@ -213,6 +213,9 @@ services:
   open-webui:
     image: ghcr.io/open-webui/open-webui
     depends_on: [litellm]
+    volumes:
+      - open-webui-data:/app/backend/data
+      - ./tools:/app/backend/data/tools  # Synaptic wiring
     
   litellm:
     image: ghcr.io/berriai/litellm
@@ -234,6 +237,78 @@ services:
     image: redis:alpine
     volumes: [redis-data:/data]
 ```
+
+## Synaptic Wiring: Tool Definitions
+
+The organism requires **tool definitions** to connect the Cortex (Open WebUI) to the other subsystems. These act as "nerve endings" that enable the brain to control the body.
+
+### Architecture
+
+```
+┌─────────────────┐
+│   Open WebUI    │  The Cortex (Brain)
+│   (Cortex)      │
+└────────┬────────┘
+         │
+         │ Tool Definitions (Synaptic Wiring)
+         │
+    ┌────┴────┬────────┬────────────┐
+    │         │        │            │
+┌───▼──┐  ┌──▼───┐ ┌──▼─────┐  ┌──▼────┐
+│SearXNG│ │FireCrawl│Qdrant│  │ Redis │
+│(Vision)│(Digestion)│(Memory)│ │(Reflex)│
+└───────┘  └──────┘ └────────┘  └───────┘
+```
+
+### Available Tools
+
+1. **SearXNG Search Tool** (`tools/searxng_search.py`)
+   - Function: `web_search(query: str)`
+   - Purpose: Anonymous web search via the Sensorium's Vision
+   - Implementation: HTTP requests to SearXNG service
+   - Output: Formatted search results with titles, URLs, and snippets
+
+2. **FireCrawl Scraper Tool** (`tools/firecrawl_scraper.py`)
+   - Functions: 
+     - `scrape_webpage(url: str)` - Single page extraction
+     - `crawl_website(url: str, max_pages: int)` - Multi-page crawling
+   - Purpose: Extract content from JavaScript-heavy websites
+   - Implementation: API calls to FireCrawl service
+   - Output: Clean Markdown optimized for LLM consumption
+
+3. **Qdrant Memory Tool** (`tools/qdrant_memory.py`)
+   - Functions:
+     - `store_memory(content: str, metadata: dict)` - Store information
+     - `recall_memory(query: str, limit: int)` - Semantic search
+   - Purpose: Long-term memory with RAG capabilities
+   - Implementation: Vector database operations via Qdrant API
+   - Output: Stored memory confirmations and recalled context
+
+### Tool Integration
+
+Tools are mounted into Open WebUI via Docker volume:
+```yaml
+volumes:
+  - ./tools:/app/backend/data/tools
+```
+
+When Open WebUI starts, it automatically discovers and loads all Python tools in this directory. Users can then invoke these tools through natural language interaction, and the LLM decides when to use each tool based on the query.
+
+### Example Workflow
+
+```
+User Query: "Search for recent AI papers and save key findings"
+
+1. LLM decides to use web_search tool
+2. SearXNG searches anonymously → Returns results
+3. LLM decides to use scrape_webpage tool  
+4. FireCrawl extracts paper content → Returns Markdown
+5. LLM decides to use store_memory tool
+6. Qdrant stores key findings → Confirms storage
+7. LLM synthesizes final answer using all tool outputs
+```
+
+This creates a true **observe-think-act cycle** where the Cortex can perceive (Sensorium), remember (Memory), and act (Reflexes) autonomously.
 
 ## Contributing
 
