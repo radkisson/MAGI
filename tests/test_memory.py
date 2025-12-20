@@ -3,13 +3,8 @@ Test suite for RIN Memory
 """
 
 import pytest
-import sys
-from pathlib import Path
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
 from rin.memory import MemoryStore, VectorMemory, MemoryManager
+from rin.memory.store import DEFAULT_EMBEDDING_DIM
 
 
 def test_memory_store_initialization():
@@ -56,7 +51,7 @@ def test_vector_memory_embed():
     
     assert embedding is not None
     assert isinstance(embedding, list)
-    assert len(embedding) == 768  # Default embedding size
+    assert len(embedding) == DEFAULT_EMBEDDING_DIM  # Use constant instead of magic number
 
 
 def test_vector_memory_store():

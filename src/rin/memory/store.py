@@ -11,6 +11,10 @@ from datetime import datetime
 import json
 
 
+# Default embedding dimension (can be configured)
+DEFAULT_EMBEDDING_DIM = 768
+
+
 class MemoryStore:
     """
     Base memory storage system
@@ -101,6 +105,9 @@ class VectorMemory:
         self.logger = logging.getLogger(__name__)
         self.vectors = {}  # Placeholder for vector storage
         
+        # Get embedding dimension from config or use default
+        self.embedding_dim = self.config.get('embedding_dim', DEFAULT_EMBEDDING_DIM)
+        
         self.logger.info("VectorMemory initialized")
     
     def embed(self, text: str) -> List[float]:
@@ -116,7 +123,7 @@ class VectorMemory:
         # Placeholder for actual embedding generation
         # In full implementation, this would use OpenAI, Sentence Transformers, etc.
         self.logger.debug(f"Generating embedding for: {text[:50]}...")
-        return [0.0] * 768  # Placeholder vector
+        return [0.0] * self.embedding_dim  # Placeholder vector
     
     def store_vector(self, text: str, metadata: Optional[Dict] = None) -> str:
         """

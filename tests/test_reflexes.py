@@ -3,12 +3,6 @@ Test suite for RIN Reflexes
 """
 
 import pytest
-import sys
-from pathlib import Path
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
 from rin.reflexes import ReflexEngine, Action, Workflow, ActionStatus
 
 

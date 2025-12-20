@@ -3,14 +3,7 @@ Test suite for RIN Core Agent
 """
 
 import pytest
-import sys
-from pathlib import Path
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
 from rin import Agent
-from rin.core.agent import Agent as CoreAgent
 
 
 def test_agent_initialization():

@@ -134,8 +134,7 @@ class SensorManager:
             "api_connector": APIConnector(config)
         }
         
-        self.logger.info("SensorManager initialized with sensors: " + 
-                        ", ".join(self.sensors.keys()))
+        self.logger.info(f"SensorManager initialized with sensors: {', '.join(self.sensors.keys())}")
     
     def perceive(self, sensor_type: str, target: str) -> Dict[str, Any]:
         """
