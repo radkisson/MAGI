@@ -33,8 +33,14 @@ services:
       - "4000:4000"
     volumes:
       - ./config/litellm/config.yaml:/app/config.yaml
+      - ./data/litellm:/app/data
     command: [ "--config", "/app/config.yaml", "--port", "4000" ]
     env_file: .env
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
   # --- THE SENSORIUM (Vision) ---
   searxng:
