@@ -8,28 +8,46 @@
 
 Commercial AI models (ChatGPT, Claude) are "Brains in a Jar"—intelligent but disconnected, censored, and reliant on their creators for input. RIN is a sovereign, self-hosted entity. It treats commercial APIs merely as "compute," while retaining its own memory, eyes, and agency on your infrastructure.
 
-Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a sovereign organism equipped with:
+Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a **sovereign organism** composed of five biological subsystems:
 
-- 🔭 **Sensors** (real-time browsing)
-- 🧠 **Memory** (vectorized recall)
-- ⚡ **Reflexes** (automation)
+- 🧠 **The Cortex** (cognition) - Open WebUI + LiteLLM
+- 👁️ **The Sensorium** (perception) - SearXNG + FireCrawl
+- 💾 **The Memory** (recall) - Qdrant Vector Database
+- ⚡ **The Nervous System** (reflex) - Redis Message Bus
+
+## System Architecture
+
+RIN functions as a single organism via Docker orchestration, with each subsystem playing a vital role:
+
+### The Cortex (Cognition)
+- **Open WebUI**: Unified interface for human-agent interaction
+- **LiteLLM**: Intelligent API router for multi-model orchestration (GPT-4o, Claude 3.5, Llama 3)
+
+### The Sensorium (Perception)
+- **SearXNG**: Privacy-respecting metasearch engine for anonymous web vision
+- **FireCrawl**: Specialized scraping array for complex JavaScript sites
+
+### The Memory (Recall)
+- **Qdrant**: Vector database enabling RAG for long-term semantic recall
+
+### The Nervous System (Reflex)
+- **Redis**: High-speed message bus coordinating asynchronous tasks
 
 ## Key Features
 
-- **Sovereign Architecture**: Run entirely on your infrastructure
-- **Real-Time Perception**: Browse the web and gather information
-- **Persistent Memory**: Vector-based knowledge storage and retrieval
-- **Autonomous Actions**: Automated task execution and decision-making
-- **API Independence**: Use any LLM provider as compute
-- **Privacy-First**: Your data never leaves your control
+- **Sovereign Architecture**: Complete control over your AI infrastructure
+- **Privacy-First**: Anonymous web search via SearXNG, no data leakage
+- **Multi-Model Intelligence**: Route tasks to optimal LLM providers via LiteLLM
+- **Persistent Memory**: RAG-enabled recall via Qdrant vector storage
+- **Asynchronous Coordination**: Redis-powered task queuing and execution
+- **Biological Design**: Five subsystems working as a unified organism
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.9 or higher
-- Docker (optional, for containerized deployment)
-- API keys for LLM providers (OpenAI, Anthropic, or local models)
+- Docker and Docker Compose
+- API keys for LLM providers (OpenAI, Anthropic) or local Ollama installation
 
 ### Installation
 
@@ -38,50 +56,64 @@ Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system d
 git clone https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-.git
 cd Rhyzomic-Intelligence-Node-RIN-
 
-# Install dependencies
-pip install -r requirements.txt
-
 # Configure your environment
 cp .env.example .env
-# Edit .env with your API keys and settings
+# Edit .env with your API keys
 
-# Run RIN
-python -m rin.main
+# Launch the entire organism
+docker-compose up -d
+
+# Access the Cortex (Open WebUI)
+open http://localhost:3000
 ```
 
-### Docker Deployment
+### Service Access Points
+
+Once deployed, access the various subsystems:
+
+- **Open WebUI (Cortex)**: http://localhost:3000
+- **LiteLLM API**: http://localhost:4000
+- **SearXNG (Search)**: http://localhost:8080
+- **FireCrawl API**: http://localhost:3002
+- **Qdrant (Vector DB)**: http://localhost:6333
+- **Redis**: localhost:6379
+
+### Managing the Organism
 
 ```bash
-# Build the Docker image
-docker build -t rin:latest .
+# Start all subsystems
+docker-compose up -d
 
-# Run the container
-docker run -d \
-  --name rin \
-  -v $(pwd)/data:/app/data \
-  -p 8000:8000 \
-  --env-file .env \
-  rin:latest
+# View logs
+docker-compose logs -f
+
+# Stop all subsystems
+docker-compose down
+
+# Restart a specific subsystem
+docker-compose restart open-webui
+
+# Check health status
+docker-compose ps
 ```
 
 ## Architecture
 
-RIN is built on three core pillars:
+RIN functions as a biological organism with specialized subsystems:
 
-### 1. Sensors (Real-Time Browsing)
-- Web scraping and content extraction
-- API integration for external data sources
-- Real-time information gathering
+### The Cortex (Cognition)
+- **Open WebUI**: Human-agent interaction interface
+- **LiteLLM**: Multi-model routing (GPT-4o for logic, Claude for coding, Llama for privacy)
 
-### 2. Memory (Vectorized Recall)
-- Vector database for semantic search
-- Persistent knowledge storage
-- Context-aware retrieval
+### The Sensorium (Perception)
+- **SearXNG**: Privacy-preserving metasearch for anonymous web vision
+- **FireCrawl**: Headless browser for complex JavaScript site scraping
 
-### 3. Reflexes (Automation)
-- Autonomous task execution
-- Decision-making framework
-- Tool integration and orchestration
+### The Memory (Recall)
+- **Qdrant**: Vector database for RAG-enabled long-term semantic recall
+
+### The Nervous System (Reflex)
+- **Redis**: Asynchronous task coordination and message bus
 
 See [DESIGN.md](DESIGN.md) for detailed architecture documentation.
 
@@ -89,68 +121,99 @@ See [DESIGN.md](DESIGN.md) for detailed architecture documentation.
 
 ```
 rin/
-├── src/rin/                    # Source code
-│   ├── sensors/                # Real-time browsing and data collection
-│   ├── memory/                 # Vector storage and retrieval
-│   ├── reflexes/               # Automation and action execution
+├── docker-compose.yml          # Orchestration of all subsystems
+├── .env.example                # Environment configuration template
+├── DESIGN.md                   # Detailed architecture documentation
+├── src/rin/                    # Python integration code (legacy framework)
 │   ├── core/                   # Agent orchestration
+│   ├── sensors/                # Sensor framework
+│   ├── memory/                 # Memory framework
+│   ├── reflexes/               # Reflex framework
 │   └── utils/                  # Shared utilities
 ├── tests/                      # Test suite
 ├── docs/                       # Documentation
-├── examples/                   # Usage examples
-├── config/                     # Configuration files
-└── data/                       # Local data storage (gitignored)
+└── examples/                   # Usage examples
 ```
 
 ## Configuration
 
-RIN is configured via environment variables and configuration files:
+RIN is configured via environment variables in `.env`:
 
-- `.env` - API keys and sensitive settings
-- `config/config.yaml` - System configuration
-- `config/memory_config.yaml` - Memory system settings
-- `config/sensors_config.yaml` - Sensors configuration
+```bash
+# LLM Provider API Keys
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
+
+# Optional: Local Ollama
+OLLAMA_API_BASE=http://host.docker.internal:11434
+
+# LiteLLM Configuration
+LITELLM_MASTER_KEY=your_secure_key
+
+# SearXNG Configuration
+SEARXNG_SECRET=your_secret_key
+
+# FireCrawl Configuration
+FIRECRAWL_API_KEY=your_firecrawl_key
+
+# Web UI Authentication (optional)
+WEBUI_AUTH=false
+```
 
 ## Usage Examples
 
-### Basic Agent Interaction
+### Interacting with RIN
+
+1. **Access Open WebUI** at http://localhost:3000
+2. **Start a conversation** with the Cortex
+3. **Ask questions** - RIN will use SearXNG to search privately
+4. **Request detailed information** - FireCrawl will scrape and extract content
+5. **Build context** - Qdrant stores all interactions for future recall
+6. **Switch models** - LiteLLM routes to the best model for your task
+
+### Example Workflows
+
+**Privacy-Preserving Research:**
+```
+You: "Search for recent developments in quantum computing"
+RIN: [Uses SearXNG to search anonymously]
+     [Scrapes relevant pages with FireCrawl]
+     [Stores findings in Qdrant]
+     [Synthesizes comprehensive answer]
+```
+
+**Multi-Model Reasoning:**
+```
+You: "Write a Python script to analyze this data, then explain the logic"
+RIN: [Routes coding to Claude 3.5]
+     [Routes explanation to GPT-4o]
+     [Stores script in Qdrant for future reference]
+```
+
+**Long-Term Memory:**
+```
+You: "Remember we discussed quantum computing last week"
+RIN: [Queries Qdrant vector database]
+     [Retrieves semantic context via RAG]
+     [Responds with relevant past context]
+```
+
+## Development
+
+### Python Framework (Legacy)
+
+The `src/rin/` directory contains a Python framework that can be used for custom integrations:
 
 ```python
 from rin import Agent
 
-# Initialize the agent
+# Initialize the agent (uses local framework)
 agent = Agent()
 
 # Send a query
 response = agent.query("What are the latest developments in AI?")
 print(response)
-
-# The agent will:
-# 1. Use sensors to browse relevant sources
-# 2. Store findings in memory
-# 3. Generate a response using its reflexes
 ```
-
-### Autonomous Task Execution
-
-```python
-from rin import Agent
-
-agent = Agent()
-
-# Assign a task
-agent.execute_task(
-    "Monitor HackerNews for articles about Python and summarize them daily"
-)
-
-# The agent will autonomously:
-# 1. Browse HackerNews regularly
-# 2. Filter relevant articles
-# 3. Store summaries in memory
-# 4. Generate daily reports
-```
-
-## Development
 
 ### Running Tests
 
@@ -181,29 +244,36 @@ pylint src/rin
 Contributions are welcome! Please read our contributing guidelines and submit pull requests.
 
 Areas of focus:
-- New sensor implementations
-- Memory optimization
-- Reflex automation patterns
-- Documentation improvements
+- Docker Compose orchestration improvements
+- Custom Open WebUI tools and plugins
+- LiteLLM routing configurations
+- Qdrant schema optimization
+- SearXNG and FireCrawl integrations
+- Documentation and examples
 - Testing coverage
 
 ## Roadmap
 
-- [x] v1.0: Foundation and core agent loop
-- [x] v1.1: Basic sensors implementation
-- [ ] v1.2: Memory system with vector storage (Current)
-- [ ] v1.3: Advanced reflexes and automation
-- [ ] v2.0: Multi-agent coordination
+- [x] v1.0: Foundation and architecture design
+- [ ] v1.1: The Cortex (Open WebUI + LiteLLM integration)
+- [ ] v1.2: The Sensorium (SearXNG + FireCrawl deployment) - Current
+- [ ] v1.3: The Memory (Qdrant RAG implementation)
+- [ ] v1.4: The Nervous System (Redis coordination)
+- [ ] v2.0: Full organism integration and optimization
 
 ## Philosophy
 
-RIN embodies digital sovereignty. It's not about replacing commercial AI—it's about reclaiming agency. By hosting your own intelligence node, you maintain:
+RIN embodies digital sovereignty as a **biological organism**. It's not about replacing commercial AI—it's about reclaiming agency. By hosting your own intelligence node, you maintain:
 
-- **Control**: Over your data and operations
-- **Privacy**: No data sent to third parties
-- **Flexibility**: Use any LLM as compute
-- **Transparency**: Full visibility into operations
+- **Control**: Over the entire organism and its data
+- **Privacy**: Anonymous perception via SearXNG, no external tracking
+- **Flexibility**: Multi-model routing via LiteLLM (GPT-4o, Claude, Llama)
+- **Memory**: Long-term RAG-enabled recall via Qdrant
+- **Transparency**: Full visibility into all subsystems
 - **Independence**: Not reliant on any single provider
+- **Coordination**: Asynchronous task execution via Redis
+
+RIN is a complete organism, not just a tool. Each subsystem plays a vital role in creating sovereign AI infrastructure.
 
 ## License
 
@@ -217,4 +287,4 @@ See [LICENSE](LICENSE) for details.
 
 ---
 
-**Built for digital sovereignty. Run by you, for you.**
+**Built for digital sovereignty. A living organism, run by you, for you.** 🧠👁️💾⚡
