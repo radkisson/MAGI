@@ -139,6 +139,31 @@ These are resolved automatically within the `rin-network` Docker network.
 
 ## 📝 Development Notes
 
+### Critical: Qdrant Collection Initialization
+
+⚠️ **Edge Case Alert**: On first deployment, the Qdrant collection doesn't exist yet.
+
+The `qdrant_memory.py` tool includes automatic collection initialization via `_ensure_collection_exists()`:
+- Checks if collection exists on each memory operation
+- Creates collection automatically if missing
+- Uses 768-dimension vectors (compatible with text-embedding-ada-002)
+- Configures Cosine distance for semantic similarity
+
+**What happens without this check:**
+```python
+# BAD - Will crash on fresh deployment
+client.upsert(collection_name="rin_memory", points=[...])
+# Error: Collection 'rin_memory' not found
+```
+
+**Proper implementation (already in code):**
+```python
+# GOOD - Safe for fresh deployment
+def store_memory(self, content, ...):
+    self._ensure_collection_exists()  # Creates if missing
+    # Now safe to upsert data
+```
+
 ### Adding New Tools
 
 1. Create a new `.py` file in this directory
@@ -176,6 +201,12 @@ if __event_emitter__:
 - Qdrant has no authentication by default (internal network only)
 
 ## 🐛 Troubleshooting
+
+**Qdrant collection errors on first use:**
+- The collection is auto-created on first memory operation
+- If you see "Collection not found" errors, check Qdrant service health
+- Verify Qdrant is accessible: `curl http://localhost:6333/collections`
+- Check logs: `docker-compose logs qdrant`
 
 **Tool not appearing in Open WebUI:**
 - Check that file is in `/app/backend/data/tools/` inside container

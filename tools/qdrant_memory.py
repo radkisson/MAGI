@@ -167,7 +167,12 @@ class Tools:
             return f"Memory recall failed: {error_msg}"
     
     def _ensure_collection_exists(self):
-        """Ensure the Qdrant collection exists, create if needed"""
+        """
+        Ensure the Qdrant collection exists, create if needed.
+        
+        This is critical on first deployment - without this check, the memory
+        tool will crash when trying to upsert data into a non-existent collection.
+        """
         try:
             # Check if collection exists
             response = requests.get(
@@ -176,16 +181,38 @@ class Tools:
             )
             
             if response.status_code == 404:
-                # Create collection
-                requests.put(
+                # Collection doesn't exist - create it
+                create_response = requests.put(
                     f"{self.qdrant_url}/collections/{self.collection_name}",
                     json={
                         "vectors": {
-                            "size": 768,  # Standard embedding size
-                            "distance": "Cosine",
+                            "size": 768,  # Standard embedding dimension (text-embedding-ada-002)
+                            "distance": "Cosine",  # Cosine similarity for semantic search
                         }
                     },
                     timeout=5,
                 )
-        except Exception:
-            pass  # Collection operations are best-effort
+                
+                if create_response.status_code not in [200, 201]:
+                    raise Exception(
+                        f"Failed to create collection: {create_response.status_code}"
+                    )
+                    
+            elif response.status_code != 200:
+                raise Exception(
+                    f"Failed to check collection status: {response.status_code}"
+                )
+                
+        except requests.exceptions.ConnectionError:
+            raise Exception(
+                "Cannot connect to Qdrant. Ensure service is running (docker-compose up -d)"
+            )
+        except requests.exceptions.Timeout:
+            raise Exception(
+                "Qdrant connection timeout. Service may be starting up or overloaded"
+            )
+        except Exception as e:
+            if "Failed" in str(e) or "Cannot connect" in str(e):
+                raise  # Re-raise our custom exceptions
+            # For other exceptions, provide generic error
+            raise Exception(f"Qdrant initialization failed: {str(e)}")
