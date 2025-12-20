@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  rin:
+    build: .
+    container_name: rin
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config:ro
+    environment:
+      # LLM Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      
+      # Vector Database
+      - VECTOR_DB_TYPE=${VECTOR_DB_TYPE:-local}
+      - VECTOR_DB_PATH=/app/data/vectors
+      
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FILE=/app/data/logs/rin.log
+      
+      # Storage
+      - DATA_DIR=/app/data
+      - MEMORY_DIR=/app/data/memory
+      - CACHE_DIR=/app/data/cache
+    restart: unless-stopped
+    # Uncomment to expose API port
+    # ports:
+    #   - "8000:8000"
+    networks:
+      - rin-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import rin; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  rin-network:
+    driver: bridge
+
+volumes:
+  rin-data:
+    driver: local
