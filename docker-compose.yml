@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # --- THE CORTEX (Brain) ---
   open-webui:
