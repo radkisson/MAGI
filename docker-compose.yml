@@ -1,6 +1,7 @@
 services:
   # --- THE CORTEX (Brain) ---
   open-webui:
+    # Note: Using 'main' tag for latest features as specified in deployment architecture
     image: ghcr.io/open-webui/open-webui:main
     container_name: rin-cortex
     restart: always
@@ -24,6 +25,7 @@ services:
 
   # --- THE ROUTER ---
   litellm:
+    # Note: Using 'main-latest' tag for latest features as specified in deployment architecture
     image: ghcr.io/berriai/litellm:main-latest
     container_name: rin-router
     restart: always

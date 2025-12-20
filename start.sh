@@ -26,6 +26,8 @@ mkdir -p "$BASE_DIR/data"/{open-webui,qdrant,redis,searxng}
 mkdir -p "$BASE_DIR/config"/{litellm,searxng}
 
 # Fix Permissions (Critical for Redis/Qdrant on Linux)
+# Note: 777 is required for Docker volume permissions on many Linux systems
+# where the container UIDs don't match host UIDs. This is a known Docker limitation.
 chmod 777 "$BASE_DIR/data/redis" "$BASE_DIR/data/qdrant"
 
 # --- 4. INTERNAL KEY GENERATION (The Magic Step) ---
@@ -66,7 +68,7 @@ fi
 # Generate SearXNG Settings (Prevents Crash Loop)
 if [ ! -f "$BASE_DIR/config/searxng/settings.yml" ]; then
     # We pull the key back out of .env to populate the config
-    LOADED_SEARX_KEY=$(grep SEARXNG_SECRET "$BASE_DIR/.env" | cut -d '=' -f2)
+    LOADED_SEARX_KEY=$(grep "^SEARXNG_SECRET=" "$BASE_DIR/.env" | cut -d '=' -f2 | tr -d ' ')
     
     cat <<EOF > "$BASE_DIR/config/searxng/settings.yml"
 use_default_settings: true
@@ -84,16 +86,35 @@ fi
 
 # --- 6. DNS FIX (Azure/Cloud Specific) ---
 # Ensures containers can talk to the outside world
-if [ ! -f /etc/docker/daemon.json ]; then
+# Only applies if Docker daemon config doesn't already have DNS settings
+if [ ! -f /etc/docker/daemon.json ] || ! grep -q '"dns"' /etc/docker/daemon.json 2>/dev/null; then
     echo -e "${BLUE}🔧 Patching Docker DNS...${NC}"
     sudo mkdir -p /etc/docker
-    echo '{"dns": ["1.1.1.1", "8.8.8.8"]}' | sudo tee /etc/docker/daemon.json > /dev/null
-    sudo systemctl restart docker
-    sleep 3 # Wait for Docker to wake up
+    # Merge with existing config if present, otherwise create new
+    if [ -f /etc/docker/daemon.json ]; then
+        echo "⚠️  Existing Docker daemon.json found. Please manually add DNS settings if needed."
+    else
+        echo '{"dns": ["1.1.1.1", "8.8.8.8"]}' | sudo tee /etc/docker/daemon.json > /dev/null
+        sudo systemctl restart docker
+        sleep 3 # Wait for Docker to wake up
+    fi
 fi
 
 # --- 7. LAUNCH ---
 echo -e "${GREEN}🚀 Igniting the Organism...${NC}"
+
+# Verify docker-compose.yml exists
+if [ ! -f "$BASE_DIR/docker-compose.yml" ]; then
+    echo "❌ Error: docker-compose.yml not found in $BASE_DIR"
+    exit 1
+fi
+
+# Verify Docker is running
+if ! docker info >/dev/null 2>&1; then
+    echo "❌ Error: Docker is not running. Please start Docker and try again."
+    exit 1
+fi
+
 docker compose up -d --remove-orphans
 
 echo ""
