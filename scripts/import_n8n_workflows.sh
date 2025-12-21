@@ -19,10 +19,11 @@ if [ "$WORKFLOW_COUNT" -eq 0 ]; then
     exit 0
 fi
 
-# Check if already imported (skip on subsequent starts)
+# Check if already imported using hash of workflow filenames instead of count
+WORKFLOW_HASH=$(find "$WORKFLOWS_DIR" -name "*.json" -type f -exec basename {} \; 2>/dev/null | sort | md5sum | cut -d' ' -f1)
 if [ -f "$IMPORT_MARKER" ]; then
-    MARKER_COUNT=$(cat "$IMPORT_MARKER" 2>/dev/null || echo "0")
-    if [ "$MARKER_COUNT" -eq "$WORKFLOW_COUNT" ]; then
+    MARKER_HASH=$(cat "$IMPORT_MARKER" 2>/dev/null || echo "")
+    if [ "$MARKER_HASH" = "$WORKFLOW_HASH" ]; then
         echo "ℹ️  Workflows already imported ($WORKFLOW_COUNT workflows). Skipping."
         exit 0
     fi
@@ -30,17 +31,41 @@ fi
 
 echo "🔄 Importing $WORKFLOW_COUNT workflows from $WORKFLOWS_DIR..."
 
-# Import all workflows
-n8n import:workflow --separate --input="$WORKFLOWS_DIR" 2>&1 | grep -v "Could not find workflow" | grep -v "Could not remove webhooks" || true
+# Import all workflows and check exit status
+IMPORT_OUTPUT=$(n8n import:workflow --separate --input="$WORKFLOWS_DIR" 2>&1)
+IMPORT_EXIT_CODE=$?
+echo "$IMPORT_OUTPUT" | grep -v "Could not find workflow" | grep -v "Could not remove webhooks"
 
-# Mark as imported
-echo "$WORKFLOW_COUNT" > "$IMPORT_MARKER"
+if [ "$IMPORT_EXIT_CODE" -ne 0 ]; then
+    echo "❌ Workflow import failed with exit code $IMPORT_EXIT_CODE."
+    exit "$IMPORT_EXIT_CODE"
+fi
+
+# Mark as imported with hash
+echo "$WORKFLOW_HASH" > "$IMPORT_MARKER"
 
 echo "✅ Workflows imported successfully."
 
-# List imported workflows
+# List imported workflows with robust parsing
 echo ""
 echo "📋 Available workflows:"
-n8n list:workflow 2>/dev/null | while IFS='|' read -r id name; do
-    echo "   - $name"
+n8n list:workflow 2>/dev/null | while IFS= read -r line; do
+    # Skip empty lines and obvious header/separator lines
+    [ -z "$line" ] && continue
+    case "$line" in
+        -*|'='*|*[Ii][Dd]*[Nn]ame*) continue ;;
+    esac
+
+    name=""
+
+    if printf '%s\n' "$line" | grep -q '|'; then
+        # Pipe-delimited table format: assume second column is the name
+        name=$(printf '%s\n' "$line" | awk -F'|' 'NF>=2 {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
+    else
+        # Fallback: treat first whitespace-separated field as ID and the rest as name
+        name=$(printf '%s\n' "$line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}')
+    fi
+
+    # Only print if we successfully extracted a non-empty name
+    [ -n "$name" ] && echo "   - $name"
 done
