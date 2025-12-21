@@ -44,7 +44,6 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - DATABASE_URL=  # Disable Prisma/PostgreSQL, use SQLite from config instead
 
   # --- THE SENSORIUM (Vision) ---
   searxng:
