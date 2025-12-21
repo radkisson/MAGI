@@ -178,29 +178,26 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
 
 def get_admin_user_id(db_path: str) -> str:
     """Get the first admin user ID from the database."""
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    # Try to find an admin user
-    cursor.execute("SELECT id FROM user WHERE role = 'admin' LIMIT 1")
-    row = cursor.fetchone()
-    
-    if row:
-        user_id = row[0]
-        conn.close()
-        return user_id
-    
-    # If no admin, get any user
-    cursor.execute("SELECT id FROM user LIMIT 1")
-    row = cursor.fetchone()
-    
-    if row:
-        user_id = row[0]
-        conn.close()
-        return user_id
-    
-    conn.close()
-    return "system"
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        
+        # Try to find an admin user
+        cursor.execute("SELECT id FROM user WHERE role = 'admin' LIMIT 1")
+        row = cursor.fetchone()
+        
+        if row:
+            user_id = row[0]
+            return user_id
+        
+        # If no admin, get any user
+        cursor.execute("SELECT id FROM user LIMIT 1")
+        row = cursor.fetchone()
+        
+        if row:
+            user_id = row[0]
+            return user_id
+        
+        return "system"
 
 
 def main():
