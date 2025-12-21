@@ -253,9 +253,6 @@ general_settings:
     type: "redis"
     host: "redis"
     port: 6379
-    
-  # Success callback for cost tracking
-  success_callback: ["langfuse"]  # Track successful calls
   
   # Model-specific cost overrides (optional, LiteLLM has defaults)
   model_cost:

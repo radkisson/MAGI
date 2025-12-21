@@ -110,7 +110,6 @@ The system "knows" how to configure itself. Users only provide optional API keys
 
 ## 🐛 Known Limitations
 
-- **PostgreSQL removed**: Cost-tracking logs in LiteLLM temporarily disabled. Will be re-introduced as SQLite in v1.3.
 - **Manual workflow import**: The Morning Briefing workflow requires manual import into n8n (one-time setup).
 - **Local-only access**: All services bind to localhost. Remote access requires SSH tunneling or VPN (Tailscale recommended).
 
