@@ -15,19 +15,25 @@ def test_tavily_integration():
     print("Testing Tavily Integration...")
     
     try:
-        from tavily_search import Tools as TavilyTools
+        from tavily_search import Tools as TavilyTools, Valves as TavilyValves
         print("  ✓ Tavily tool imported successfully")
         
         tavily = TavilyTools()
         print("  ✓ Tavily tool initialized")
         
-        assert tavily.api_url == "https://api.tavily.com/search"
+        assert tavily.valves.TAVILY_API_URL == "https://api.tavily.com/search"
         print("  ✓ API URL configured correctly")
         
         assert hasattr(tavily, 'web_search')
         assert hasattr(tavily, 'quick_search')
         assert hasattr(tavily, 'deep_search')
         print("  ✓ All required methods present")
+        
+        # Test Valves class (Pydantic model)
+        valves_fields = TavilyValves.model_fields.keys() if hasattr(TavilyValves, 'model_fields') else []
+        assert 'TAVILY_API_KEY' in valves_fields
+        assert 'TAVILY_API_URL' in valves_fields
+        print("  ✓ Valves class properly configured")
         
         # Test without API key
         if 'TAVILY_API_KEY' in os.environ:
@@ -37,10 +43,19 @@ def test_tavily_integration():
         assert "TAVILY_API_KEY" in result or "not configured" in result
         print("  ✓ Handles missing API key gracefully")
         
+        # Test with API key
+        os.environ['TAVILY_API_KEY'] = 'test-key-123'
+        tavily = TavilyTools()
+        assert tavily.valves.TAVILY_API_KEY == 'test-key-123'
+        print("  ✓ Environment variable loading works")
+        del os.environ['TAVILY_API_KEY']
+        
         print("✅ Tavily integration test PASSED\n")
         return True
     except Exception as e:
         print(f"❌ Tavily integration test FAILED: {e}\n")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -49,32 +64,49 @@ def test_firecrawl_integration():
     print("Testing Firecrawl Integration...")
     
     try:
-        from firecrawl_scraper import Tools as FirecrawlTools
+        from firecrawl_scraper import Tools as FirecrawlTools, Valves as FirecrawlValves
         print("  ✓ Firecrawl tool imported successfully")
         
         firecrawl = FirecrawlTools()
         print("  ✓ Firecrawl tool initialized")
         
-        assert "firecrawl" in firecrawl.firecrawl_url
+        assert "firecrawl" in firecrawl.valves.FIRECRAWL_API_URL
         print("  ✓ Default self-hosted URL configured")
         
         assert hasattr(firecrawl, 'scrape_webpage')
         assert hasattr(firecrawl, 'crawl_website')
         print("  ✓ All required methods present")
         
+        # Test Valves class (Pydantic model)
+        valves_fields = FirecrawlValves.model_fields.keys() if hasattr(FirecrawlValves, 'model_fields') else []
+        assert 'FIRECRAWL_API_KEY' in valves_fields
+        assert 'FIRECRAWL_API_URL' in valves_fields
+        print("  ✓ Valves class properly configured")
+        
         # Test cloud mode configuration
         os.environ['FIRECRAWL_API_URL'] = 'https://api.firecrawl.dev'
+        os.environ['FIRECRAWL_API_KEY'] = 'fc-test-123'
         firecrawl = FirecrawlTools()
-        assert firecrawl.firecrawl_url == 'https://api.firecrawl.dev'
+        assert firecrawl.valves.FIRECRAWL_API_URL == 'https://api.firecrawl.dev'
+        assert firecrawl.valves.FIRECRAWL_API_KEY == 'fc-test-123'
         print("  ✓ Cloud mode configuration works")
         
         # Clean up
         del os.environ['FIRECRAWL_API_URL']
+        del os.environ['FIRECRAWL_API_KEY']
+        
+        # Test error handling without API key
+        firecrawl = FirecrawlTools()
+        result = firecrawl.scrape_webpage("https://example.com")
+        assert "not configured" in result or "FIRECRAWL_API_KEY" in result
+        print("  ✓ Handles missing API key gracefully")
         
         print("✅ Firecrawl integration test PASSED\n")
         return True
     except Exception as e:
         print(f"❌ Firecrawl integration test FAILED: {e}\n")
+        import traceback
+        traceback.print_exc()
         return False
 
 

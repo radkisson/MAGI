@@ -21,6 +21,8 @@ from pydantic import BaseModel, Field
 class Valves(BaseModel):
     """Configuration valves for Tavily integration (auto-loaded from .env)"""
     
+    # Note: default_factory with lambda is required for runtime environment variable loading.
+    # This ensures the Valves check environment variables when instantiated, not at import time.
     TAVILY_API_KEY: str = Field(
         default_factory=lambda: os.getenv("TAVILY_API_KEY", ""),
         description="Tavily API Key (auto-loaded from .env or set manually)"
