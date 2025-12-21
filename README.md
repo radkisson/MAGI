@@ -116,6 +116,14 @@ After making changes, restart RIN:
 
 The start script will display the actual ports being used.
 
+#### n8n Secure Cookie Warning
+
+If you see a warning about n8n's secure cookie configuration when accessing http://localhost:5678, this is expected for local development over HTTP.
+
+**Already Fixed**: The `docker-compose.yml` is configured with `N8N_SECURE_COOKIE=false` to disable this security feature for local HTTP development.
+
+**Note**: If deploying to production with HTTPS/TLS, you should remove this setting to enable secure cookies for better security.
+
 ### Service Access Points
 
 Once deployed, access the various subsystems:
