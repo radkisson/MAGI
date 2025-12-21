@@ -26,8 +26,8 @@ if ! docker ps | grep -q rin-cortex; then
 fi
 
 # Load port from .env
-if [ -f "$BASE_DIR/.env" ]; then
-    export $(grep -v '^#' "$BASE_DIR/.env" | grep 'PORT_WEBUI' | xargs) 2>/dev/null || true
+if [ -f "$BASE_DIR/../.env" ]; then
+    export $(grep -v '^#' "$BASE_DIR/../.env" | grep 'PORT_WEBUI' | xargs) 2>/dev/null || true
 fi
 PORT_WEBUI=${PORT_WEBUI:-3000}
 
@@ -54,18 +54,18 @@ if [ -z "$API_KEY" ]; then
 fi
 
 # Update .env file
-if grep -q "^OPENWEBUI_API_KEY=" "$BASE_DIR/.env" 2>/dev/null; then
+if grep -q "^OPENWEBUI_API_KEY=" "$BASE_DIR/../.env" 2>/dev/null; then
     # Update existing value
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|^OPENWEBUI_API_KEY=.*|OPENWEBUI_API_KEY=${API_KEY}|" "$BASE_DIR/.env"
+        sed -i '' "s|^OPENWEBUI_API_KEY=.*|OPENWEBUI_API_KEY=${API_KEY}|" "$BASE_DIR/../.env"
     else
-        sed -i "s|^OPENWEBUI_API_KEY=.*|OPENWEBUI_API_KEY=${API_KEY}|" "$BASE_DIR/.env"
+        sed -i "s|^OPENWEBUI_API_KEY=.*|OPENWEBUI_API_KEY=${API_KEY}|" "$BASE_DIR/../.env"
     fi
 else
     # Add new value
-    echo "" >> "$BASE_DIR/.env"
-    echo "# --- OPEN WEBUI API KEY ---" >> "$BASE_DIR/.env"
-    echo "OPENWEBUI_API_KEY=${API_KEY}" >> "$BASE_DIR/.env"
+    echo "" >> "$BASE_DIR/../.env"
+    echo "# --- OPEN WEBUI API KEY ---" >> "$BASE_DIR/../.env"
+    echo "OPENWEBUI_API_KEY=${API_KEY}" >> "$BASE_DIR/../.env"
 fi
 
 echo ""

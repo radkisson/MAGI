@@ -232,7 +232,7 @@ Query books, papers, and scientific literature directly from Telegram. RIN uses 
 
 **Supported query types:**
 - **Academic**: "Find papers on transformer architecture" → Google Scholar, arXiv, Semantic Scholar
-- **Books**: "Find books about stoicism" → Open Library, Anna's Archive
+- **Books**: "Find books about stoicism" → Open Library
 - **Science**: "What causes aurora borealis?" → PubMed, scientific sources
 - **General**: Any other query → Web search with Tavily/SearXNG
 
