@@ -180,23 +180,50 @@ RIN: [Uses SearXNG tool to search anonymously]
 
 ### Autonomous Workflows (n8n)
 
-RIN comes with a **pre-configured Morning Briefing workflow** that runs autonomously at 8 AM daily. This is RIN's first "survival instinct" - waking up and checking the world without human intervention.
+RIN includes **8 pre-configured workflow templates** that enable autonomous operations and external integrations. These workflows give RIN the ability to send emails, post to Slack/Telegram, monitor RSS feeds, conduct research, and generate daily reports.
 
-#### Importing the Morning Briefing Workflow
+#### Available Workflow Templates
+
+1. **Morning Briefing** - Daily news summary at 8 AM
+2. **OpenWebUI Integration** - General-purpose webhook receiver for Open WebUI
+3. **Email Integration** - Send emails via SMTP (Gmail, custom servers)
+4. **Slack Notifications** - Post messages to Slack channels
+5. **Telegram Notifications** - Send messages via Telegram bot
+6. **RSS Feed Monitor** - Monitor and summarize RSS feeds every 6 hours
+7. **Research Agent** - Autonomous research with search, scraping, and synthesis
+8. **Daily Report Generator** - Comprehensive intelligence reports at 6 PM daily
+
+#### Quick Start
 
 1. **Access n8n**: After running `./start.sh`, open http://localhost:5678
 2. **Create Account**: First-time setup will prompt you to create an owner account
-3. **Import Workflow**:
+3. **Import Workflows**:
    - Click "Add workflow" (+ button)
    - Click the three dots menu (⋮) → "Import from File"
-   - Select `workflows/morning_briefing.json`
-4. **Activate**: Toggle the workflow to "Active" in the top-right corner
+   - Select any workflow from `workflows/` directory (e.g., `morning_briefing.json`)
+4. **Configure Credentials** (for email/Slack/Telegram workflows):
+   - Settings → Credentials → Create New
+   - Add SMTP, Slack API, or Telegram API credentials as needed
+5. **Activate**: Toggle the workflow to "Active" in the top-right corner
 
-The workflow will now:
-- Trigger at 8:00 AM daily
-- Query SearXNG for "top technology news today"
-- Send results to LiteLLM for summarization
-- Generate a 3-bullet morning briefing
+#### Using Workflows from Open WebUI
+
+Once workflows are activated, you can trigger them naturally in conversation:
+
+```
+You: "Send an email to team@company.com with today's briefing"
+You: "Post a message to Slack saying 'Deployment complete'"
+You: "Research quantum computing and send me a comprehensive report"
+```
+
+RIN will automatically use the n8n_reflex tool to trigger the appropriate workflows.
+
+#### Documentation
+
+For detailed setup instructions, see:
+- [`workflows/INSTALLATION_GUIDE.md`](workflows/INSTALLATION_GUIDE.md) - Step-by-step setup for each workflow
+- [`workflows/USAGE_GUIDE.md`](workflows/USAGE_GUIDE.md) - How to trigger workflows from Open WebUI
+- [`workflows/README.md`](workflows/README.md) - Technical architecture and workflow descriptions
 
 #### Creating Custom Workflows
 
@@ -462,22 +489,31 @@ Areas of focus:
   - [x] Fallback model chains for reliability (multi-provider redundancy)
   - [x] Comprehensive [Model Configuration Guide](docs/MODEL_CONFIGURATION.md)
 
+- [x] **v1.2 "Intelligence"**: Advanced Automation ✅
+  - [x] Comprehensive n8n workflow template library (8 workflows)
+  - [x] Email integration workflow (Gmail, SMTP)
+  - [x] RSS feed monitoring and summarization
+  - [x] Slack/Telegram bot integration workflows
+  - [x] Autonomous research agent workflow
+  - [x] Daily report generator workflow
+  - [x] Detailed workflow installation and usage guides
+  - [x] FireCrawl API configuration fixes
+
 ### Planned
-- [ ] **v1.2 "Intelligence"**: Advanced Automation
+- [ ] **v1.3 "Intelligence Plus"**: Enhanced Automation
   - [ ] Auto-load workflows into n8n on first boot
-  - [ ] Email integration workflow (Gmail, SMTP)
-  - [ ] RSS feed monitoring and summarization
-  - [ ] GitHub notifications and PR summaries
-  - [ ] Slack/Telegram bot integration
+  - [ ] GitHub notifications and PR summaries workflow
+  - [ ] Calendar integration workflow
+  - [ ] Document processing workflow
   
-- [ ] **v1.3 "Observability"**: Monitoring & Logging
+- [ ] **v1.4 "Observability"**: Monitoring & Logging
   - [ ] Real-time health dashboard
   - [ ] Usage analytics and insights
   - [ ] Performance metrics (latency, token usage)
   - [ ] Workflow execution history in n8n
   - [ ] Advanced cost analytics and reporting
   
-- [ ] **v1.4 "Resilience"**: Production Hardening
+- [ ] **v1.5 "Resilience"**: Production Hardening
   - [ ] Automated backups for vector database and chat history
   - [ ] Health checks and auto-restart for failed services
   - [ ] Rate limiting and quota management
