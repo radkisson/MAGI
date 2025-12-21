@@ -68,6 +68,12 @@ cd Rhyzomic-Intelligence-Node-RIN-
 
 **2. Ignite**
 ```bash
+chmod +x rin start.sh
+./rin start
+```
+
+Or use the classic method:
+```bash
 chmod +x start.sh
 ./start.sh
 ```
@@ -83,9 +89,24 @@ This automatically:
 
 If you have an OpenAI/Anthropic API key:
 - Open `.env` and add your keys
-- Run `./start.sh` again to apply
+- Run `./rin start` or `./start.sh` again to apply
 
 Then open http://localhost:3000 to access the Cortex.
+
+### CLI Management
+
+RIN includes a comprehensive CLI tool (`./rin`) for managing the entire system:
+
+```bash
+./rin start      # Start all services
+./rin stop       # Stop all services
+./rin status     # Check system health
+./rin logs       # View logs
+./rin update     # Pull latest images
+./rin upgrade    # Upgrade RIN
+./rin backup     # Backup your data
+./rin help       # Show all commands
+```
 
 ### Troubleshooting
 
@@ -192,6 +213,59 @@ You can create your own workflows in the n8n visual editor:
 See [`workflows/README.md`](workflows/README.md) for detailed architecture and examples.
 
 ### Managing the Organism
+
+RIN now includes a comprehensive CLI management tool for easier lifecycle management:
+
+```bash
+# Start RIN (same as ./start.sh)
+./rin start
+
+# Stop all services
+./rin stop
+
+# Restart all services
+./rin restart
+
+# Check system status and health
+./rin status
+
+# View logs (all services)
+./rin logs
+
+# View logs for specific service (with follow)
+./rin logs open-webui -f
+
+# Update Docker images
+./rin update
+
+# Upgrade RIN to latest version
+./rin upgrade
+
+# Backup all data
+./rin backup
+
+# Restore from backup
+./rin restore backups/20231221_120000
+
+# List running containers
+./rin ps
+
+# Execute command in container
+./rin exec redis redis-cli
+
+# Clean up containers and images
+./rin clean
+
+# Show version information
+./rin version
+
+# Show help
+./rin help
+```
+
+**Backward Compatibility**: The original `./start.sh` script still works as before. The new `./rin` CLI is a comprehensive wrapper that provides additional management commands.
+
+**Advanced Docker Management** (if you prefer direct docker-compose):
 
 ```bash
 # Start all subsystems
