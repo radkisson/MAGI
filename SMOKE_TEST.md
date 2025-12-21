@@ -271,7 +271,7 @@ Once all tests pass:
 1. **Configure LLM routing** in LiteLLM for multi-model intelligence
 2. **Customize tool behavior** by editing Python files in `tools/`
 3. **Add new tools** following the pattern in `tools/README.md`
-4. **Monitor costs** using PostgreSQL LiteLLM observability
+4. **Monitor costs** using SQLite cost tracking in LiteLLM (stored in `data/litellm/`)
 5. **Create workflows** combining multiple tools for complex tasks
 
 ## Hot-Swappable Updates
