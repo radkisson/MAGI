@@ -21,7 +21,6 @@ import sys
 import importlib.util
 import inspect
 from pathlib import Path
-from typing import get_type_hints
 
 
 def get_tool_specs(tools_instance):
