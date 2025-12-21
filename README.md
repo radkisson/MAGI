@@ -374,6 +374,46 @@ RIN supports two modes for Firecrawl:
   ```
 - Restart services: `./start.sh`
 
+### Service Selection
+
+RIN allows you to selectively enable or disable optional services to reduce resource usage or when using alternatives.
+
+**Interactive Mode (First Run)**
+
+When you run `./start.sh` for the first time, you'll be prompted to select which services to enable:
+
+```
+🎛️  Service Selection
+Choose which services to enable:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔥 FireCrawl (Web Scraping Engine)
+   Self-hosted service for extracting content from websites
+   Alternative: Use Tavily API or other scraping tools via OpenWebUI
+
+   Enable FireCrawl? [Y/n]:
+```
+
+**Manual Configuration**
+
+You can also manually configure services in `.env`:
+
+```bash
+# Service Selection
+ENABLE_FIRECRAWL=Y     # Set to N to disable FireCrawl
+```
+
+**When to Disable FireCrawl:**
+- You prefer using Tavily API for web scraping
+- You want to reduce memory/CPU usage
+- You're using other OpenWebUI scraping tools
+- You don't need web content extraction
+
+After changing service selection, restart RIN:
+```bash
+./start.sh
+```
+
 ## Usage Examples
 
 ### Interacting with RIN
