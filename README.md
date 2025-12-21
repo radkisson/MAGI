@@ -87,6 +87,43 @@ If you have an OpenAI/Anthropic API key:
 
 Then open http://localhost:3000 to access the Cortex.
 
+### Troubleshooting
+
+#### Port Already Allocated Error
+
+If you encounter an error like `"Bind for 0.0.0.0:3000 failed: port is already allocated"`, this means one of the default ports is already in use on your system.
+
+**Solution**: Edit the `.env` file and change the conflicting port(s):
+
+```bash
+nano .env
+```
+
+Available port configurations:
+- `PORT_WEBUI=3000` - Open WebUI (Cortex) - Main interface
+- `PORT_LITELLM=4000` - LiteLLM (Router) - AI model routing
+- `PORT_SEARXNG=8080` - SearXNG (Vision) - Search engine
+- `PORT_FIRECRAWL=3002` - FireCrawl (Digestion) - Web scraping
+- `PORT_N8N=5678` - n8n (Reflex) - Workflow automation
+- `PORT_QDRANT=6333` - Qdrant (Memory) - Vector database
+
+For example, if port 3000 is in use, change `PORT_WEBUI=3000` to `PORT_WEBUI=3001`.
+
+After making changes, restart RIN:
+```bash
+./start.sh
+```
+
+The start script will display the actual ports being used.
+
+#### n8n Secure Cookie Warning
+
+If you see a warning about n8n's secure cookie configuration when accessing http://localhost:5678, this is expected for local development over HTTP.
+
+**Already Fixed**: The `docker-compose.yml` is configured with `N8N_SECURE_COOKIE=false` to disable this security feature for local HTTP development.
+
+**Note**: If deploying to production with HTTPS/TLS, you should remove this setting to enable secure cookies for better security.
+
 ### Service Access Points
 
 Once deployed, access the various subsystems:

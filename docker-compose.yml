@@ -30,7 +30,7 @@ services:
     container_name: rin-router
     restart: always
     ports:
-      - "4000:4000"
+      - "${PORT_LITELLM:-4000}:4000"
     volumes:
       - ./config/litellm/config.yaml:/app/config.yaml
       - ./data/litellm:/app/data
@@ -41,6 +41,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - DATABASE_URL=  # Disable Prisma/PostgreSQL, use SQLite from config instead
 
   # --- THE SENSORIUM (Vision) ---
   searxng:
@@ -48,7 +49,7 @@ services:
     container_name: rin-vision
     restart: always
     ports:
-      - "8080:8080"
+      - "${PORT_SEARXNG:-8080}:8080"
     volumes:
       - ./config/searxng:/etc/searxng
     env_file: .env
@@ -63,11 +64,11 @@ services:
 
   # --- THE DIGESTION ---
   firecrawl:
-    image: mendableai/firecrawl:latest
+    image: mcp/firecrawl:latest
     container_name: rin-digestion
     restart: always
     ports:
-      - "3002:3002"
+      - "${PORT_FIRECRAWL:-3002}:3002"
     environment:
       - REDIS_URL=redis://redis:6379
       - PLAYWRIGHT_MICROSERVICE_URL=http://playwright:3000
@@ -89,7 +90,7 @@ services:
     container_name: rin-reflex-automation
     restart: always
     ports:
-      - "5678:5678"
+      - "${PORT_N8N:-5678}:5678"
     volumes:
       - ./data/n8n:/home/node/.n8n
       - ./workflows:/workflows:ro
@@ -100,6 +101,7 @@ services:
       - WEBHOOK_URL=http://localhost:5678
       - GENERIC_TIMEZONE=UTC
       - N8N_EDITOR_BASE_URL=http://localhost:5678
+      - N8N_SECURE_COOKIE=false  # Disable secure cookie for local HTTP development
     env_file: .env
 
   # --- SUPPORT ---
@@ -115,6 +117,6 @@ services:
     container_name: rin-memory
     restart: always
     ports:
-      - "6333:6333"
+      - "${PORT_QDRANT:-6333}:6333"
     volumes:
       - ./data/qdrant:/qdrant/storage
