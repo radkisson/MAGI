@@ -227,7 +227,7 @@ services:
     image: searxng/searxng
     
   firecrawl:
-    image: mcp/firecrawl
+    image: mendableai/firecrawl
     
   qdrant:
     image: qdrant/qdrant
