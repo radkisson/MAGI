@@ -64,7 +64,7 @@ services:
 
   # --- THE DIGESTION ---
   firecrawl:
-    image: ghcr.io/mendableai/firecrawl:latest
+    image: ghcr.io/firecrawl/firecrawl:latest
     container_name: rin-digestion
     restart: always
     profiles:
@@ -84,7 +84,7 @@ services:
       - playwright-service
 
   playwright-service:
-    image: ghcr.io/mendableai/playwright-service:latest
+    image: ghcr.io/firecrawl/playwright-service:latest
     container_name: rin-browser
     restart: always
     profiles:
