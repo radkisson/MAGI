@@ -1,0 +1,246 @@
+{
+  "name": "RIN - Research Agent Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "research",
+        "options": {}
+      },
+      "name": "Webhook: Research Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "research",
+      "id": "webhook-research"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract research query\nconst data = $input.item.json.data || $input.item.json;\n\nreturn {\n  json: {\n    query: data.query || data.topic || '',\n    depth: data.depth || 'standard',\n    sources: data.sources || 5,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Parse Research Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "id": "parse-query"
+    },
+    {
+      "parameters": {
+        "url": "http://rin-vision:8080/search",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            },
+            {
+              "name": "pageno",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "name": "Search with SearXNG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "id": "search-searxng"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract top URLs from search results\nconst results = $input.item.json.results || [];\nconst topUrls = results.slice(0, 3).map(r => r.url).filter(Boolean);\n\nreturn topUrls.map(url => ({\n  json: {\n    url: url,\n    query: $input.item.json.query\n  }\n}));"
+      },
+      "name": "Extract URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "id": "extract-urls"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://firecrawl:3002/v0/scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.FIRECRAWL_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.url }}"
+            },
+            {
+              "name": "formats",
+              "value": "=[\"markdown\"]"
+            }
+          ]
+        }
+      },
+      "name": "Scrape Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300],
+      "id": "scrape-content"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rin-router:4000/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-4o"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{\"role\": \"system\", \"content\": \"You are a research analyst. Synthesize information from multiple sources into a comprehensive research report.\"}, {\"role\": \"user\", \"content\": `Research Topic: ${$('Parse Research Query').item.json.query}\\n\\nGathered Information:\\n\\n${$input.all().map((item, i) => `Source ${i+1}:\\n${item.json.data?.markdown || 'No content'}\\n\\n---\\n\\n`).join('')}\\n\\nProvide a comprehensive research report with key findings, sources, and conclusions.` }] }}"
+            }
+          ]
+        }
+      },
+      "name": "Synthesize Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 300],
+      "id": "synthesize-report"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract research report\nconst response = $input.item.json;\nconst report = response.choices?.[0]?.message?.content || 'No report generated';\n\nreturn {\n  json: {\n    status: 'success',\n    query: $('Parse Research Query').item.json.query,\n    report: report,\n    sources: $input.all().length,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Format Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300],
+      "id": "format-report"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1650, 300],
+      "id": "send-response"
+    }
+  ],
+  "connections": {
+    "Webhook: Research Request": {
+      "main": [
+        [
+          {
+            "node": "Parse Research Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Research Query": {
+      "main": [
+        [
+          {
+            "node": "Search with SearXNG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search with SearXNG": {
+      "main": [
+        [
+          {
+            "node": "Extract URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract URLs": {
+      "main": [
+        [
+          {
+            "node": "Scrape Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Content": {
+      "main": [
+        [
+          {
+            "node": "Synthesize Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesize Report": {
+      "main": [
+        [
+          {
+            "node": "Format Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Report": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-research-agent"
+  },
+  "tags": []
+}

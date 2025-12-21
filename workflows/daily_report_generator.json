@@ -1,0 +1,205 @@
+{
+  "name": "RIN - Daily Report Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule: Daily at 6 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "id": "schedule-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate today's date and topics\nconst today = new Date();\nconst topics = [\n  'artificial intelligence news',\n  'technology developments',\n  'cybersecurity updates'\n];\n\nreturn topics.map(topic => ({\n  json: {\n    topic: topic,\n    date: today.toISOString().split('T')[0],\n    timestamp: today.toISOString()\n  }\n}));"
+      },
+      "name": "Generate Topics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "id": "generate-topics"
+    },
+    {
+      "parameters": {
+        "url": "http://rin-vision:8080/search",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "={{ $json.topic + ' ' + $json.date }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        }
+      },
+      "name": "Search Each Topic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "id": "search-topics"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate all search results\nconst allResults = $input.all();\nconst aggregated = {\n  topics: [],\n  date: new Date().toISOString().split('T')[0]\n};\n\nfor (const item of allResults) {\n  const topic = item.json.topic || 'Unknown';\n  const results = item.json.results || [];\n  \n  aggregated.topics.push({\n    name: topic,\n    results: results.slice(0, 3).map(r => ({\n      title: r.title || '',\n      url: r.url || '',\n      snippet: r.content || ''\n    }))\n  });\n}\n\nreturn { json: aggregated };"
+      },
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "id": "aggregate-results"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rin-router:4000/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-4o"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{\"role\": \"system\", \"content\": \"You are a professional analyst creating daily intelligence reports.\"}, {\"role\": \"user\", \"content\": `Create a comprehensive daily report for ${$json.date} covering these topics:\\n\\n${$json.topics.map((t, i) => `\\n## ${t.name}\\n${t.results.map(r => `- ${r.title}\\n  ${r.snippet}\\n  Source: ${r.url}`).join('\\n\\n')}`).join('\\n\\n')}\\n\\nProvide:\n1. Executive Summary\n2. Key Developments by Topic\n3. Notable Trends\n4. Action Items or Recommendations` }] }}"
+            }
+          ]
+        }
+      },
+      "name": "Generate Report with LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300],
+      "id": "generate-report"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract and format the report\nconst response = $input.item.json;\nconst report = response.choices?.[0]?.message?.content || 'Report generation failed';\nconst date = $('Aggregate Results').item.json.date;\n\nreturn {\n  json: {\n    title: `RIN Daily Intelligence Report - ${date}`,\n    date: date,\n    report: report,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Format Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "id": "format-report"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "collectionName": "rin_reports",
+        "options": {
+          "wait": true
+        }
+      },
+      "name": "Store in Qdrant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 300],
+      "id": "store-qdrant",
+      "notes": "This node stores the report in Qdrant for long-term memory.\nConfigure Qdrant connection if needed."
+    }
+  ],
+  "connections": {
+    "Schedule: Daily at 6 PM": {
+      "main": [
+        [
+          {
+            "node": "Generate Topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Topics": {
+      "main": [
+        [
+          {
+            "node": "Search Each Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Each Topic": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [
+          {
+            "node": "Generate Report with LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Report with LLM": {
+      "main": [
+        [
+          {
+            "node": "Format Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Report": {
+      "main": [
+        [
+          {
+            "node": "Store in Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-daily-report"
+  },
+  "tags": []
+}

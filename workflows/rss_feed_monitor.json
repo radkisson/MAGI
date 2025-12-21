@@ -1,0 +1,147 @@
+{
+  "name": "RIN - RSS Feed Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */6 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule: Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "id": "schedule-trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://news.ycombinator.com/rss",
+        "options": {}
+      },
+      "name": "Fetch RSS Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "id": "fetch-rss",
+      "notes": "Configure the RSS feed URL you want to monitor.\nDefault: Hacker News RSS feed"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Filter and format RSS items\nconst items = $input.all();\nconst newItems = items.slice(0, 5); // Get top 5 items\n\nreturn newItems.map(item => ({\n  json: {\n    title: item.json.title || '',\n    link: item.json.link || '',\n    pubDate: item.json.pubDate || '',\n    description: item.json.contentSnippet || item.json.description || ''\n  }\n}));"
+      },
+      "name": "Filter Top Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "id": "filter-items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rin-router:4000/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-4o-mini"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{\"role\": \"user\", \"content\": \"Summarize these RSS feed items into a brief digest with key takeaways:\\n\\n\" + $input.all().map(item => `Title: ${item.json.title}\\nLink: ${item.json.link}\\nDescription: ${item.json.description}`).join('\\n\\n---\\n\\n') }] }}"
+            }
+          ]
+        }
+      },
+      "name": "Summarize with LiteLLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300],
+      "id": "summarize-llm"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract the summary from LLM response\nconst response = $input.item.json;\nconst summary = response.choices?.[0]?.message?.content || 'No summary available';\n\nreturn {\n  json: {\n    summary: summary,\n    itemCount: $input.all().length,\n    timestamp: new Date().toISOString(),\n    feedUrl: 'https://news.ycombinator.com/rss'\n  }\n};"
+      },
+      "name": "Format Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "id": "format-summary"
+    }
+  ],
+  "connections": {
+    "Schedule: Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Fetch RSS Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "Filter Top Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Top Items": {
+      "main": [
+        [
+          {
+            "node": "Summarize with LiteLLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize with LiteLLM": {
+      "main": [
+        [
+          {
+            "node": "Format Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-rss-monitor"
+  },
+  "tags": []
+}
