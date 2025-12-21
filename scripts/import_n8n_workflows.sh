@@ -32,8 +32,9 @@ fi
 echo "🔄 Importing $WORKFLOW_COUNT workflows from $WORKFLOWS_DIR..."
 
 # Import all workflows and check exit status
-n8n import:workflow --separate --input="$WORKFLOWS_DIR" 2>&1 | grep -v "Could not find workflow" | grep -v "Could not remove webhooks"
-IMPORT_EXIT_CODE=${PIPESTATUS[0]}
+IMPORT_OUTPUT=$(n8n import:workflow --separate --input="$WORKFLOWS_DIR" 2>&1)
+IMPORT_EXIT_CODE=$?
+echo "$IMPORT_OUTPUT" | grep -v "Could not find workflow" | grep -v "Could not remove webhooks"
 
 if [ "$IMPORT_EXIT_CODE" -ne 0 ]; then
     echo "❌ Workflow import failed with exit code $IMPORT_EXIT_CODE."

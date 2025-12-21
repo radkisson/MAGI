@@ -16,6 +16,7 @@ Use Cases:
 import os
 import json
 import time
+import re
 import threading
 import requests
 from typing import Callable, Any
@@ -59,8 +60,7 @@ class Tools:
         if not workflow_id:
             return False, "Workflow ID cannot be empty"
         
-        # Only allow alphanumeric, hyphens, and underscores
-        import re
+        # Only allow alphanumeric, hyphens, and underscores (hyphen at end to avoid range interpretation)
         if not re.match(r'^[a-zA-Z0-9_-]+$', workflow_id):
             return False, "Workflow ID can only contain letters, numbers, hyphens, and underscores"
         
