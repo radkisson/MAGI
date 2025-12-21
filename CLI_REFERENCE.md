@@ -30,14 +30,25 @@ chmod +x rin
 Starts all RIN services. This is equivalent to running `./start.sh`.
 
 - Auto-generates secure internal keys if `.env` doesn't exist
+- Prompts for service selection (FireCrawl, etc.) on first run
 - Creates required directory structure
 - Fixes permissions for Redis/Qdrant
 - Configures Docker DNS
-- Starts all containers
+- Starts all containers based on selected services
 
 **Example:**
 ```bash
 ./rin start
+```
+
+**Interactive Service Selection:**
+On first run, you'll be prompted to choose which optional services to enable:
+- FireCrawl (web scraping) - Can be disabled if using Tavily or other APIs
+
+**Non-Interactive Mode:**
+To skip prompts (useful for automation/CI):
+```bash
+echo "Y" | ./rin start  # Enable all services
 ```
 
 #### `./rin stop`
@@ -336,7 +347,19 @@ OPENROUTER_API_KEY=  # OpenRouter API key
 LITELLM_MASTER_KEY=  # Auto-generated
 SEARXNG_SECRET=      # Auto-generated
 FIRECRAWL_API_KEY=   # Auto-generated
+
+# Service Selection
+ENABLE_FIRECRAWL=Y   # Y to enable, N to disable
 ```
+
+### Service Selection Variables
+
+Control which optional services are enabled:
+
+- `ENABLE_FIRECRAWL=Y` - Enable/disable FireCrawl web scraping service
+  - Set to `N` if using Tavily API or other alternatives
+  - Reduces resource usage when disabled
+  - Default: `Y` (enabled)
 
 ## Service URLs
 

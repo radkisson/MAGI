@@ -53,6 +53,12 @@ LITELLM_MASTER_KEY=${LITELLM_KEY}
 SEARXNG_SECRET=${SEARXNG_KEY}
 FIRECRAWL_API_KEY=${FIRECRAWL_KEY}
 
+# --- FIRECRAWL CONFIGURATION (OPTIONAL) ---
+# By default, RIN uses the self-hosted Firecrawl running in Docker.
+# To use Firecrawl Cloud API instead, uncomment and set:
+# FIRECRAWL_API_URL=https://api.firecrawl.dev
+# And replace FIRECRAWL_API_KEY above with your cloud API key from https://firecrawl.dev
+
 # --- EXTERNAL API KEYS (USER DEFINED) ---
 # Replace these with your actual keys to power the brain.
 OPENAI_API_KEY=
@@ -71,6 +77,57 @@ EOF
 else
     echo "✅ .env already exists. Preserving existing keys."
 fi
+
+# --- 4.5 SERVICE SELECTION (INTERACTIVE) ---
+# Allow users to choose which optional services to enable
+echo ""
+echo -e "${BLUE}🎛️  Service Selection${NC}"
+echo "Choose which services to enable:"
+echo ""
+
+# Check if running in non-interactive mode (for CI/CD or scripts)
+if [ -t 0 ]; then
+    # Interactive mode
+    
+    # FireCrawl Selection
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔥 FireCrawl (Web Scraping Engine)"
+    echo "   Self-hosted service for extracting content from websites"
+    echo "   Alternative: Use Tavily API or other scraping tools via OpenWebUI"
+    echo ""
+    read -p "   Enable FireCrawl? [Y/n]: " ENABLE_FIRECRAWL
+    ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL:-Y}
+    
+    # Convert to uppercase for comparison
+    ENABLE_FIRECRAWL=$(echo "$ENABLE_FIRECRAWL" | tr '[:lower:]' '[:upper:]')
+    
+    echo ""
+else
+    # Non-interactive mode - enable all services by default
+    echo "⚙️  Non-interactive mode detected. Enabling all services by default."
+    ENABLE_FIRECRAWL="Y"
+fi
+
+# Store selections in .env for persistence
+if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
+    # Update existing value (use different sed syntax based on OS)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS requires -i with extension
+        sed -i '' "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+    else
+        # Linux doesn't need extension
+        sed -i "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+    fi
+else
+    # Add new value
+    echo "" >> "$BASE_DIR/.env"
+    echo "# --- SERVICE SELECTION ---" >> "$BASE_DIR/.env"
+    echo "# Services can be disabled to reduce resource usage" >> "$BASE_DIR/.env"
+    echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}" >> "$BASE_DIR/.env"
+fi
+
+# Export for docker-compose profiles
+export ENABLE_FIRECRAWL
 
 # --- 5. CONFIGURATION INJECTION ---
 
@@ -124,11 +181,25 @@ if ! docker info >/dev/null 2>&1; then
     exit 1
 fi
 
-docker compose up -d --remove-orphans
+# Build docker compose command with selected profiles
+COMPOSE_PROFILES=""
+if [ "$ENABLE_FIRECRAWL" = "Y" ]; then
+    COMPOSE_PROFILES="--profile firecrawl"
+    echo "✓ Enabling FireCrawl services"
+fi
+
+# Launch services with selected profiles
+if [ -n "$COMPOSE_PROFILES" ]; then
+    docker compose $COMPOSE_PROFILES up -d --remove-orphans
+else
+    docker compose up -d --remove-orphans
+fi
 
 # Load port configuration from .env to display in output
 if [ -f "$BASE_DIR/.env" ]; then
     export $(grep -v '^#' "$BASE_DIR/.env" | grep 'PORT_' | xargs)
+    # Load service selection
+    export $(grep -v '^#' "$BASE_DIR/.env" | grep 'ENABLE_' | xargs) 2>/dev/null || true
 fi
 
 # Use loaded values or defaults
@@ -142,12 +213,16 @@ echo ""
 echo -e "${GREEN}✅ RIN IS ALIVE.${NC}"
 echo ""
 echo "=== Post-Deployment Verification ==="
-echo "Verify the 5 biological subsystems are active:"
+echo "Verify the biological subsystems are active:"
 echo ""
 echo "🧠 Cortex (UI):        http://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
 echo "🔄 Reflex (n8n):       http://localhost:${PORT_N8N}      (n8n workflow editor)"
 echo "👁️  Sensorium:         http://localhost:${PORT_SEARXNG}      (SearXNG search bar)"
-echo "🔥 Digestion:          http://localhost:${PORT_FIRECRAWL}      (FireCrawl API - returns {\"status\":\"ok\"})"
+if [ "$ENABLE_FIRECRAWL" = "Y" ]; then
+    echo "🔥 Digestion:          http://localhost:${PORT_FIRECRAWL}      (FireCrawl API - returns {\"status\":\"ok\"})"
+else
+    echo "🔥 Digestion:          [DISABLED] (Use Tavily or other APIs in OpenWebUI)"
+fi
 echo "🚦 Router:             http://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
 echo ""
 echo "=== Next Steps ==="
