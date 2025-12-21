@@ -52,13 +52,42 @@ check_docker() {
     fi
 }
 
+confirm_action() {
+    local message="$1"
+    local response
+    
+    echo -e "${YELLOW}$message${NC}"
+    read -p "Continue? (y/n) " -n 1 -r response
+    echo
+    
+    if [[ ! $response =~ ^[Yy]$ ]]; then
+        return 1
+    fi
+    return 0
+}
+
+validate_base_dir() {
+    # Ensure BASE_DIR is set and is a valid directory
+    if [ -z "$BASE_DIR" ]; then
+        print_error "BASE_DIR is not set. This is a critical error."
+        exit 1
+    fi
+    
+    # Ensure BASE_DIR looks like the RIN directory (has docker-compose.yml)
+    if [ ! -f "$BASE_DIR/docker-compose.yml" ]; then
+        print_error "BASE_DIR does not appear to be a valid RIN directory."
+        print_error "Expected docker-compose.yml in: $BASE_DIR"
+        exit 1
+    fi
+}
+
 load_env() {
     if [ -f "$BASE_DIR/.env" ]; then
         # Safely load PORT_ variables from .env
         while IFS='=' read -r key value; do
-            # Skip comments and empty lines
-            [[ "$key" =~ ^#.*$ ]] && continue
-            [[ -z "$key" ]] && continue
+            # Skip comments and empty lines (including whitespace before comments)
+            [[ "$key" =~ ^[[:space:]]*# ]] && continue
+            [[ "$key" =~ ^[[:space:]]*$ ]] && continue
             # Only load PORT_ variables
             if [[ "$key" =~ ^PORT_ ]]; then
                 # Remove any quotes and export
@@ -225,10 +254,8 @@ cmd_upgrade() {
     fi
     
     print_warning "Updates available. This will pull the latest code."
-    read -p "Continue? (y/n) " -n 1 -r
-    echo
     
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ! confirm_action "⚠ This will update RIN code and Docker images."; then
         print_info "Upgrade cancelled"
         exit 0
     fi
@@ -301,6 +328,9 @@ EOF
 cmd_restore() {
     print_header "Restoring RIN Data"
     
+    # Validate BASE_DIR first
+    validate_base_dir
+    
     local backup_dir="$1"
     
     if [ -z "$backup_dir" ]; then
@@ -324,11 +354,7 @@ cmd_restore() {
     cat "$backup_dir/backup_manifest.txt"
     echo ""
     
-    print_warning "This will overwrite current data with backup."
-    read -p "Continue? (y/n) " -n 1 -r
-    echo
-    
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ! confirm_action "⚠ This will overwrite current data with backup."; then
         print_info "Restore cancelled"
         exit 0
     fi
@@ -344,7 +370,7 @@ cmd_restore() {
         cp -r "$BASE_DIR/data" "$safety_backup"
     fi
     
-    # Restore data
+    # Restore data (with BASE_DIR validation already done)
     if [ -d "$backup_dir/data" ]; then
         print_info "Restoring data directory..."
         rm -rf "$BASE_DIR/data"
@@ -357,14 +383,14 @@ cmd_restore() {
         cp "$backup_dir/.env" "$BASE_DIR/"
     fi
     
-    # Restore config
+    # Restore config (with BASE_DIR validation already done)
     if [ -d "$backup_dir/config" ]; then
         print_info "Restoring config directory..."
         rm -rf "$BASE_DIR/config"
         cp -r "$backup_dir/config" "$BASE_DIR/"
     fi
     
-    # Restore workflows
+    # Restore workflows (with BASE_DIR validation already done)
     if [ -d "$backup_dir/workflows" ]; then
         print_info "Restoring workflows..."
         rm -rf "$BASE_DIR/workflows"
@@ -420,10 +446,8 @@ cmd_clean() {
     
     print_warning "This will remove all containers, volumes, and images."
     print_warning "Your data in the data/ directory will be preserved."
-    read -p "Continue? (y/n) " -n 1 -r
-    echo
     
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ! confirm_action "⚠ This is a destructive operation."; then
         print_info "Clean cancelled"
         exit 0
     fi
