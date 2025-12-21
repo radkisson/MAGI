@@ -4,6 +4,9 @@ data/
 *.sqlite
 *.log
 
+# Backups
+backups/
+
 # Vector database files
 vectors/
 chroma/
