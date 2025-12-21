@@ -6,6 +6,7 @@ Welcome to the Rhyzomic Intelligence Node (RIN) documentation hub. This director
 
 ### Getting Started
 - **[GETTING_STARTED.md](GETTING_STARTED.md)** - Initial setup and first steps with RIN
+- **[../CLI_REFERENCE.md](../CLI_REFERENCE.md)** - Complete CLI management tool reference ⭐ **NEW**
 
 ### Core Features
 - **[API.md](API.md)** - API reference and integration guide
@@ -27,7 +28,8 @@ Welcome to the Rhyzomic Intelligence Node (RIN) documentation hub. This director
 
 ### "I want to get started quickly"
 1. [GETTING_STARTED.md](GETTING_STARTED.md)
-2. [V1.1_QUICK_REFERENCE.md](V1.1_QUICK_REFERENCE.md)
+2. [../CLI_REFERENCE.md](../CLI_REFERENCE.md)
+3. [V1.1_QUICK_REFERENCE.md](V1.1_QUICK_REFERENCE.md)
 
 ### "I want to configure models"
 1. [V1.1_QUICK_REFERENCE.md](V1.1_QUICK_REFERENCE.md)
@@ -93,6 +95,18 @@ The v1.1 "Expansion" release introduces major enhancements to model support:
 
 ### Configuration Tasks
 ```bash
+# Start RIN
+./rin start
+
+# Stop RIN
+./rin stop
+
+# Check system status
+./rin status
+
+# View logs
+./rin logs
+
 # View current model configuration
 cat config/litellm/config.yaml
 
@@ -100,7 +114,7 @@ cat config/litellm/config.yaml
 nano config/litellm/config.yaml
 
 # Restart to apply changes
-docker-compose restart litellm
+./rin restart
 ```
 
 ### Monitoring Tasks
@@ -118,12 +132,18 @@ curl http://localhost:4000/health
 ### Troubleshooting Tasks
 ```bash
 # View LiteLLM logs
-docker-compose logs litellm
+./rin logs litellm
+
+# View all logs with follow
+./rin logs -f
 
 # Restart all services
-docker-compose restart
+./rin restart
 
 # Check service status
+./rin status
+
+# Or use docker-compose directly
 docker-compose ps
 ```
 

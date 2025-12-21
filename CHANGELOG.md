@@ -5,6 +5,42 @@ All notable changes to the Rhyzomic Intelligence Node (RIN) will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-12-21
+
+### Added
+- **Comprehensive CLI Management Tool**: New `./rin` command-line interface for complete lifecycle management
+  - `rin start` - Start all RIN services (wraps start.sh)
+  - `rin stop` - Gracefully stop all services
+  - `rin restart` - Restart all services
+  - `rin status` - System health checks and service status
+  - `rin logs [service] [-f]` - View and follow logs
+  - `rin update` - Pull latest Docker images
+  - `rin upgrade` - Upgrade RIN to latest version
+  - `rin backup [dir]` - Backup all data and configuration
+  - `rin restore <dir>` - Restore from backup
+  - `rin ps` - List running containers
+  - `rin exec <service> [cmd]` - Execute commands in containers
+  - `rin clean` - Remove containers and images
+  - `rin version` - Show version information
+  - `rin help` - Comprehensive help documentation
+- **CLI Documentation**: Complete CLI reference guide (CLI_REFERENCE.md)
+- **Backup System**: Automated backup and restore functionality
+- **Enhanced Monitoring**: Health checks for all services with status reporting
+
+### Changed
+- **README.md**: Updated with CLI management examples and quick start guide
+- **docs/README.md**: Added CLI reference to documentation index
+- **.gitignore**: Added backups directory to prevent accidental commits
+
+### Fixed
+- Improved error handling when services are not running
+- Better user feedback with colored output and clear status messages
+
+### Backward Compatibility
+- Original `./start.sh` script remains fully functional
+- All existing Docker Compose commands still work
+- No breaking changes to existing workflows
+
 ## [1.2.0] - 2025-12-20
 
 ### Added
