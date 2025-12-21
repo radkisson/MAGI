@@ -65,6 +65,11 @@ OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 OPENROUTER_API_KEY=
 
+# --- SEARCH & SCRAPING API KEYS (OPTIONAL) ---
+# Tavily: AI-optimized search engine (alternative/complement to SearXNG)
+# Get your key from: https://tavily.com
+TAVILY_API_KEY=
+
 # --- NETWORK ---
 PORT_WEBUI=3000
 PORT_LITELLM=4000
