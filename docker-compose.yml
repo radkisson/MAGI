@@ -64,25 +64,29 @@ services:
 
   # --- THE DIGESTION ---
   firecrawl:
-    image: mcp/firecrawl:latest
+    image: ghcr.io/mendableai/firecrawl:latest
     container_name: rin-digestion
     restart: always
     ports:
       - "${PORT_FIRECRAWL:-3002}:3002"
     environment:
       - REDIS_URL=redis://redis:6379
-      - PLAYWRIGHT_MICROSERVICE_URL=http://playwright:3000
+      - PLAYWRIGHT_MICROSERVICE_URL=http://playwright-service:3000/scrape
       # Automatically uses the key generated in start.sh
-      - TEST_API_KEY=${FIRECRAWL_API_KEY} 
+      - TEST_API_KEY=${FIRECRAWL_API_KEY}
+      - HOST=0.0.0.0
+      - PORT=3002
+      - USE_DB_AUTHENTICATION=false
     depends_on:
       - redis
-      - playwright
+      - playwright-service
 
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.43.0-jammy
+  playwright-service:
+    image: ghcr.io/mendableai/playwright-service:latest
     container_name: rin-browser
-    command: npx -y playwright run-server --port 3000
     restart: always
+    environment:
+      - PORT=3000
 
   # --- THE REFLEX (Autonomy) ---
   n8n:

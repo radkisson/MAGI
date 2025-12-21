@@ -53,6 +53,12 @@ LITELLM_MASTER_KEY=${LITELLM_KEY}
 SEARXNG_SECRET=${SEARXNG_KEY}
 FIRECRAWL_API_KEY=${FIRECRAWL_KEY}
 
+# --- FIRECRAWL CONFIGURATION (OPTIONAL) ---
+# By default, RIN uses the self-hosted Firecrawl running in Docker.
+# To use Firecrawl Cloud API instead, uncomment and set:
+# FIRECRAWL_API_URL=https://api.firecrawl.dev
+# And replace FIRECRAWL_API_KEY above with your cloud API key from https://firecrawl.dev
+
 # --- EXTERNAL API KEYS (USER DEFINED) ---
 # Replace these with your actual keys to power the brain.
 OPENAI_API_KEY=
