@@ -145,6 +145,24 @@ If you see a warning about n8n's secure cookie configuration when accessing http
 
 **Note**: If deploying to production with HTTPS/TLS, you should remove this setting to enable secure cookies for better security.
 
+### Post-Deployment: Activate Tools (One-Time Setup)
+
+After RIN starts, you need to **activate the tools** in Open WebUI (one-time setup):
+
+1. Open http://localhost:3000
+2. Go to **Workspace** → **Tools**
+3. Click **"+"** or **"Import Tool"** to import each tool
+4. Toggle tools **ON** to enable them
+
+**Available Tools:**
+- 🔥 FireCrawl Scraper (web scraping)
+- 🔍 Tavily Search (AI-optimized search)
+- 🔍 SearXNG Search (anonymous search)
+- 💾 Qdrant Memory (long-term RAG)
+- 🔄 n8n Reflex (workflow automation)
+
+See [tools/README.md](tools/README.md) for detailed setup instructions.
+
 ### Service Access Points
 
 Once deployed, access the various subsystems:

@@ -2,6 +2,73 @@
 
 This directory contains the **"nerve endings"** that connect the Cortex (Open WebUI) to the other biological subsystems of RIN. These tools enable Open WebUI to control and utilize the Sensorium, Memory, and Nervous System.
 
+## ⚠️ CRITICAL: First-Time Tool Activation Required
+
+**Tools do NOT auto-activate!** After deployment, you must manually import them once in Open WebUI.
+
+### Quick Setup (2 minutes)
+
+1. **Start RIN**: `./rin start` or `./start.sh`
+2. **Open WebUI**: http://localhost:3000
+3. **Login** with your admin account
+4. **Navigate to Tools**: Click profile icon → **Workspace** → **Tools**
+5. **Import Each Tool**:
+   - Click the **"+"** or **"Import Tool"** button
+   - Select tools from the list (they're already in the filesystem)
+   - Toggle each tool **ON** to enable it
+
+### Why Manual Import?
+
+Open WebUI uses a **database-driven architecture** for tools. Placing files in `/app/backend/data/tools/` makes them *available* for import, but doesn't *register* them. This is intentional:
+- **Security**: Prevents arbitrary code execution
+- **Control**: Allows per-user tool permissions
+- **Configuration**: Enables tool-specific settings (Valves)
+
+### Expected Tools After Import
+
+| Tool | Functions | Purpose |
+|------|-----------|---------|
+| `firecrawl_scraper` | `scrape_webpage()`, `crawl_website()` | Web scraping with headless browser |
+| `tavily_search` | `web_search()`, `quick_search()`, `deep_search()` | AI-optimized search |
+| `searxng_search` | `web_search()` | Anonymous metasearch |
+| `qdrant_memory` | `store_memory()`, `recall_memory()` | Long-term RAG memory |
+| `n8n_reflex` | `trigger_workflow()`, `list_workflows()` | Automation triggers |
+
+### Verification
+
+After import, run the diagnostic:
+```bash
+./tools/check_tools.sh
+```
+
+Or verify manually:
+```bash
+# Check tools are mounted
+docker exec rin-cortex ls /app/backend/data/tools/
+
+# Check for .pyc files (indicates tools were imported)
+docker exec rin-cortex ls /app/backend/data/tools/__pycache__/
+```
+
+### Troubleshooting
+
+If tools don't appear after refresh:
+```bash
+# Restart Open WebUI
+docker restart rin-cortex
+
+# Check tools are mounted
+docker exec rin-cortex ls /app/backend/data/tools/
+
+# Validate Python syntax
+python3 -m py_compile tools/firecrawl_scraper.py
+
+# Run full diagnostic
+./tools/check_tools.sh
+```
+
+---
+
 ## 🧠 Architecture: Brain-to-Body Connection
 
 ```

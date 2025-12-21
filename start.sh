@@ -235,3 +235,37 @@ echo "1. Add API keys: nano .env (add OPENAI_API_KEY or ANTHROPIC_API_KEY)"
 echo "2. Restart to apply: ./start.sh"
 echo "3. Activate tools in Cortex: http://localhost:${PORT_WEBUI} → Workspace → Tools"
 echo "4. Import workflows: http://localhost:5678 → Import → workflows/morning_briefing.json"
+
+# --- 8. TOOL AVAILABILITY CHECK ---
+echo ""
+echo -e "${BLUE}🔧 Tool Configuration${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Wait a moment for containers to start
+sleep 2
+
+# Verify tools are mounted
+TOOL_COUNT=$(docker exec rin-cortex ls /app/backend/data/tools/*.py 2>/dev/null | wc -l)
+if [ "$TOOL_COUNT" -gt 0 ]; then
+    echo "✅ $TOOL_COUNT tool(s) detected in container:"
+    docker exec rin-cortex ls /app/backend/data/tools/*.py 2>/dev/null | sed 's|.*/||' | while read f; do
+        echo "   - $f"
+    done
+else
+    echo "⚠️  No tools detected. Check volume mount configuration."
+fi
+
+echo ""
+echo -e "${BLUE}📋 IMPORTANT: First-Time Tool Setup${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Tools must be manually imported on first use:"
+echo ""
+echo "1. Open http://localhost:${PORT_WEBUI}"
+echo "2. Go to: Workspace → Tools"
+echo "3. Click '+' or 'Import Tool' for each tool"
+echo "4. Toggle tools ON to enable them"
+echo ""
+echo "After import, tools persist across restarts."
+echo "For detailed setup: see tools/README.md"
+echo ""
