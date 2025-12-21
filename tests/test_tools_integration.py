@@ -167,4 +167,7 @@ def test_tools_readme_documents_firecrawl():
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    # Note: For proper pytest execution, run: pytest tests/test_tools_integration.py -v
+    # This fallback is for environments without pytest installed
+    print("Please run: pytest tests/test_tools_integration.py -v")
+    print("Or use tests/test_tools_simple.py for direct execution without pytest")

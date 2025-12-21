@@ -93,6 +93,8 @@ def test_env_configuration():
         assert 'FIRECRAWL_API_KEY' in content
         print("  ✓ FIRECRAWL_API_KEY present in .env.example")
         
+        # Verify documentation URL for Tavily is present
+        # Not a URL sanitization - just checking documentation completeness
         assert 'tavily.com' in content
         print("  ✓ Tavily documentation link present")
         
