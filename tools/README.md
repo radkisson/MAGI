@@ -35,7 +35,29 @@ Searches the web anonymously without revealing IP addresses or tracking data. Ag
 "Search for the latest AI research papers"
 ```
 
-### 2. FireCrawl Scraper (`firecrawl_scraper.py`)
+### 2. Tavily Search (`tavily_search.py`)
+**Purpose**: AI-optimized web search (Premium Alternative to SearXNG)
+
+**Functions**:
+- `web_search(query: str, search_depth: str, max_results: int)` - Flexible search with options
+- `quick_search(query: str)` - Fast search with basic depth (3 results)
+- `deep_search(query: str)` - Comprehensive search with advanced depth (10 results)
+
+Tavily is a premium AI-native search engine designed specifically for LLM applications. It provides:
+- AI-generated summaries for quick understanding
+- Source citations with relevance scoring
+- Structured data optimized for LLM consumption
+- Real-time information gathering
+
+**Example Usage in Open WebUI**:
+```
+"Search Tavily for the latest developments in quantum computing"
+"Do a deep search on climate change solutions"
+```
+
+**Configuration**: Requires TAVILY_API_KEY in .env (get from https://tavily.com)
+
+### 3. FireCrawl Scraper (`firecrawl_scraper.py`)
 **Purpose**: Web scraping and content extraction (The Sensorium's Digestion)
 
 **Functions**:
@@ -50,7 +72,11 @@ Uses headless browsers to handle JavaScript-heavy sites and converts content to 
 "Crawl https://docs.python.org and extract the tutorial pages"
 ```
 
-### 3. Qdrant Memory (`qdrant_memory.py`)
+**Configuration**: 
+- Self-hosted mode (default): Uses Docker service, FIRECRAWL_API_KEY auto-generated
+- Cloud mode: Set FIRECRAWL_API_URL=https://api.firecrawl.dev and provide your API key
+
+### 4. Qdrant Memory (`qdrant_memory.py`)
 **Purpose**: Long-term memory with RAG (The Memory)
 
 **Functions**:

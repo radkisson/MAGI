@@ -182,6 +182,54 @@ cmd_status() {
     echo "  🧠 Cortex:     http://localhost:${PORT_WEBUI:-3000}"
     echo "  🔄 Reflex:     http://localhost:${PORT_N8N:-5678}"
     echo "  🔍 Vision:     http://localhost:${PORT_SEARXNG:-8080}"
+    
+    echo ""
+    echo "API Keys Configuration:"
+    
+    # Check for .env file
+    if [ -f "$BASE_DIR/.env" ]; then
+        # Check TAVILY_API_KEY
+        TAVILY_KEY=$(grep "^TAVILY_API_KEY=" "$BASE_DIR/.env" 2>/dev/null | cut -d '=' -f2 | tr -d ' ')
+        if [ -n "$TAVILY_KEY" ] && [ "$TAVILY_KEY" != "" ]; then
+            print_success "  Tavily Search: Configured ✓ (tavily_search.py available)"
+        else
+            print_warning "  Tavily Search: Not configured (add TAVILY_API_KEY to .env)"
+        fi
+        
+        # Check FIRECRAWL configuration
+        FIRECRAWL_URL=$(grep "^FIRECRAWL_API_URL=" "$BASE_DIR/.env" 2>/dev/null | cut -d '=' -f2 | tr -d ' ')
+        if [ -n "$FIRECRAWL_URL" ] && [ "$FIRECRAWL_URL" != "" ]; then
+            print_success "  FireCrawl: Cloud API mode ✓ (firecrawl_scraper.py)"
+        else
+            print_success "  FireCrawl: Self-hosted mode ✓ (firecrawl_scraper.py)"
+        fi
+        
+        # Check OPENAI_API_KEY
+        OPENAI_KEY=$(grep "^OPENAI_API_KEY=" "$BASE_DIR/.env" 2>/dev/null | cut -d '=' -f2 | tr -d ' ')
+        if [ -n "$OPENAI_KEY" ] && [ "$OPENAI_KEY" != "" ]; then
+            print_success "  OpenAI: Configured ✓"
+        else
+            print_warning "  OpenAI: Not configured (add OPENAI_API_KEY to .env)"
+        fi
+        
+        # Check ANTHROPIC_API_KEY
+        ANTHROPIC_KEY=$(grep "^ANTHROPIC_API_KEY=" "$BASE_DIR/.env" 2>/dev/null | cut -d '=' -f2 | tr -d ' ')
+        if [ -n "$ANTHROPIC_KEY" ] && [ "$ANTHROPIC_KEY" != "" ]; then
+            print_success "  Anthropic: Configured ✓"
+        else
+            print_warning "  Anthropic: Not configured (add ANTHROPIC_API_KEY to .env)"
+        fi
+    else
+        print_error "  .env file not found. Run ./rin start to initialize."
+    fi
+    
+    echo ""
+    echo "Tools Available in Open WebUI:"
+    echo "  📦 searxng_search.py    - Anonymous web search"
+    echo "  📦 tavily_search.py     - AI-optimized search (requires TAVILY_API_KEY)"
+    echo "  📦 firecrawl_scraper.py - Web scraping (self-hosted or cloud)"
+    echo "  📦 qdrant_memory.py     - Long-term memory with RAG"
+    echo "  📦 n8n_reflex.py        - Workflow automation"
 }
 
 cmd_logs() {
@@ -520,6 +568,21 @@ SERVICES:
     qdrant          - Qdrant (Memory)
     redis           - Redis (Nervous System)
     playwright      - Playwright (Browser)
+
+INTEGRATED TOOLS (Available in Open WebUI):
+    searxng_search.py   - Anonymous web search via SearXNG
+    tavily_search.py    - AI-optimized search via Tavily API (requires TAVILY_API_KEY)
+    firecrawl_scraper.py - Web scraping via FireCrawl (self-hosted or cloud)
+    qdrant_memory.py    - Long-term memory with RAG
+    n8n_reflex.py       - Workflow automation integration
+
+API KEYS CONFIGURATION:
+    Configure in .env file:
+    - TAVILY_API_KEY       (Optional - for Tavily search, get from https://tavily.com)
+    - FIRECRAWL_API_KEY    (Auto-generated for self-hosted, or use cloud API key)
+    - OPENAI_API_KEY       (Required for GPT models)
+    - ANTHROPIC_API_KEY    (Required for Claude models)
+    - OPENROUTER_API_KEY   (Optional - access to 20+ models)
 
 For more information, visit:
     https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-
