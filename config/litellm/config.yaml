@@ -229,20 +229,17 @@ router_settings:
       - openrouter/mixtral-8x7b
 
 # ============================================================================
-# General Settings - Enhanced with Cost Tracking
+# General Settings
 # ============================================================================
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   
-  # Cost tracking database (SQLite for persistent storage)
-  database_url: "sqlite:////app/data/litellm_cost_tracking.db"
+  # Note: Database disabled for Zero-Config architecture (v1.2.0+)
+  # Cost tracking uses in-memory storage. For persistent cost tracking,
+  # add a PostgreSQL service and set DATABASE_URL in .env
   
   # Enable detailed logging for debugging
   set_verbose: false
-  
-  # Cost and budget tracking
-  max_budget: 100  # Maximum budget in USD per month (adjust as needed)
-  budget_duration: "30d"  # Budget duration
   
   # Alert settings
   alerting:
@@ -253,24 +250,6 @@ general_settings:
     type: "redis"
     host: "redis"
     port: 6379
-  
-  # Model-specific cost overrides (optional, LiteLLM has defaults)
-  model_cost:
-    # OpenAI pricing (per 1M tokens)
-    gpt-4o:
-      input_cost_per_token: 0.0000025
-      output_cost_per_token: 0.00001
-    gpt-4o-mini:
-      input_cost_per_token: 0.00000015
-      output_cost_per_token: 0.0000006
-    
-    # Anthropic pricing (per 1M tokens)
-    claude-3-5-sonnet:
-      input_cost_per_token: 0.000003
-      output_cost_per_token: 0.000015
-    claude-3-5-haiku:
-      input_cost_per_token: 0.0000008
-      output_cost_per_token: 0.000004
 
 # ============================================================================
 # Litellm Settings
