@@ -2,7 +2,7 @@
 set -e
 
 # Rhyzomic Intelligence Node (RIN) - CLI Management Tool
-# Version: 1.2.0
+# Version: 1.2.1
 # Description: Comprehensive CLI for managing RIN lifecycle
 
 # --- Color Definitions ---
@@ -54,7 +54,18 @@ check_docker() {
 
 load_env() {
     if [ -f "$BASE_DIR/.env" ]; then
-        export $(grep -v '^#' "$BASE_DIR/.env" | grep 'PORT_' | xargs)
+        # Safely load PORT_ variables from .env
+        while IFS='=' read -r key value; do
+            # Skip comments and empty lines
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            # Only load PORT_ variables
+            if [[ "$key" =~ ^PORT_ ]]; then
+                # Remove any quotes and export
+                value=$(echo "$value" | sed 's/^["'\'']\|["'\'']$//g')
+                export "$key=$value"
+            fi
+        done < "$BASE_DIR/.env"
     fi
 }
 
@@ -275,7 +286,7 @@ cmd_backup() {
     cat <<EOF > "$backup_dir/backup_manifest.txt"
 RIN Backup Manifest
 Created: $(date)
-Version: 1.2.0
+Version: 1.2.1
 
 Contents:
 - data/          (All service data)
@@ -303,6 +314,16 @@ cmd_restore() {
         exit 1
     fi
     
+    # Verify backup integrity
+    if [ ! -f "$backup_dir/backup_manifest.txt" ]; then
+        print_error "Invalid backup: backup_manifest.txt not found"
+        exit 1
+    fi
+    
+    print_info "Backup verification:"
+    cat "$backup_dir/backup_manifest.txt"
+    echo ""
+    
     print_warning "This will overwrite current data with backup."
     read -p "Continue? (y/n) " -n 1 -r
     echo
@@ -315,6 +336,13 @@ cmd_restore() {
     # Stop services before restoring
     print_info "Stopping services..."
     docker compose down 2>/dev/null || true
+    
+    # Create safety backup of current data
+    if [ -d "$BASE_DIR/data" ]; then
+        local safety_backup="$BASE_DIR/data.pre-restore.$(date +%Y%m%d_%H%M%S)"
+        print_info "Creating safety backup of current data: $safety_backup"
+        cp -r "$BASE_DIR/data" "$safety_backup"
+    fi
     
     # Restore data
     if [ -d "$backup_dir/data" ]; then
@@ -415,7 +443,7 @@ cmd_clean() {
 cmd_version() {
     print_header "RIN Version"
     
-    echo "RIN Version: 1.2.0"
+    echo "RIN Version: 1.2.1"
     echo "CLI Tool: v1.0.0"
     echo ""
     
