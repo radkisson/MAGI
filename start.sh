@@ -241,14 +241,22 @@ if [ $WAITED -ge $MAX_WAIT ]; then
     echo "⚠️  Timeout waiting for n8n. Workflows may need manual import."
 else
     # Check if workflows already imported
-    WORKFLOW_COUNT=$(docker exec rin-reflex-automation n8n list:workflow 2>/dev/null | wc -l || echo "0")
+    WORKFLOW_LIST=$(docker exec rin-reflex-automation n8n list:workflow 2>/dev/null || echo "")
+    # Drop potential header line and count only non-empty lines as actual workflows
+    WORKFLOW_COUNT=$(printf "%s\n" "$WORKFLOW_LIST" | sed '1d' | grep -c '[^[:space:]]' || echo "0")
     if [ "$WORKFLOW_COUNT" -gt 0 ]; then
         echo "  ℹ️  $WORKFLOW_COUNT workflows already present"
     else
         # Import workflows from /workflows directory
         echo "  Importing workflows from /workflows..."
-        docker exec rin-reflex-automation n8n import:workflow --separate --input=/workflows/ 2>&1 | grep -v "Could not find workflow" | grep -v "Could not remove webhooks" || true
-        echo "  ✅ Workflows imported"
+        IMPORT_OUTPUT=$(docker exec rin-reflex-automation n8n import:workflow --separate --input=/workflows/ 2>&1)
+        IMPORT_STATUS=$?
+        echo "$IMPORT_OUTPUT" | grep -v "Could not find workflow" | grep -v "Could not remove webhooks" || true
+        if [ $IMPORT_STATUS -eq 0 ]; then
+            echo "  ✅ Workflows imported"
+        else
+            echo "  ❌ Workflow import failed (exit code $IMPORT_STATUS). See output above for details."
+        fi
     fi
 fi
 

@@ -16,6 +16,7 @@ Use Cases:
 import os
 import json
 import time
+import threading
 import requests
 from typing import Callable, Any
 from pydantic import BaseModel, Field
@@ -52,6 +53,18 @@ class Tools:
     
     def __init__(self):
         self.valves = Valves()
+    
+    def _validate_workflow_id(self, workflow_id: str) -> tuple[bool, str]:
+        """Validate workflow_id to ensure it's safe for URL construction."""
+        if not workflow_id:
+            return False, "Workflow ID cannot be empty"
+        
+        # Only allow alphanumeric, hyphens, and underscores
+        import re
+        if not re.match(r'^[a-zA-Z0-9_-]+$', workflow_id):
+            return False, "Workflow ID can only contain letters, numbers, hyphens, and underscores"
+        
+        return True, ""
     
     def _parse_payload(self, payload: str) -> dict:
         """Parse payload string into structured data."""
@@ -107,6 +120,12 @@ class Tools:
             workflow_id: "slack-notify"
             payload: '{"channel": "#alerts", "message": "Task completed"}'
         """
+        
+        # Validate workflow_id
+        is_valid, error_msg = self._validate_workflow_id(workflow_id)
+        if not is_valid:
+            self._emit_status(__event_emitter__, f"❌ Invalid workflow ID", done=True)
+            return f"❌ Invalid Workflow ID: {error_msg}"
         
         self._emit_status(__event_emitter__, f"⚡ Triggering reflex: {workflow_id}")
         
@@ -193,6 +212,12 @@ class Tools:
             payload: '{"company": "OpenAI", "fields": ["funding", "employees"]}'
         """
         
+        # Validate workflow_id
+        is_valid, error_msg = self._validate_workflow_id(workflow_id)
+        if not is_valid:
+            self._emit_status(__event_emitter__, f"❌ Invalid workflow ID", done=True)
+            return f"❌ Invalid Workflow ID: {error_msg}"
+        
         self._emit_status(__event_emitter__, f"🧠 Initiating cognitive query: {workflow_id}")
         
         url = f"{self.valves.N8N_WEBHOOK_URL}/{workflow_id}"
@@ -207,58 +232,76 @@ class Tools:
             # Start the request with a longer timeout
             self._emit_status(__event_emitter__, "🔄 Waiting for Nervous System response...")
             
-            # Use a session for better connection handling
-            session = requests.Session()
-            
-            # For long-running requests, we need to handle the wait with pulse updates
-            # We'll use a simple approach: make the request and emit pulses in a thread
-            import threading
-            
+            # Thread-safe result storage using Lock
+            result_lock = threading.Lock()
             result = {"response": None, "error": None, "done": False}
             
             def make_request():
-                try:
-                    result["response"] = session.post(
-                        url,
-                        json=data,
-                        headers={"Content-Type": "application/json"},
-                        timeout=timeout
-                    )
-                except Exception as e:
-                    result["error"] = e
-                finally:
-                    result["done"] = True
+                with requests.Session() as session:
+                    try:
+                        response = session.post(
+                            url,
+                            json=data,
+                            headers={"Content-Type": "application/json"},
+                            timeout=timeout
+                        )
+                        with result_lock:
+                            result["response"] = response
+                    except Exception as e:
+                        with result_lock:
+                            result["error"] = e
+                    finally:
+                        with result_lock:
+                            result["done"] = True
             
-            # Start request in background thread
-            request_thread = threading.Thread(target=make_request)
+            # Start request in daemon thread (will be cleaned up automatically)
+            request_thread = threading.Thread(target=make_request, daemon=True)
             request_thread.start()
             
             # Emit pulse updates while waiting
             pulse_count = 0
-            while not result["done"]:
-                time.sleep(min(pulse_interval, 1))  # Check every second, pulse every interval
+            last_pulse_time = start_time
+            
+            while True:
+                time.sleep(1)  # Check every second
                 elapsed = time.time() - start_time
                 
-                if int(elapsed) % pulse_interval == 0 and int(elapsed) > pulse_count * pulse_interval:
+                # Check if request is done first (before timeout check)
+                with result_lock:
+                    is_done = result["done"]
+                
+                if is_done:
+                    break
+                
+                # Check timeout
+                if elapsed > timeout:
+                    break
+                
+                # Emit pulse at regular intervals
+                if elapsed - (last_pulse_time - start_time) >= pulse_interval:
                     pulse_count += 1
+                    last_pulse_time = time.time()
                     self._emit_status(
                         __event_emitter__,
                         f"🔄 Waiting for Nervous System... ({int(elapsed)}s elapsed)"
                     )
-                
-                if elapsed > timeout:
-                    break
             
-            # Wait for thread to complete
+            # Wait for thread to complete (up to 5 seconds)
             request_thread.join(timeout=5)
             
-            if result["error"]:
-                raise result["error"]
+            # Get final results with lock
+            with result_lock:
+                final_error = result["error"]
+                final_response = result["response"]
+                is_done = result["done"]
             
-            if result["response"] is None:
+            if final_error:
+                raise final_error
+            
+            if not is_done or final_response is None:
                 raise requests.exceptions.Timeout("Request did not complete")
             
-            response = result["response"]
+            response = final_response
             elapsed_total = time.time() - start_time
             
             self._emit_status(
@@ -275,9 +318,14 @@ class Tools:
                 except json.JSONDecodeError:
                     return response.text
             else:
+                response_text = response.text
+                max_len = 500
+                display_text = response_text[:max_len]
+                if len(response_text) > max_len:
+                    display_text += "... [truncated]"
                 return (
                     f"⚠️ Workflow returned status {response.status_code}\n\n"
-                    f"Response: {response.text[:500]}"
+                    f"Response: {display_text}"
                 )
                 
         except requests.exceptions.Timeout:
