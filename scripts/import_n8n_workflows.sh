@@ -53,7 +53,7 @@ n8n list:workflow 2>/dev/null | while IFS= read -r line; do
     # Skip empty lines and obvious header/separator lines
     [ -z "$line" ] && continue
     case "$line" in
-        -*|'='*|ID*Name*|id*name*) continue ;;
+        -*|'='*|*[Ii][Dd]*[Nn]ame*) continue ;;
     esac
 
     name=""
@@ -63,7 +63,7 @@ n8n list:workflow 2>/dev/null | while IFS= read -r line; do
         name=$(printf '%s\n' "$line" | awk -F'|' 'NF>=2 {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
     else
         # Fallback: treat first whitespace-separated field as ID and the rest as name
-        name=$(printf '%s\n' "$line" | awk '{ $1=""; sub(/^[ \t]+/, ""); print }')
+        name=$(printf '%s\n' "$line" | awk '{for(i=2;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}')
     fi
 
     # Only print if we successfully extracted a non-empty name

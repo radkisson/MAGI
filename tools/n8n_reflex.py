@@ -60,7 +60,7 @@ class Tools:
         if not workflow_id:
             return False, "Workflow ID cannot be empty"
         
-        # Only allow alphanumeric, hyphens, and underscores (hyphen at end to avoid range interpretation)
+        # Only allow alphanumeric characters, hyphens, and underscores
         if not re.match(r'^[a-zA-Z0-9_-]+$', workflow_id):
             return False, "Workflow ID can only contain letters, numbers, hyphens, and underscores"
         
@@ -278,7 +278,7 @@ class Tools:
                     break
                 
                 # Emit pulse at regular intervals
-                if elapsed - (last_pulse_time - start_time) >= pulse_interval:
+                if time.time() - last_pulse_time >= pulse_interval:
                     pulse_count += 1
                     last_pulse_time = time.time()
                     self._emit_status(
