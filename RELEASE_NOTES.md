@@ -1,3 +1,99 @@
+# RIN v1.3: "Intelligence" Release
+
+**"Tools that think before you ask."**
+
+We have eliminated the last layer of manual configuration. RIN v1.3 introduces **Auto-Registration**, ensuring that your biological sensors (Search, Scraping, Memory) are wired to the brain immediately upon boot.
+
+---
+
+## 🌟 New Features
+
+### 1. Auto-Registered Tooling
+
+- **Problem**: In v1.2, tools were mounted but invisible until manually imported via the UI.
+- **Solution**: The new `register_tools.py` injector scans your `tools/` directory and hot-wires them directly into the Cortex's synapse database.
+- **Result**: Tavily Search, FireCrawl, SearXNG, Qdrant Memory, and n8n Reflex appear in your chat interface **instantly on first launch**.
+
+### 2. Environment-Driven Configuration ("Smart Valves")
+
+- **Security**: API keys for tools (e.g., `TAVILY_API_KEY`, `FIRECRAWL_API_KEY`) are now injected from your `.env` file directly into the tool's logic via Pydantic Valves.
+- **Zero-Touch**: No more copying and pasting keys into the UI. If the environment variable exists, the tool is authenticated.
+
+### 3. Expanded Sensorium
+
+- **Tavily Search**: Added as a native "Premium" alternative to SearXNG for users requiring higher-reliability citations and AI-optimized results.
+- **Smart Fallbacks**: Tools now gracefully degrade (providing helpful error messages) if keys are missing, rather than crashing the conversation.
+
+---
+
+## 🐛 Bug Fixes
+
+- **INC-009**: Fixed LiteLLM crash loop caused by phantom PostgreSQL configuration (`database_url` in config.yaml).
+- **Tool Visibility**: Fixed tools not appearing in Open WebUI despite correct volume mounts.
+- **n8n Permissions**: Fixed permission errors on fresh Linux deployments.
+
+---
+
+## ⚡ Upgrade Instructions (from v1.2)
+
+```bash
+# 1. Pull latest code
+git pull origin main
+
+# 2. Update your .env (Add Tavily if desired)
+nano .env
+# Add: TAVILY_API_KEY=tvly-your-key-here
+
+# 3. Re-Ignite (Triggers the new registration script)
+./start.sh
+```
+
+Your tools will be automatically registered and ready to use.
+
+---
+
+## 🔧 Technical Notes
+
+### SQLite Constraint (Technical Debt)
+
+The `register_tools.py` script currently uses direct SQLite injection to bypass the API authentication requirement. This is intentional for the Zero-Config architecture.
+
+**Future Migration Path (v1.4 Enterprise)**:
+- When scaling to 20+ users with PostgreSQL, this script will need refactoring.
+- Planned: Check for `DATABASE_URL` and use SQLAlchemy/Prisma instead of raw `sqlite3` calls.
+
+---
+
+## 📦 What's Included
+
+### Auto-Registered Tools (5 Total)
+
+| Tool | Functions | Purpose |
+|------|-----------|---------|
+| **FireCrawl Scraper** | `scrape_webpage`, `crawl_website` | Web scraping with headless browser |
+| **Tavily Search** | `web_search`, `quick_search`, `deep_search` | AI-optimized premium search |
+| **SearXNG Search** | `web_search` | Anonymous metasearch |
+| **Qdrant Memory** | `store_memory`, `recall_memory` | Long-term RAG memory |
+| **n8n Reflex** | `trigger_workflow`, `list_workflows` | Workflow automation triggers |
+
+---
+
+## 🎯 Version History
+
+| Version | Codename | Focus |
+|---------|----------|-------|
+| v1.0 | Genesis | Initial release, biological architecture |
+| v1.1 | Expansion | OpenRouter integration, model marketplace |
+| v1.2 | Zero-Config | Atomic deployment, infrastructure automation |
+| **v1.3** | **Intelligence** | **Auto-registration, smart tooling** |
+
+---
+
+**RIN v1.3 "Intelligence"** - The sovereign AI organism is now fully autonomous. Zero-config. Zero-friction. Complete control. 🧠⚡
+
+---
+---
+
 # RIN v1.0: "Genesis" Release
 
 **"The Intelligence of GPT-4. The Privacy of a Faraday Cage."**
