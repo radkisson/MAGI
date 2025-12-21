@@ -15,6 +15,9 @@ services:
       - OPENAI_API_BASE_URL=http://litellm:4000
       - ENABLE_RAG_WEB_SEARCH=True
       - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>
+      # External Senses: API Keys for Tools (Auto-Configuration)
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
     env_file: .env
     depends_on:
       - litellm

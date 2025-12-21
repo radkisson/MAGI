@@ -15,15 +15,27 @@ Tavily offers:
 import os
 import requests
 from typing import Callable, Any
+from pydantic import BaseModel, Field
+
+
+class Valves(BaseModel):
+    """Configuration valves for Tavily integration (auto-loaded from .env)"""
+    
+    TAVILY_API_KEY: str = Field(
+        default_factory=lambda: os.getenv("TAVILY_API_KEY", ""),
+        description="Tavily API Key (auto-loaded from .env or set manually)"
+    )
+    TAVILY_API_URL: str = Field(
+        default="https://api.tavily.com/search",
+        description="Tavily API URL"
+    )
 
 
 class Tools:
     """Open WebUI Tool: AI-Optimized Web Search via Tavily API"""
     
     def __init__(self):
-        # Get API key from environment
-        self.api_key = os.environ.get("TAVILY_API_KEY", "")
-        self.api_url = "https://api.tavily.com/search"
+        self.valves = Valves()
     
     def web_search(
         self,
@@ -52,13 +64,13 @@ class Tools:
         """
         
         # Validate API key
-        if not self.api_key:
+        if not self.valves.TAVILY_API_KEY:
             error_msg = (
                 "❌ Tavily API key not configured.\n\n"
                 "To use Tavily search:\n"
                 "1. Get an API key from https://tavily.com\n"
                 "2. Add to .env: TAVILY_API_KEY=tvly-your-key-here\n"
-                "3. Restart RIN: ./rin restart\n\n"
+                "3. Restart RIN: ./start.sh\n\n"
                 "Alternative: Use the built-in SearXNG tool for anonymous search."
             )
             
@@ -86,14 +98,14 @@ class Tools:
         try:
             # Make request to Tavily API
             response = requests.post(
-                self.api_url,
+                self.valves.TAVILY_API_URL,
                 json={
-                    "api_key": self.api_key,
+                    "api_key": self.valves.TAVILY_API_KEY,
                     "query": query,
                     "search_depth": search_depth,
                     "max_results": min(max_results, 10),
                     "include_answer": True,
-                    "include_raw_content": False,
+                    "include_raw_content": True,
                 },
                 timeout=15,
             )
