@@ -219,7 +219,7 @@ if [ $WAITED -ge $MAX_WAIT ]; then
 else
     # Run the tool registration script
     if [ -f "$BASE_DIR/tools/register_tools.py" ]; then
-        docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py 2>/dev/null || echo "⚠️  Tool registration script failed. You may need to register tools manually."
+        docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py || echo "⚠️  Tool registration script failed. You may need to register tools manually."
     fi
 fi
 

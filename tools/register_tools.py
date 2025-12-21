@@ -111,7 +111,13 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
             return False
         
         tools_class = getattr(module, 'Tools')
-        tools_instance = tools_class()
+        
+        # Try to instantiate the Tools class
+        try:
+            tools_instance = tools_class()
+        except TypeError as e:
+            print(f"  ⚠️  {tool_id}: Tools class cannot be instantiated without arguments ({e}), skipping")
+            return False
         
         # Get specs
         specs = get_tool_specs(tools_instance)
@@ -138,36 +144,39 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
         
         # Connect to database
         conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        
-        # Check if tool already exists
-        cursor.execute("SELECT id FROM tool WHERE id = ?", (tool_id,))
-        if cursor.fetchone():
-            print(f"  ℹ️  {tool_id}: Already registered, skipping")
+        try:
+            cursor = conn.cursor()
+            
+            # Check if tool already exists
+            cursor.execute("SELECT id FROM tool WHERE id = ?", (tool_id,))
+            existing = cursor.fetchone()
+            
+            if existing:
+                print(f"  ℹ️  {tool_id}: Already registered, skipping")
+            else:
+                # Insert tool
+                cursor.execute("""
+                    INSERT INTO tool (id, user_id, name, content, specs, meta, valves, access_control, updated_at, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    tool_id,
+                    user_id,
+                    tool_id.replace('_', ' ').title(),  # Human-readable name
+                    content,
+                    json.dumps(specs),
+                    json.dumps(meta),
+                    json.dumps({}),  # Empty valves (will use defaults from Valves class)
+                    None,  # Public access
+                    now,
+                    now
+                ))
+                
+                conn.commit()
+                print(f"  ✅ {tool_id}: Registered with {len(specs)} function(s)")
+        finally:
             conn.close()
-            return True
         
-        # Insert tool
-        cursor.execute("""
-            INSERT INTO tool (id, user_id, name, content, specs, meta, valves, access_control, updated_at, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            tool_id,
-            user_id,
-            tool_id.replace('_', ' ').title(),  # Human-readable name
-            content,
-            json.dumps(specs),
-            json.dumps(meta),
-            json.dumps({}),  # Empty valves (will use defaults from Valves class)
-            None,  # Public access
-            now,
-            now
-        ))
-        
-        conn.commit()
-        conn.close()
-        
-        print(f"  ✅ {tool_id}: Registered with {len(specs)} function(s)")
+        # Return True if tool is registered (either already existed or just inserted)
         return True
         
     except Exception as e:
