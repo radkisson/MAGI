@@ -30,7 +30,7 @@ services:
     container_name: rin-router
     restart: always
     ports:
-      - "4000:4000"
+      - "${PORT_LITELLM:-4000}:4000"
     volumes:
       - ./config/litellm/config.yaml:/app/config.yaml
       - ./data/litellm:/app/data
@@ -48,7 +48,7 @@ services:
     container_name: rin-vision
     restart: always
     ports:
-      - "8080:8080"
+      - "${PORT_SEARXNG:-8080}:8080"
     volumes:
       - ./config/searxng:/etc/searxng
     env_file: .env
@@ -67,7 +67,7 @@ services:
     container_name: rin-digestion
     restart: always
     ports:
-      - "3002:3002"
+      - "${PORT_FIRECRAWL:-3002}:3002"
     environment:
       - REDIS_URL=redis://redis:6379
       - PLAYWRIGHT_MICROSERVICE_URL=http://playwright:3000
@@ -89,7 +89,7 @@ services:
     container_name: rin-reflex-automation
     restart: always
     ports:
-      - "5678:5678"
+      - "${PORT_N8N:-5678}:5678"
     volumes:
       - ./data/n8n:/home/node/.n8n
       - ./workflows:/workflows:ro
@@ -115,6 +115,6 @@ services:
     container_name: rin-memory
     restart: always
     ports:
-      - "6333:6333"
+      - "${PORT_QDRANT:-6333}:6333"
     volumes:
       - ./data/qdrant:/qdrant/storage

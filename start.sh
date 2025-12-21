@@ -61,6 +61,11 @@ OPENROUTER_API_KEY=
 
 # --- NETWORK ---
 PORT_WEBUI=3000
+PORT_LITELLM=4000
+PORT_SEARXNG=8080
+PORT_FIRECRAWL=3002
+PORT_N8N=5678
+PORT_QDRANT=6333
 EOF
     echo "✅ .env created with secure internal keys."
 else
@@ -121,20 +126,32 @@ fi
 
 docker compose up -d --remove-orphans
 
+# Load port configuration from .env to display in output
+if [ -f "$BASE_DIR/.env" ]; then
+    export $(grep -v '^#' "$BASE_DIR/.env" | grep 'PORT_' | xargs)
+fi
+
+# Use loaded values or defaults
+PORT_WEBUI=${PORT_WEBUI:-3000}
+PORT_N8N=${PORT_N8N:-5678}
+PORT_SEARXNG=${PORT_SEARXNG:-8080}
+PORT_FIRECRAWL=${PORT_FIRECRAWL:-3002}
+PORT_LITELLM=${PORT_LITELLM:-4000}
+
 echo ""
 echo -e "${GREEN}✅ RIN IS ALIVE.${NC}"
 echo ""
 echo "=== Post-Deployment Verification ==="
 echo "Verify the 5 biological subsystems are active:"
 echo ""
-echo "🧠 Cortex (UI):        http://localhost:3000      (Open WebUI login screen)"
-echo "🔄 Reflex (n8n):       http://localhost:5678      (n8n workflow editor)"
-echo "👁️  Sensorium:         http://localhost:8080      (SearXNG search bar)"
-echo "🔥 Digestion:          http://localhost:3002      (FireCrawl API - returns {\"status\":\"ok\"})"
-echo "🚦 Router:             http://localhost:4000/health (LiteLLM health status)"
+echo "🧠 Cortex (UI):        http://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
+echo "🔄 Reflex (n8n):       http://localhost:${PORT_N8N}      (n8n workflow editor)"
+echo "👁️  Sensorium:         http://localhost:${PORT_SEARXNG}      (SearXNG search bar)"
+echo "🔥 Digestion:          http://localhost:${PORT_FIRECRAWL}      (FireCrawl API - returns {\"status\":\"ok\"})"
+echo "🚦 Router:             http://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
 echo ""
 echo "=== Next Steps ==="
 echo "1. Add API keys: nano .env (add OPENAI_API_KEY or ANTHROPIC_API_KEY)"
 echo "2. Restart to apply: ./start.sh"
-echo "3. Activate tools in Cortex: http://localhost:3000 → Workspace → Tools"
+echo "3. Activate tools in Cortex: http://localhost:${PORT_WEBUI} → Workspace → Tools"
 echo "4. Import workflows: http://localhost:5678 → Import → workflows/morning_briefing.json"
