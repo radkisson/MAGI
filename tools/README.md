@@ -2,6 +2,48 @@
 
 This directory contains the **"nerve endings"** that connect the Cortex (Open WebUI) to the other biological subsystems of RIN. These tools enable Open WebUI to control and utilize the Sensorium, Memory, and Nervous System.
 
+## ✅ Auto-Registration
+
+**Tools are automatically registered** when you run `./start.sh` or `./rin start`. No manual setup required.
+
+### Included Tools
+
+| Tool | Functions | Purpose |
+|------|-----------|---------|
+| **FireCrawl Scraper** | `scrape_webpage()`, `crawl_website()` | Web scraping with headless browser |
+| **Tavily Search** | `web_search()`, `quick_search()`, `deep_search()` | AI-optimized search |
+| **SearXNG Search** | `web_search()` | Anonymous metasearch |
+| **Qdrant Memory** | `store_memory()`, `recall_memory()` | Long-term RAG memory |
+| **n8n Reflex** | `trigger_workflow()`, `list_workflows()` | Workflow automation |
+
+### Verification
+
+After starting RIN, verify tools are registered:
+
+```bash
+# Check tools in database
+docker exec rin-cortex python3 -c "
+import sqlite3
+conn = sqlite3.connect('/app/backend/data/webui.db')
+cursor = conn.cursor()
+cursor.execute('SELECT name FROM tool')
+for row in cursor.fetchall():
+    print(f'  ✅ {row[0]}')
+conn.close()
+"
+```
+
+Or view them in the UI: **Workspace → Tools**
+
+### Manual Registration (If Needed)
+
+If tools don't appear, re-run the registration script:
+
+```bash
+docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py
+docker restart rin-cortex
+```
+
 ## 🧠 Architecture: Brain-to-Body Connection
 
 ```
@@ -91,40 +133,34 @@ Enables RIN to remember facts and conversations for months, preventing hallucina
 "What did we discuss about quantum computing last week?"
 ```
 
-## 🔌 Installation in Open WebUI
+## 🔌 How Tools Are Installed
 
-### Method 1: Manual Installation
+### Automatic Registration (Default)
 
-1. Copy the tool files to Open WebUI's tools directory:
-   ```bash
-   docker cp tools/searxng_search.py rin-cortex-ui:/app/backend/data/tools/
-   docker cp tools/firecrawl_scraper.py rin-cortex-ui:/app/backend/data/tools/
-   docker cp tools/qdrant_memory.py rin-cortex-ui:/app/backend/data/tools/
-   ```
+When you run `./start.sh`, the script:
+1. Mounts `./tools` to `/app/backend/data/tools/` in the container
+2. Waits for Open WebUI to initialize
+3. Runs `register_tools.py` to insert tools into the database
+4. Tools are immediately available in the UI
 
-2. Restart Open WebUI:
-   ```bash
-   docker-compose restart open-webui
-   ```
+### Manual Registration (Fallback)
 
-3. Tools will appear in Open WebUI's Tools section
+If tools don't appear automatically:
 
-### Method 2: Volume Mount (Recommended)
-
-Update `docker-compose.yml` to mount the tools directory:
-
-```yaml
-open-webui:
-  image: ghcr.io/open-webui/open-webui:latest
-  volumes:
-    - open-webui-data:/app/backend/data
-    - ./tools:/app/backend/data/tools  # Add this line
-```
-
-Then restart:
 ```bash
-docker-compose down && docker-compose up -d
+# Re-run the registration script
+docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py
+
+# Restart to pick up changes
+docker restart rin-cortex
 ```
+
+### Adding New Tools
+
+1. Create a new `.py` file in `tools/` directory
+2. Follow the structure below (must have `Tools` class)
+3. Run registration: `docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py`
+4. Restart: `docker restart rin-cortex`
 
 ## 🧪 Testing the Synaptic Connections
 

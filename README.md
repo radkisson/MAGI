@@ -93,6 +93,20 @@ If you have an OpenAI/Anthropic API key:
 
 Then open http://localhost:3000 to access the Cortex.
 
+### Included Tools (Auto-Registered)
+
+RIN comes with 5 pre-configured tools that are automatically registered on startup:
+
+| Tool | Functions | Purpose |
+|------|-----------|---------|
+| 🔥 **FireCrawl Scraper** | `scrape_webpage`, `crawl_website` | Web scraping with headless browser |
+| 🔍 **Tavily Search** | `web_search`, `quick_search`, `deep_search` | AI-optimized web search |
+| 👁️ **SearXNG Search** | `web_search` | Anonymous metasearch |
+| 💾 **Qdrant Memory** | `store_memory`, `recall_memory` | Long-term RAG memory |
+| ⚡ **n8n Reflex** | `trigger_workflow`, `list_workflows` | Workflow automation |
+
+View and configure tools: **Workspace → Tools** in the UI.
+
 ### CLI Management
 
 RIN includes a comprehensive CLI tool (`./rin`) for managing the entire system:

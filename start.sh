@@ -200,6 +200,29 @@ else
     docker compose up -d --remove-orphans
 fi
 
+# --- 8. AUTO-REGISTER TOOLS ---
+echo -e "${BLUE}🔧 Registering tools in Open WebUI...${NC}"
+
+# Wait for Open WebUI to be healthy (max 60 seconds)
+MAX_WAIT=60
+WAITED=0
+while [ $WAITED -lt $MAX_WAIT ]; do
+    if docker exec rin-cortex test -f /app/backend/data/webui.db 2>/dev/null; then
+        break
+    fi
+    sleep 2
+    WAITED=$((WAITED + 2))
+done
+
+if [ $WAITED -ge $MAX_WAIT ]; then
+    echo "⚠️  Timeout waiting for Open WebUI database. Tools may need manual registration."
+else
+    # Run the tool registration script
+    if [ -f "$BASE_DIR/tools/register_tools.py" ]; then
+        docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py || echo "⚠️  Tool registration script failed. You may need to register tools manually."
+    fi
+fi
+
 # Load port configuration from .env to display in output
 if [ -f "$BASE_DIR/.env" ]; then
     export $(grep -v '^#' "$BASE_DIR/.env" | grep 'PORT_' | xargs)
@@ -230,8 +253,16 @@ else
 fi
 echo "🚦 Router:             http://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
 echo ""
+echo "=== Tools (Auto-Registered) ==="
+echo "✅ FireCrawl Scraper   - Web scraping with headless browser"
+echo "✅ Tavily Search       - AI-optimized web search"
+echo "✅ SearXNG Search      - Anonymous metasearch"
+echo "✅ Qdrant Memory       - Long-term RAG memory"
+echo "✅ n8n Reflex          - Workflow automation triggers"
+echo ""
+echo "View tools: http://localhost:${PORT_WEBUI} → Workspace → Tools"
+echo ""
 echo "=== Next Steps ==="
 echo "1. Add API keys: nano .env (add OPENAI_API_KEY or ANTHROPIC_API_KEY)"
 echo "2. Restart to apply: ./start.sh"
-echo "3. Activate tools in Cortex: http://localhost:${PORT_WEBUI} → Workspace → Tools"
-echo "4. Import workflows: http://localhost:5678 → Import → workflows/morning_briefing.json"
+echo "3. Import workflows: http://localhost:5678 → Import → workflows/morning_briefing.json"
