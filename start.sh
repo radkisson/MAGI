@@ -251,7 +251,44 @@ if [ $WAITED -ge $MAX_WAIT ]; then
 else
     # Run the tool registration script
     if [ -f "$BASE_DIR/tools/register_tools.py" ]; then
-        docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py || echo "⚠️  Tool registration script failed. You may need to register tools manually."
+        docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py 2>/dev/null || echo "⚠️  Tool registration script failed. You may need to register tools manually."
+    fi
+fi
+
+# --- 9. AUTO-IMPORT N8N WORKFLOWS ---
+echo -e "${BLUE}🔄 Importing n8n workflows...${NC}"
+
+# Wait for n8n to be ready (max 30 seconds)
+MAX_WAIT=30
+WAITED=0
+while [ $WAITED -lt $MAX_WAIT ]; do
+    if docker exec rin-reflex-automation test -f /home/node/.n8n/database.sqlite 2>/dev/null; then
+        break
+    fi
+    sleep 2
+    WAITED=$((WAITED + 2))
+done
+
+if [ $WAITED -ge $MAX_WAIT ]; then
+    echo "⚠️  Timeout waiting for n8n. Workflows may need manual import."
+else
+    # Check if workflows already imported
+    WORKFLOW_LIST=$(docker exec rin-reflex-automation n8n list:workflow 2>/dev/null || echo "")
+    # Drop potential header line and count only non-empty lines as actual workflows
+    WORKFLOW_COUNT=$(printf "%s\n" "$WORKFLOW_LIST" | sed '1d' | grep -c '[^[:space:]]' || echo "0")
+    if [ "$WORKFLOW_COUNT" -gt 0 ]; then
+        echo "  ℹ️  $WORKFLOW_COUNT workflows already present"
+    else
+        # Import workflows from /workflows directory
+        echo "  Importing workflows from /workflows..."
+        IMPORT_OUTPUT=$(docker exec rin-reflex-automation n8n import:workflow --separate --input=/workflows/ 2>&1)
+        IMPORT_STATUS=$?
+        echo "$IMPORT_OUTPUT" | grep -v "Could not find workflow" | grep -v "Could not remove webhooks" || true
+        if [ $IMPORT_STATUS -eq 0 ]; then
+            echo "  ✅ Workflows imported"
+        else
+            echo "  ❌ Workflow import failed (exit code $IMPORT_STATUS). See output above for details."
+        fi
     fi
 fi
 
@@ -290,14 +327,31 @@ echo "✅ FireCrawl Scraper   - Web scraping with headless browser"
 echo "✅ Tavily Search       - AI-optimized web search"
 echo "✅ SearXNG Search      - Academic search (Google Scholar, arXiv, PubMed)"
 echo "✅ Qdrant Memory       - Long-term RAG memory"
-echo "✅ n8n Reflex          - Workflow automation triggers"
+echo "✅ n8n Reflex          - Synaptic Bridge (trigger_reflex + query_workflow)"
 echo ""
 echo "View tools: http://localhost:${PORT_WEBUI} → Workspace → Tools"
+echo ""
+echo "=== n8n Workflows (Auto-Imported) ==="
+echo "🔥 Reflex Workflows (fire-and-forget via trigger_reflex):"
+echo "   - send-email        : Send emails via SMTP"
+echo "   - slack-notify      : Post to Slack channels"
+echo "   - telegram-send     : Send Telegram messages"
+echo ""
+echo "🧠 Cognitive Workflows (data retrieval via query_workflow):"
+echo "   - research          : Deep research with sources"
+echo "   - openwebui-action  : General-purpose router"
+echo ""
+echo "⏰ Scheduled Workflows (autonomous):"
+echo "   - Morning Briefing  : 8 AM daily news summary"
+echo "   - RSS Monitor       : Every 6 hours feed digest"
+echo "   - Daily Report      : 6 PM intelligence report"
+echo ""
+echo "Manage workflows: http://localhost:${PORT_N8N}"
 echo ""
 echo "=== Next Steps ==="
 echo "1. Add API keys: nano .env (add OPENAI_API_KEY or ANTHROPIC_API_KEY)"
 echo "2. Restart to apply: ./start.sh"
-echo "3. Import workflows: http://localhost:${PORT_N8N} → Import → workflows/"
+echo "3. Activate scheduled workflows in n8n (toggle ON in workflow editor)"
 echo ""
 echo "=== Telegram Integration (Optional) ==="
 echo "For Telegram research assistant:"
