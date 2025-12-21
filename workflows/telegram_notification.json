@@ -1,0 +1,143 @@
+{
+  "name": "RIN - Telegram Bot Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-send",
+        "options": {}
+      },
+      "name": "Webhook: Receive Message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "telegram-send",
+      "id": "webhook-telegram"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Telegram message data\nconst data = $input.item.json.data || $input.item.json;\n\nreturn {\n  json: {\n    chatId: data.chatId || data.chat_id || '',\n    message: data.message || data.text || '',\n    parseMode: data.parseMode || 'Markdown',\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Parse Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "id": "parse-message"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "={{ $json.parseMode }}"
+        }
+      },
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [650, 300],
+      "id": "send-telegram",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      },
+      "notes": "Configure Telegram Bot credentials:\n1. Create a bot with @BotFather on Telegram\n2. Get the bot token\n3. Add credentials in n8n: Settings > Credentials > Create New > Telegram API\n4. Use the bot token from BotFather"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "value": "=Message sent to Telegram chat {{ $json.chatId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [850, 300],
+      "id": "format-response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1050, 300],
+      "id": "send-response"
+    }
+  ],
+  "connections": {
+    "Webhook: Receive Message": {
+      "main": [
+        [
+          {
+            "node": "Parse Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Telegram": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-telegram-integration"
+  },
+  "tags": []
+}

@@ -1,0 +1,148 @@
+{
+  "name": "RIN - Email Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-email",
+        "options": {}
+      },
+      "name": "Webhook: Receive Email Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "send-email",
+      "id": "webhook-email"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract email parameters from the webhook payload\nconst data = $input.item.json.data || $input.item.json;\n\nreturn {\n  json: {\n    to: data.to || '',\n    subject: data.subject || 'Message from RIN',\n    body: data.body || data.content || '',\n    from: data.from || 'RIN Intelligence Node <rin@localhost>',\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Parse Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "id": "parse-email"
+    },
+    {
+      "parameters": {
+        "authentication": "smtp",
+        "fromEmail": "={{ $json.from }}",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "text": "={{ $json.body }}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [650, 300],
+      "id": "send-email",
+      "credentials": {
+        "smtp": {
+          "id": "1",
+          "name": "SMTP Account"
+        }
+      },
+      "notes": "Configure SMTP credentials in n8n settings:\n- Settings > Credentials > Create New\n- Type: SMTP\n- Host: smtp.gmail.com (for Gmail)\n- Port: 587\n- User: your-email@gmail.com\n- Password: app-specific password"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "value": "=Email sent successfully to {{ $json.to }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [850, 300],
+      "id": "format-success"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1050, 300],
+      "id": "send-response"
+    }
+  ],
+  "connections": {
+    "Webhook: Receive Email Request": {
+      "main": [
+        [
+          {
+            "node": "Parse Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email Data": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-email-integration"
+  },
+  "tags": []
+}

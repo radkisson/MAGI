@@ -72,8 +72,10 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - PLAYWRIGHT_MICROSERVICE_URL=http://playwright:3000
-      # Automatically uses the key generated in start.sh
-      - TEST_API_KEY=${FIRECRAWL_API_KEY} 
+      # FireCrawl API configuration - uses key generated in start.sh
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
+      - FIRECRAWL_API_URL=http://localhost:3002
+      - TEST_API_KEY=${FIRECRAWL_API_KEY}
     depends_on:
       - redis
       - playwright
