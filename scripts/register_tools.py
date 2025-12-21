@@ -176,6 +176,7 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
         finally:
             conn.close()
         
+        # Return True if tool is registered (either already existed or just inserted)
         return True
         
     except Exception as e:
