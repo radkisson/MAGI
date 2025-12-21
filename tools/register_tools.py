@@ -149,32 +149,33 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
             
             # Check if tool already exists
             cursor.execute("SELECT id FROM tool WHERE id = ?", (tool_id,))
-            if cursor.fetchone():
+            existing = cursor.fetchone()
+            
+            if existing:
                 print(f"  ℹ️  {tool_id}: Already registered, skipping")
-                return True
-            
-            # Insert tool
-            cursor.execute("""
-                INSERT INTO tool (id, user_id, name, content, specs, meta, valves, access_control, updated_at, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                tool_id,
-                user_id,
-                tool_id.replace('_', ' ').title(),  # Human-readable name
-                content,
-                json.dumps(specs),
-                json.dumps(meta),
-                json.dumps({}),  # Empty valves (will use defaults from Valves class)
-                None,  # Public access
-                now,
-                now
-            ))
-            
-            conn.commit()
+            else:
+                # Insert tool
+                cursor.execute("""
+                    INSERT INTO tool (id, user_id, name, content, specs, meta, valves, access_control, updated_at, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    tool_id,
+                    user_id,
+                    tool_id.replace('_', ' ').title(),  # Human-readable name
+                    content,
+                    json.dumps(specs),
+                    json.dumps(meta),
+                    json.dumps({}),  # Empty valves (will use defaults from Valves class)
+                    None,  # Public access
+                    now,
+                    now
+                ))
+                
+                conn.commit()
+                print(f"  ✅ {tool_id}: Registered with {len(specs)} function(s)")
         finally:
             conn.close()
         
-        print(f"  ✅ {tool_id}: Registered with {len(specs)} function(s)")
         return True
         
     except Exception as e:
