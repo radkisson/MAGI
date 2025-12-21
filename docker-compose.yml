@@ -67,6 +67,8 @@ services:
     image: ghcr.io/mendableai/firecrawl:latest
     container_name: rin-digestion
     restart: always
+    profiles:
+      - firecrawl
     ports:
       - "${PORT_FIRECRAWL:-3002}:3002"
     environment:
@@ -85,6 +87,8 @@ services:
     image: ghcr.io/mendableai/playwright-service:latest
     container_name: rin-browser
     restart: always
+    profiles:
+      - firecrawl
     environment:
       - PORT=3000
 
