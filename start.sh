@@ -110,8 +110,14 @@ fi
 
 # Store selections in .env for persistence
 if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
-    # Update existing value
-    sed -i.bak "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+    # Update existing value (use different sed syntax based on OS)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS requires -i with extension
+        sed -i '' "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+    else
+        # Linux doesn't need extension
+        sed -i "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+    fi
 else
     # Add new value
     echo "" >> "$BASE_DIR/.env"
