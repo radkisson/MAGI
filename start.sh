@@ -70,6 +70,30 @@ OPENROUTER_API_KEY=
 # Get your key from: https://tavily.com
 TAVILY_API_KEY=
 
+# --- AZURE COGNITIVE SERVICES (OPTIONAL) ---
+# For "The Azure Muse" voice assistant (Telegram + Azure STT/TTS)
+# Azure OpenAI Whisper (Speech-to-Text)
+# Get from: https://portal.azure.com > Azure OpenAI > Keys and Endpoint
+AZURE_OPENAI_RESOURCE_NAME=
+AZURE_OPENAI_API_KEY=
+AZURE_WHISPER_DEPLOYMENT_NAME=
+
+# Azure Speech (Text-to-Speech) - OPTIONAL
+AZURE_SPEECH_RESOURCE_NAME=
+AZURE_SPEECH_API_KEY=
+AZURE_SPEECH_REGION=
+
+# --- TELEGRAM BOT (OPTIONAL) ---
+# For Telegram integrations (voice assistant, research queries)
+# Create bot at: https://t.me/BotFather
+TELEGRAM_BOT_TOKEN=
+
+# --- OPEN WEBUI API (AUTO-GENERATED ON FIRST BOOT) ---
+# Used by n8n workflows to query Open WebUI as an API
+# This will be auto-generated after first login - see OPENWEBUI_API_KEY below
+OPENWEBUI_API_KEY=
+OPENWEBUI_DEFAULT_MODEL=gpt-4o
+
 # --- NETWORK ---
 PORT_WEBUI=3000
 PORT_LITELLM=4000
@@ -141,7 +165,14 @@ if [ ! -f "$BASE_DIR/config/searxng/settings.yml" ]; then
     # We pull the key back out of .env to populate the config
     LOADED_SEARX_KEY=$(grep "^SEARXNG_SECRET=" "$BASE_DIR/.env" | cut -d '=' -f2 | tr -d ' ')
     
-    cat <<EOF > "$BASE_DIR/config/searxng/settings.yml"
+    # Check if we have a template with academic engines
+    if [ -f "$BASE_DIR/config/searxng/settings.yml.example" ]; then
+        # Use the template and inject the secret key
+        sed "s/REPLACE_WITH_RANDOM_SECRET/${LOADED_SEARX_KEY}/" "$BASE_DIR/config/searxng/settings.yml.example" > "$BASE_DIR/config/searxng/settings.yml"
+        echo "✅ SearXNG configured with academic search engines (Google Scholar, arXiv, PubMed, etc.)"
+    else
+        # Fallback to basic config
+        cat <<EOF > "$BASE_DIR/config/searxng/settings.yml"
 use_default_settings: true
 server:
   secret_key: "${LOADED_SEARX_KEY}"
@@ -153,6 +184,7 @@ search:
     - html
     - json
 EOF
+    fi
 fi
 
 # --- 6. DNS FIX (Azure/Cloud Specific) ---
@@ -256,7 +288,7 @@ echo ""
 echo "=== Tools (Auto-Registered) ==="
 echo "✅ FireCrawl Scraper   - Web scraping with headless browser"
 echo "✅ Tavily Search       - AI-optimized web search"
-echo "✅ SearXNG Search      - Anonymous metasearch"
+echo "✅ SearXNG Search      - Academic search (Google Scholar, arXiv, PubMed)"
 echo "✅ Qdrant Memory       - Long-term RAG memory"
 echo "✅ n8n Reflex          - Workflow automation triggers"
 echo ""
@@ -265,4 +297,14 @@ echo ""
 echo "=== Next Steps ==="
 echo "1. Add API keys: nano .env (add OPENAI_API_KEY or ANTHROPIC_API_KEY)"
 echo "2. Restart to apply: ./start.sh"
-echo "3. Import workflows: http://localhost:5678 → Import → workflows/morning_briefing.json"
+echo "3. Import workflows: http://localhost:${PORT_N8N} → Import → workflows/"
+echo ""
+echo "=== Telegram Integration (Optional) ==="
+echo "For Telegram research assistant:"
+echo "1. Create a Telegram bot: https://t.me/BotFather"
+echo "2. Add TELEGRAM_BOT_TOKEN to .env"
+echo "3. Generate Open WebUI API key: ./scripts/generate_api_key.sh"
+echo "4. Import: workflows/telegram_research_assistant.json"
+echo ""
+echo "For Azure voice assistant, add to .env:"
+echo "   AZURE_OPENAI_RESOURCE_NAME, AZURE_OPENAI_API_KEY, AZURE_WHISPER_DEPLOYMENT_NAME"
