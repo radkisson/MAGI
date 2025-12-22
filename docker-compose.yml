@@ -20,9 +20,12 @@ services:
       - TAVILY_API_KEY=${TAVILY_API_KEY}
     env_file: .env
     depends_on:
-      - litellm
-      - qdrant
-      - searxng
+      litellm:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      searxng:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -40,10 +43,17 @@ services:
     command: [ "--config", "/app/config.yaml", "--port", "4000" ]
     env_file: .env
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # --- THE SENSORIUM (Vision) ---
   searxng:
@@ -63,6 +73,12 @@ services:
       - CHOWN
       - SETGID
       - SETUID
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # --- THE DIGESTION ---
   firecrawl:
@@ -81,6 +97,10 @@ services:
       - HOST=0.0.0.0
       - PORT=3002
       - USE_DB_AUTHENTICATION=false
+      - NUM_WORKERS_PER_QUEUE=1
+      # Disable NUQ database and RabbitMQ setup (prevents Docker-in-Docker errors)
+      - NUQ_DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
+      - NUQ_RABBITMQ_URL=amqp://guest:guest@localhost:5672
     depends_on:
       - redis
       - playwright-service
@@ -113,6 +133,12 @@ services:
       - N8N_EDITOR_BASE_URL=http://localhost:5678
       - N8N_SECURE_COOKIE=false  # Disable secure cookie for local HTTP development
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # --- SUPPORT ---
   redis:
@@ -121,6 +147,11 @@ services:
     restart: always
     volumes:
       - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant
@@ -130,3 +161,9 @@ services:
       - "${PORT_QDRANT:-6333}:6333"
     volumes:
       - ./data/qdrant:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
