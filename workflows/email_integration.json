@@ -10,7 +10,10 @@
       "name": "Webhook: Receive Email Request",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "send-email",
       "id": "webhook-email"
     },
@@ -21,7 +24,10 @@
       "name": "Parse Email Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "parse-email"
     },
     {
@@ -36,7 +42,10 @@
       "name": "Send Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [650, 300],
+      "position": [
+        650,
+        300
+      ],
       "id": "send-email",
       "credentials": {
         "smtp": {
@@ -75,7 +84,10 @@
       "name": "Format Success Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.3,
-      "position": [850, 300],
+      "position": [
+        850,
+        300
+      ],
       "id": "format-success"
     },
     {
@@ -86,7 +98,10 @@
       "name": "Send Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1050, 300],
+      "position": [
+        1050,
+        300
+      ],
       "id": "send-response"
     }
   ],
@@ -143,6 +158,5 @@
   "versionId": "1",
   "meta": {
     "instanceId": "rin-email-integration"
-  },
-  "tags": []
+  }
 }

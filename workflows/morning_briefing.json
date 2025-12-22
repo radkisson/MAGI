@@ -15,7 +15,10 @@
       "name": "Circadian Rhythm (8 AM)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "id": "circadian-trigger"
     },
     {
@@ -38,7 +41,10 @@
       "name": "Sensor: SearXNG",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "sensor-searxng"
     },
     {
@@ -76,7 +82,10 @@
       "name": "Cortex: LiteLLM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [650, 300],
+      "position": [
+        650,
+        300
+      ],
       "id": "cortex-litellm"
     }
   ],
@@ -111,6 +120,5 @@
   "versionId": "1",
   "meta": {
     "instanceId": "rin-autonomous-briefing"
-  },
-  "tags": []
+  }
 }

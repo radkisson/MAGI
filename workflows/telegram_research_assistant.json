@@ -3,7 +3,9 @@
   "nodes": [
     {
       "parameters": {
-        "updates": ["message"],
+        "updates": [
+          "message"
+        ],
         "additionalFields": {
           "limit": 100,
           "timeout": 30,
@@ -15,7 +17,10 @@
       },
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "name": "Telegram: Receive Message",
       "webhookId": "telegram-research-trigger",
       "id": "telegram-research-trigger",
@@ -41,7 +46,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [200, 0],
+      "position": [
+        200,
+        0
+      ],
       "name": "Has Text Message?",
       "id": "has-text-message"
     },
@@ -51,21 +59,27 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [400, -50],
+      "position": [
+        400,
+        -50
+      ],
       "name": "Prepare Query",
       "id": "prepare-query"
     },
     {
       "parameters": {
         "chatId": "={{ $('Telegram: Receive Message').item.json.message.chat.id }}",
-        "text": "🔍 *Researching...*\n\nQuery: _{{ $json.query }}_\nType: {{ $json.queryType }}",
+        "text": "\ud83d\udd0d *Researching...*\n\nQuery: _{{ $json.query }}_\nType: {{ $json.queryType }}",
         "additionalFields": {
           "parse_mode": "Markdown"
         }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
-      "position": [600, -150],
+      "position": [
+        600,
+        -150
+      ],
       "name": "Send: Thinking...",
       "id": "send-thinking",
       "credentials": {
@@ -116,7 +130,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [600, 50],
+      "position": [
+        600,
+        50
+      ],
       "name": "Query Open WebUI",
       "id": "query-openwebui",
       "notes": "Sends query to Open WebUI API. The AI will use its tools (SearXNG, Tavily, etc.) to research."
@@ -127,7 +144,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [800, 50],
+      "position": [
+        800,
+        50
+      ],
       "name": "Format Response",
       "id": "format-response"
     },
@@ -142,7 +162,10 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
-      "position": [1000, 50],
+      "position": [
+        1000,
+        50
+      ],
       "name": "Send Response",
       "id": "send-response",
       "credentials": {
@@ -155,14 +178,17 @@
     {
       "parameters": {
         "chatId": "={{ $('Telegram: Receive Message').item.json.message.chat.id }}",
-        "text": "❌ *Error processing your request*\n\nPlease try again or rephrase your query.\n\n_If the problem persists, check that RIN services are running._",
+        "text": "\u274c *Error processing your request*\n\nPlease try again or rephrase your query.\n\n_If the problem persists, check that RIN services are running._",
         "additionalFields": {
           "parse_mode": "Markdown"
         }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
-      "position": [800, 200],
+      "position": [
+        800,
+        200
+      ],
       "name": "Send Error",
       "id": "send-error",
       "credentials": {
@@ -253,6 +279,5 @@
   "meta": {
     "instanceId": "rin-telegram-research"
   },
-  "tags": ["telegram", "research", "academic", "books", "science"],
   "pinData": {}
 }
