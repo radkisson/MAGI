@@ -216,6 +216,49 @@ Generates comprehensive daily reports covering multiple topics (AI, technology, 
 2. Customize topics and schedule if desired
 3. Toggle to "Active"
 
+### 10. telegram_research_assistant.json ✅ AVAILABLE
+**Full research assistant via Telegram using Open WebUI as the brain.**
+
+Query books, papers, and scientific literature directly from Telegram. RIN uses Open WebUI's tools (SearXNG with academic engines, Tavily) to research and respond.
+
+**Trigger**: Any Telegram text message to your bot
+
+**How it works:**
+1. **Input**: User sends a message via Telegram
+2. **Classify**: Detects query type (academic, books, science, general)
+3. **Research**: Forwards to Open WebUI API with appropriate system prompt
+4. **Tools**: Open WebUI uses SearXNG (Google Scholar, arXiv, PubMed, etc.) and Tavily
+5. **Respond**: AI-synthesized answer sent back via Telegram
+
+**Supported query types:**
+- **Academic**: "Find papers on transformer architecture" → Google Scholar, arXiv, Semantic Scholar
+- **Books**: "Find books about stoicism" → Open Library
+- **Science**: "What causes aurora borealis?" → PubMed, scientific sources
+- **General**: Any other query → Web search with Tavily/SearXNG
+
+**Prerequisites:**
+- Telegram bot from @BotFather
+- Open WebUI API key (generate in Open WebUI: Settings → Account → API Keys)
+- Set in `.env`:
+  ```
+  TELEGRAM_BOT_TOKEN=your-bot-token
+  OPENWEBUI_API_KEY=your-api-key
+  OPENWEBUI_DEFAULT_MODEL=gpt-4o
+  ```
+
+**To activate:**
+1. Configure credentials in `.env`
+2. Import `workflows/telegram_research_assistant.json`
+3. Configure Telegram credentials in n8n
+4. Toggle to "Active"
+5. Message your bot!
+
+**Example queries:**
+- "Find recent papers on CRISPR gene editing"
+- "Search for books about machine learning"
+- "What is the mechanism of mRNA vaccines?"
+- "Latest news on fusion energy"
+
 ## Accessing n8n
 
 After running `./start.sh`, access the n8n editor at:
@@ -232,6 +275,7 @@ workflows/
 ├── email_integration.json              # ✅ Email sending via SMTP
 ├── slack_notification.json             # ✅ Slack channel notifications
 ├── telegram_notification.json          # ✅ Telegram bot messaging
+├── telegram_research_assistant.json    # ✅ Telegram research (books/papers/science)
 ├── rss_feed_monitor.json               # ✅ RSS feed monitoring & summarization
 ├── research_agent.json                 # ✅ Autonomous research workflow
 └── daily_report_generator.json         # ✅ Daily intelligence reports

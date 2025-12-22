@@ -1,0 +1,258 @@
+{
+  "name": "RIN - Telegram Research Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {
+          "limit": 100,
+          "timeout": 30,
+          "allowed_updates": [
+            "message",
+            "edited_message"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "name": "Telegram: Receive Message",
+      "webhookId": "telegram-research-trigger",
+      "id": "telegram-research-trigger",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      },
+      "notes": "Receives all text messages from Telegram. Configure bot via @BotFather."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [],
+          "string": [
+            {
+              "value1": "={{ $json.message.text }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "name": "Has Text Message?",
+      "id": "has-text-message"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract message details and prepare for Open WebUI\nconst message = $input.item.json.message;\n\nconst userQuery = message.text || '';\nconst chatId = message.chat.id;\nconst userId = message.from?.id || 'unknown';\nconst username = message.from?.username || message.from?.first_name || 'User';\n\n// Detect query type based on keywords\nlet queryType = 'general';\nconst lowerQuery = userQuery.toLowerCase();\n\nif (lowerQuery.includes('paper') || lowerQuery.includes('research') || lowerQuery.includes('study') || lowerQuery.includes('arxiv') || lowerQuery.includes('journal')) {\n  queryType = 'academic';\n} else if (lowerQuery.includes('book') || lowerQuery.includes('read') || lowerQuery.includes('library') || lowerQuery.includes('pdf')) {\n  queryType = 'books';\n} else if (lowerQuery.includes('science') || lowerQuery.includes('pubmed') || lowerQuery.includes('medical') || lowerQuery.includes('biology') || lowerQuery.includes('chemistry') || lowerQuery.includes('physics')) {\n  queryType = 'science';\n}\n\n// Build system prompt based on query type\nlet systemPrompt = 'You are RIN, a sovereign research assistant accessed via Telegram. ';\n\nswitch(queryType) {\n  case 'academic':\n    systemPrompt += 'The user is looking for academic papers or research. Use web_search to find papers on Google Scholar, arXiv, Semantic Scholar. Provide: title, authors, abstract summary, and source links. Format for mobile reading.';\n    break;\n  case 'books':\n    systemPrompt += 'The user is looking for books or reading material. Search for books, provide: title, author, summary, and where to find it. Mention Open Library or other sources.';\n    break;\n  case 'science':\n    systemPrompt += 'The user has a science question. Search PubMed, arXiv, or scientific sources. Provide well-sourced, accurate scientific information with citations.';\n    break;\n  default:\n    systemPrompt += 'Answer the user query. Use web_search if you need current information. Be concise but thorough. Format for mobile Telegram reading.';\n}\n\nreturn {\n  json: {\n    chatId: chatId,\n    userId: userId,\n    username: username,\n    query: userQuery,\n    queryType: queryType,\n    systemPrompt: systemPrompt,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, -50],
+      "name": "Prepare Query",
+      "id": "prepare-query"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram: Receive Message').item.json.message.chat.id }}",
+        "text": "🔍 *Researching...*\n\nQuery: _{{ $json.query }}_\nType: {{ $json.queryType }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [600, -150],
+      "name": "Send: Thinking...",
+      "id": "send-thinking",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rin-cortex:8080/api/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ (() => { if (!$env.OPENWEBUI_API_KEY || $env.OPENWEBUI_API_KEY.trim() === '') { throw new Error('OPENWEBUI_API_KEY is not set or is empty'); } return 'Bearer ' + $env.OPENWEBUI_API_KEY; })() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{ $env.OPENWEBUI_DEFAULT_MODEL || 'gpt-4o' }}"
+            },
+            {
+              "name": "messages",
+              "value": "={{ JSON.stringify([{\"role\": \"system\", \"content\": $json.systemPrompt}, {\"role\": \"user\", \"content\": $json.query}]) }}"
+            },
+            {
+              "name": "stream",
+              "value": "=false"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 50],
+      "name": "Query Open WebUI",
+      "id": "query-openwebui",
+      "notes": "Sends query to Open WebUI API. The AI will use its tools (SearXNG, Tavily, etc.) to research."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract response from Open WebUI\nconst response = $input.item.json;\nconst preparedData = $('Prepare Query').item.json;\n\nlet aiResponse = '';\n\n// Check for HTTP error status codes\nif (response.statusCode && response.statusCode >= 400) {\n  throw new Error(`API returned error status ${response.statusCode}: ${response.statusMessage || 'Unknown error'}`);\n}\n\n// Handle different response formats\nif (response.choices && response.choices[0]) {\n  aiResponse = response.choices[0].message?.content || response.choices[0].text || '';\n} else if (response.message) {\n  aiResponse = response.message.content || response.message;\n} else if (typeof response === 'string') {\n  aiResponse = response;\n} else {\n  aiResponse = 'Sorry, I could not process the response. Please try again.';\n}\n\n// Telegram message limit is 4096 characters\nconst MAX_LENGTH = 4000;\nconst MIN_SPLIT_THRESHOLD = 500;\nlet messages = [];\n\nif (aiResponse.length > MAX_LENGTH) {\n  // Split into multiple messages\n  let remaining = aiResponse;\n  let partNum = 1;\n  let iterationCount = 0;\n  const maxIterations = 100; // Safety limit\n  \n  while (remaining.length > 0 && iterationCount < maxIterations) {\n    iterationCount++;\n    let chunk = remaining.substring(0, MAX_LENGTH);\n    let splitPoint = MAX_LENGTH;\n    \n    // Try to split at a natural break point\n    if (remaining.length > MAX_LENGTH) {\n      const lastNewline = chunk.lastIndexOf('\\n\\n');\n      const lastPeriod = chunk.lastIndexOf('. ');\n      \n      if (lastNewline > MIN_SPLIT_THRESHOLD) {\n        splitPoint = lastNewline;\n      } else if (lastPeriod > MIN_SPLIT_THRESHOLD) {\n        splitPoint = lastPeriod + 1;\n      }\n      // Ensure splitPoint is never 0 to prevent infinite loop\n      if (splitPoint === 0) {\n        splitPoint = MAX_LENGTH;\n      }\n      \n      chunk = remaining.substring(0, splitPoint);\n    }\n    \n    // Calculate remaining text after this chunk\n    const remainingAfterSplit = remaining.substring(splitPoint).trim();\n    \n    messages.push({\n      text: chunk.trim(),\n      part: partNum,\n      isLast: remainingAfterSplit.length === 0\n    });\n    \n    remaining = remainingAfterSplit;\n    partNum++;\n  }\n  \n  if (iterationCount >= maxIterations) {\n    throw new Error('Message splitting exceeded maximum iterations - possible infinite loop');\n  }\n} else {\n  messages.push({\n    text: aiResponse,\n    part: 1,\n    isLast: true\n  });\n}\n\nreturn messages.map(msg => ({\n  json: {\n    chatId: preparedData.chatId,\n    text: msg.text,\n    part: msg.part,\n    isLast: msg.isLast,\n    queryType: preparedData.queryType\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 50],
+      "name": "Format Response",
+      "id": "format-response"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "disable_web_page_preview": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1000, 50],
+      "name": "Send Response",
+      "id": "send-response",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram: Receive Message').item.json.message.chat.id }}",
+        "text": "❌ *Error processing your request*\n\nPlease try again or rephrase your query.\n\n_If the problem persists, check that RIN services are running._",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [800, 200],
+      "name": "Send Error",
+      "id": "send-error",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram: Receive Message": {
+      "main": [
+        [
+          {
+            "node": "Has Text Message?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Text Message?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Query": {
+      "main": [
+        [
+          {
+            "node": "Send: Thinking...",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query Open WebUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Open WebUI": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "onError": [
+        [
+          {
+            "node": "Send Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": ""
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-telegram-research"
+  },
+  "tags": ["telegram", "research", "academic", "books", "science"],
+  "pinData": {}
+}
