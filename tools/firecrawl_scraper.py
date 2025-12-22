@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 class Valves(BaseModel):
     """Configuration valves for FireCrawl integration (auto-loaded from .env)"""
-    
+
     # Note: default_factory with lambda is required for runtime environment variable loading.
     # This ensures the Valves check environment variables when instantiated, not at import time.
     FIRECRAWL_API_KEY: str = Field(
@@ -32,10 +32,10 @@ class Valves(BaseModel):
 
 class Tools:
     """Open WebUI Tool: Web Page Scraping via FireCrawl"""
-    
+
     def __init__(self):
         self.valves = Valves()
-    
+
     def scrape_webpage(
         self,
         url: str,
@@ -44,20 +44,20 @@ class Tools:
     ) -> str:
         """
         Scrape and extract content from a webpage using FireCrawl (The Sensorium's Digestion)
-        
+
         This tool uses a headless browser to navigate JavaScript-heavy sites and
         converts them into clean Markdown format optimized for LLM consumption.
         FireCrawl handles dynamic content, SPAs, and complex web applications.
-        
+
         Args:
             url: The webpage URL to scrape
             __user__: User context (provided by Open WebUI)
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
-            
+
         Returns:
             Clean Markdown content extracted from the webpage
         """
-        
+
         # Validate API key
         if not self.valves.FIRECRAWL_API_KEY:
             error_msg = (
@@ -68,7 +68,7 @@ class Tools:
                 "3. For cloud API: Get key from https://firecrawl.dev\n"
                 "4. Restart RIN: ./start.sh\n"
             )
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -76,20 +76,20 @@ class Tools:
                         "data": {"description": error_msg, "done": True},
                     }
                 )
-            
+
             return error_msg
-        
+
         if __event_emitter__:
             __event_emitter__(
                 {
                     "type": "status",
                     "data": {
-                        "description": f"🔥 Scraping webpage with FireCrawl...",
+                        "description": "🔥 Scraping webpage with FireCrawl...",
                         "done": False,
                     },
                 }
             )
-        
+
         try:
             # Request FireCrawl to scrape the URL
             response = requests.post(
@@ -104,25 +104,25 @@ class Tools:
                 timeout=30,
             )
             response.raise_for_status()
-            
+
             result = response.json()
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
                         "type": "status",
                         "data": {
-                            "description": f"✅ Content extracted successfully",
+                            "description": "✅ Content extracted successfully",
                             "done": True,
                         },
                     }
                 )
-            
+
             # Extract markdown content
             if result.get("success") and result.get("data"):
                 markdown_content = result["data"].get("markdown", "")
                 metadata = result["data"].get("metadata", {})
-                
+
                 if markdown_content:
                     return (
                         f"# Scraped Content from: {url}\n\n"
@@ -136,10 +136,10 @@ class Tools:
             else:
                 error = result.get("error", "Unknown error")
                 return f"Scraping failed: {error}"
-            
+
         except requests.exceptions.RequestException as e:
             error_msg = f"Error connecting to FireCrawl: {str(e)}"
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -147,9 +147,9 @@ class Tools:
                         "data": {"description": f"❌ {error_msg}", "done": True},
                     }
                 )
-            
+
             return f"Scraping failed: {error_msg}\n\nNote: Ensure FireCrawl service is running (docker-compose up -d)"
-    
+
     def crawl_website(
         self,
         url: str,
@@ -159,21 +159,21 @@ class Tools:
     ) -> str:
         """
         Crawl multiple pages from a website using FireCrawl
-        
+
         This tool crawls a website starting from the given URL, following links
         and extracting content from multiple pages. Useful for gathering
         comprehensive information from a site.
-        
+
         Args:
             url: The starting URL to crawl
             max_pages: Maximum number of pages to crawl (default: 10)
             __user__: User context (provided by Open WebUI)
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
-            
+
         Returns:
             Combined Markdown content from all crawled pages
         """
-        
+
         # Validate API key
         if not self.valves.FIRECRAWL_API_KEY:
             error_msg = (
@@ -184,7 +184,7 @@ class Tools:
                 "3. For cloud API: Get key from https://firecrawl.dev\n"
                 "4. Restart RIN: ./start.sh\n"
             )
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -192,9 +192,9 @@ class Tools:
                         "data": {"description": error_msg, "done": True},
                     }
                 )
-            
+
             return error_msg
-        
+
         if __event_emitter__:
             __event_emitter__(
                 {
@@ -205,7 +205,7 @@ class Tools:
                     },
                 }
             )
-        
+
         try:
             # Request FireCrawl to crawl the website
             response = requests.post(
@@ -223,44 +223,44 @@ class Tools:
                 timeout=60,
             )
             response.raise_for_status()
-            
+
             result = response.json()
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
                         "type": "status",
                         "data": {
-                            "description": f"✅ Crawl completed",
+                            "description": "✅ Crawl completed",
                             "done": True,
                         },
                     }
                 )
-            
+
             if result.get("success") and result.get("data"):
                 pages = result["data"]
-                
+
                 # Combine all pages
                 combined_content = f"# Website Crawl: {url}\n\n"
                 combined_content += f"Crawled {len(pages)} pages\n\n"
                 combined_content += "---\n\n"
-                
+
                 for idx, page in enumerate(pages, 1):
                     markdown = page.get("markdown", "")
                     metadata = page.get("metadata", {})
-                    
+
                     combined_content += f"## Page {idx}: {metadata.get('title', 'Untitled')}\n"
                     combined_content += f"URL: {metadata.get('sourceURL', 'N/A')}\n\n"
                     combined_content += markdown + "\n\n---\n\n"
-                
+
                 return combined_content
             else:
                 error = result.get("error", "Unknown error")
                 return f"Crawling failed: {error}"
-            
+
         except requests.exceptions.RequestException as e:
             error_msg = f"Error connecting to FireCrawl: {str(e)}"
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -268,5 +268,5 @@ class Tools:
                         "data": {"description": f"❌ {error_msg}", "done": True},
                     }
                 )
-            
+
             return f"Crawling failed: {error_msg}\n\nNote: Ensure FireCrawl service is running (docker-compose up -d)"
