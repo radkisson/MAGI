@@ -51,12 +51,11 @@ def test_tavily_integration():
         del os.environ['TAVILY_API_KEY']
         
         print("✅ Tavily integration test PASSED\n")
-        return True
     except Exception as e:
         print(f"❌ Tavily integration test FAILED: {e}\n")
         import traceback
         traceback.print_exc()
-        return False
+        raise
 
 
 def test_firecrawl_integration():
@@ -102,12 +101,11 @@ def test_firecrawl_integration():
         print("  ✓ Handles missing API key gracefully")
         
         print("✅ Firecrawl integration test PASSED\n")
-        return True
     except Exception as e:
         print(f"❌ Firecrawl integration test FAILED: {e}\n")
         import traceback
         traceback.print_exc()
-        return False
+        raise
 
 
 def test_env_configuration():
@@ -131,10 +129,9 @@ def test_env_configuration():
         print("  ✓ Tavily documentation link present")
         
         print("✅ Environment configuration test PASSED\n")
-        return True
     except Exception as e:
         print(f"❌ Environment configuration test FAILED: {e}\n")
-        return False
+        raise
 
 
 def test_documentation():
@@ -159,10 +156,9 @@ def test_documentation():
         print("  ✓ firecrawl_scraper.py mentioned")
         
         print("✅ Documentation test PASSED\n")
-        return True
     except Exception as e:
         print(f"❌ Documentation test FAILED: {e}\n")
-        return False
+        raise
 
 
 def main():

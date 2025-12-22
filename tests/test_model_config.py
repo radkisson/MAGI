@@ -52,10 +52,7 @@ def test_config_file():
     
     config_path = Path(__file__).parent.parent / "config" / "litellm" / "config.yaml"
     
-    if not config_path.exists():
-        print_error(f"Config file not found: {config_path}")
-        return False
-    
+    assert config_path.exists(), f"Config file not found: {config_path}"
     print_success(f"Config file found: {config_path}")
     
     try:
@@ -63,8 +60,7 @@ def test_config_file():
             config = yaml.safe_load(f)
         print_success("Config file is valid YAML")
     except Exception as e:
-        print_error(f"Config file is invalid YAML: {e}")
-        return False
+        assert False, f"Config file is invalid YAML: {e}"
     
     # Check required sections
     required_sections = ['model_list', 'router_settings', 'general_settings']
@@ -73,9 +69,7 @@ def test_config_file():
             print_success(f"Section '{section}' present")
         else:
             print_error(f"Section '{section}' missing")
-            return False
-    
-    return True
+            assert False, f"Section '{section}' missing"
 
 
 def test_model_definitions():
@@ -89,10 +83,7 @@ def test_model_definitions():
     
     models = config.get('model_list', [])
     
-    if not models:
-        print_error("No models defined in config")
-        return False
-    
+    assert models, "No models defined in config"
     print_success(f"Found {len(models)} model definitions")
     
     # Check for OpenRouter models
@@ -129,8 +120,6 @@ def test_model_definitions():
         print_info(f"  Google: {', '.join(google_models)}")
     if mistral_models:
         print_info(f"  Mistral: {', '.join(mistral_models)}")
-    
-    return True
 
 
 def test_cost_tracking():
@@ -146,11 +135,8 @@ def test_cost_tracking():
     
     # Check database URL
     db_url = general_settings.get('database_url')
-    if db_url and 'sqlite' in db_url:
-        print_success(f"Cost tracking database configured: {db_url}")
-    else:
-        print_error("Cost tracking database not configured")
-        return False
+    assert db_url and 'sqlite' in db_url, "Cost tracking database not configured"
+    print_success(f"Cost tracking database configured: {db_url}")
     
     # Check budget settings
     max_budget = general_settings.get('max_budget')
@@ -175,8 +161,6 @@ def test_cost_tracking():
             print_info(f"  {model}: ${input_cost:.2f}/${output_cost:.2f} per 1M tokens")
     else:
         print_warning("No custom model pricing (will use LiteLLM defaults)")
-    
-    return True
 
 
 def test_fallback_chains():
@@ -192,11 +176,8 @@ def test_fallback_chains():
     
     # Check routing strategy
     strategy = router_settings.get('routing_strategy')
-    if strategy:
-        print_success(f"Routing strategy: {strategy}")
-    else:
-        print_error("No routing strategy configured")
-        return False
+    assert strategy, "No routing strategy configured"
+    print_success(f"Routing strategy: {strategy}")
     
     # Check retry settings
     num_retries = router_settings.get('num_retries')
@@ -229,8 +210,6 @@ def test_fallback_chains():
     allowed_fails = router_settings.get('allowed_fails')
     if allowed_fails:
         print_success(f"Allowed failures: {allowed_fails}")
-    
-    return True
 
 
 def test_docker_compose():
@@ -239,10 +218,7 @@ def test_docker_compose():
     
     compose_path = Path(__file__).parent.parent / "docker-compose.yml"
     
-    if not compose_path.exists():
-        print_error(f"docker-compose.yml not found: {compose_path}")
-        return False
-    
+    assert compose_path.exists(), f"docker-compose.yml not found: {compose_path}"
     print_success(f"docker-compose.yml found: {compose_path}")
     
     with open(compose_path, 'r') as f:
@@ -252,10 +228,7 @@ def test_docker_compose():
     
     # Check LiteLLM service
     litellm = services.get('litellm', {})
-    if not litellm:
-        print_error("LiteLLM service not defined")
-        return False
-    
+    assert litellm, "LiteLLM service not defined"
     print_success("LiteLLM service defined")
     
     # Check volumes
@@ -263,17 +236,11 @@ def test_docker_compose():
     config_volume = any('config.yaml' in v for v in volumes)
     data_volume = any('data/litellm' in v for v in volumes)
     
-    if config_volume:
-        print_success("Config volume mounted")
-    else:
-        print_error("Config volume not mounted")
-        return False
+    assert config_volume, "Config volume not mounted"
+    print_success("Config volume mounted")
     
-    if data_volume:
-        print_success("Data volume mounted (for cost tracking database)")
-    else:
-        print_error("Data volume not mounted")
-        return False
+    assert data_volume, "Data volume not mounted"
+    print_success("Data volume mounted (for cost tracking database)")
     
     # Check Redis dependency
     depends_on = litellm.get('depends_on', [])
@@ -287,8 +254,6 @@ def test_docker_compose():
     has_redis_config = any('REDIS' in str(env) for env in environment)
     if has_redis_config:
         print_success("Redis environment configured")
-    
-    return True
 
 
 def test_env_file():
@@ -297,10 +262,7 @@ def test_env_file():
     
     env_example_path = Path(__file__).parent.parent / ".env.example"
     
-    if not env_example_path.exists():
-        print_error(f".env.example not found: {env_example_path}")
-        return False
-    
+    assert env_example_path.exists(), f".env.example not found: {env_example_path}"
     print_success(f".env.example found: {env_example_path}")
     
     with open(env_example_path, 'r') as f:
@@ -317,13 +279,8 @@ def test_env_file():
     ]
     
     for key in required_keys:
-        if key in env_content:
-            print_success(f"{key} present in .env.example")
-        else:
-            print_error(f"{key} missing from .env.example")
-            return False
-    
-    return True
+        assert key in env_content, f"{key} missing from .env.example"
+        print_success(f"{key} present in .env.example")
 
 
 def test_start_script():
@@ -332,29 +289,21 @@ def test_start_script():
     
     start_script_path = Path(__file__).parent.parent / "start.sh"
     
-    if not start_script_path.exists():
-        print_error(f"start.sh not found: {start_script_path}")
-        return False
-    
+    assert start_script_path.exists(), f"start.sh not found: {start_script_path}"
     print_success(f"start.sh found: {start_script_path}")
     
     with open(start_script_path, 'r') as f:
         start_content = f.read()
     
     # Check for litellm directory creation
-    if 'litellm' in start_content and 'mkdir' in start_content:
-        print_success("start.sh creates litellm data directory")
-    else:
-        print_error("start.sh doesn't create litellm data directory")
-        return False
+    assert 'litellm' in start_content and 'mkdir' in start_content, "start.sh doesn't create litellm data directory"
+    print_success("start.sh creates litellm data directory")
     
     # Check for permissions
     if 'chmod' in start_content and 'litellm' in start_content:
         print_success("start.sh sets litellm directory permissions")
     else:
         print_warning("start.sh may not set litellm directory permissions")
-    
-    return True
 
 
 def main():
