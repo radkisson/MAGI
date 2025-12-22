@@ -90,7 +90,7 @@ engines:
   #   disabled: false
   #   categories: [general]
 
-  # Note: annas_archive disabled to avoid ambiguous shortcut conflict
+  # Note: annas_archive removed - causes ambiguous shortcut 'aa' conflict with ahmia engine
   # - name: z-library (via anna's archive)
   #   engine: annas_archive
   #   shortcut: aa

@@ -99,8 +99,9 @@ services:
       - USE_DB_AUTHENTICATION=false
       - NUM_WORKERS_PER_QUEUE=1
       # Disable NUQ database and RabbitMQ setup (prevents Docker-in-Docker errors)
-      - NUQ_DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
-      - NUQ_RABBITMQ_URL=amqp://guest:guest@localhost:5672
+      # These are placeholder values that disable automatic container setup
+      - NUQ_DATABASE_URL=postgresql://firecrawl-disabled:not-used@localhost:5432/disabled
+      - NUQ_RABBITMQ_URL=amqp://firecrawl-disabled:not-used@localhost:5672
     depends_on:
       - redis
       - playwright-service
