@@ -22,8 +22,9 @@ def test_tavily_tool_initialization():
     from tavily_search import Tools as TavilyTools
     tavily = TavilyTools()
     assert tavily is not None
-    assert hasattr(tavily, 'api_url')
-    assert tavily.api_url == "https://api.tavily.com/search"
+    assert hasattr(tavily, 'valves')
+    assert hasattr(tavily.valves, 'TAVILY_API_URL')
+    assert tavily.valves.TAVILY_API_URL == "https://api.tavily.com/search"
 
 
 def test_tavily_tool_methods_exist():
@@ -71,9 +72,10 @@ def test_firecrawl_tool_initialization():
     from firecrawl_scraper import Tools as FirecrawlTools
     firecrawl = FirecrawlTools()
     assert firecrawl is not None
-    assert hasattr(firecrawl, 'firecrawl_url')
+    assert hasattr(firecrawl, 'valves')
+    assert hasattr(firecrawl.valves, 'FIRECRAWL_API_URL')
     # Default should be internal Docker service
-    assert "firecrawl" in firecrawl.firecrawl_url
+    assert "firecrawl" in firecrawl.valves.FIRECRAWL_API_URL
 
 
 def test_firecrawl_tool_methods_exist():
@@ -96,7 +98,7 @@ def test_firecrawl_cloud_mode_configuration():
     
     try:
         firecrawl = FirecrawlTools()
-        assert firecrawl.firecrawl_url == 'https://api.firecrawl.dev'
+        assert firecrawl.valves.FIRECRAWL_API_URL == 'https://api.firecrawl.dev'
     finally:
         # Clean up
         if 'FIRECRAWL_API_URL' in os.environ:
