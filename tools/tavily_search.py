@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 class Valves(BaseModel):
     """Configuration valves for Tavily integration (auto-loaded from .env)"""
-    
+
     # Note: default_factory with lambda is required for runtime environment variable loading.
     # This ensures the Valves check environment variables when instantiated, not at import time.
     TAVILY_API_KEY: str = Field(
@@ -35,10 +35,10 @@ class Valves(BaseModel):
 
 class Tools:
     """Open WebUI Tool: AI-Optimized Web Search via Tavily API"""
-    
+
     def __init__(self):
         self.valves = Valves()
-    
+
     def web_search(
         self,
         query: str,
@@ -49,22 +49,22 @@ class Tools:
     ) -> str:
         """
         Search the web using Tavily API (AI-Optimized Search Engine)
-        
+
         Tavily provides AI-optimized search results designed for LLM consumption.
         Results include source citations, relevance scoring, and structured data.
         This is a premium alternative to self-hosted SearXNG.
-        
+
         Args:
             query: The search query
             search_depth: "basic" for fast results or "advanced" for comprehensive search
             max_results: Maximum number of results to return (default: 5, max: 10)
             __user__: User context (provided by Open WebUI)
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
-            
+
         Returns:
             Formatted search results with citations and sources
         """
-        
+
         # Validate API key
         if not self.valves.TAVILY_API_KEY:
             error_msg = (
@@ -75,7 +75,7 @@ class Tools:
                 "3. Restart RIN: ./start.sh\n\n"
                 "Alternative: Use the built-in SearXNG tool for anonymous search."
             )
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -83,9 +83,9 @@ class Tools:
                         "data": {"description": error_msg, "done": True},
                     }
                 )
-            
+
             return error_msg
-        
+
         if __event_emitter__:
             __event_emitter__(
                 {
@@ -96,7 +96,7 @@ class Tools:
                     },
                 }
             )
-        
+
         try:
             # Make request to Tavily API
             response = requests.post(
@@ -112,9 +112,9 @@ class Tools:
                 timeout=15,
             )
             response.raise_for_status()
-            
+
             result = response.json()
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -125,14 +125,14 @@ class Tools:
                         },
                     }
                 )
-            
+
             # Format the response
             formatted_output = f"# Search Results: {query}\n\n"
-            
+
             # Add AI-generated answer if available
             if result.get("answer"):
                 formatted_output += f"## AI Summary\n{result['answer']}\n\n"
-            
+
             # Add search results
             if result.get("results"):
                 formatted_output += "## Sources\n\n"
@@ -141,20 +141,20 @@ class Tools:
                     url = item.get("url", "")
                     content = item.get("content", "")
                     score = item.get("score", 0)
-                    
+
                     formatted_output += f"### {idx}. {title}\n"
                     formatted_output += f"**URL**: {url}\n"
                     formatted_output += f"**Relevance**: {score:.2f}\n\n"
                     formatted_output += f"{content}\n\n"
                     formatted_output += "---\n\n"
-                
+
                 return formatted_output
             else:
                 return f"No results found for: {query}"
-            
+
         except requests.exceptions.RequestException as e:
             error_msg = f"Error connecting to Tavily API: {str(e)}"
-            
+
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -162,9 +162,9 @@ class Tools:
                         "data": {"description": f"❌ {error_msg}", "done": True},
                     }
                 )
-            
+
             return f"Search failed: {error_msg}\n\nPlease verify your TAVILY_API_KEY in .env is valid."
-    
+
     def quick_search(
         self,
         query: str,
@@ -173,15 +173,15 @@ class Tools:
     ) -> str:
         """
         Quick web search using Tavily (Fast Mode)
-        
+
         Optimized for speed with basic search depth. Use this for quick fact-checking
         or when you need immediate results.
-        
+
         Args:
             query: The search query
             __user__: User context (provided by Open WebUI)
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
-            
+
         Returns:
             Formatted search results with AI summary
         """
@@ -192,7 +192,7 @@ class Tools:
             __user__=__user__,
             __event_emitter__=__event_emitter__,
         )
-    
+
     def deep_search(
         self,
         query: str,
@@ -201,15 +201,15 @@ class Tools:
     ) -> str:
         """
         Deep web search using Tavily (Advanced Mode)
-        
+
         Comprehensive search with advanced depth. Use this for research-heavy
         queries or when you need detailed, thorough results.
-        
+
         Args:
             query: The search query
             __user__: User context (provided by Open WebUI)
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
-            
+
         Returns:
             Comprehensive search results with AI summary and detailed sources
         """
