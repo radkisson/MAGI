@@ -159,14 +159,13 @@ cmd_status() {
     echo "Service Health:"
     
     # Define services with their health endpoints
-    declare -A services=(
-        ["Open WebUI (Cortex)"]="http://localhost:${PORT_WEBUI:-3000}"
-        ["LiteLLM (Router)"]="http://localhost:${PORT_LITELLM:-4000}/health"
-        ["SearXNG (Vision)"]="http://localhost:${PORT_SEARXNG:-8080}"
-        ["FireCrawl (Digestion)"]="http://localhost:${PORT_FIRECRAWL:-3002}"
-        ["n8n (Reflex)"]="http://localhost:${PORT_N8N:-5678}"
-        ["Qdrant (Memory)"]="http://localhost:${PORT_QDRANT:-6333}"
-    )
+    declare -A services
+    services["Open WebUI (Cortex)"]="http://localhost:${PORT_WEBUI:-3000}"
+    services["LiteLLM (Router)"]="http://localhost:${PORT_LITELLM:-4000}/health"
+    services["SearXNG (Vision)"]="http://localhost:${PORT_SEARXNG:-8080}"
+    services["FireCrawl (Digestion)"]="http://localhost:${PORT_FIRECRAWL:-3002}"
+    services["n8n (Reflex)"]="http://localhost:${PORT_N8N:-5678}"
+    services["Qdrant (Memory)"]="http://localhost:${PORT_QDRANT:-6333}"
     
     for service in "${!services[@]}"; do
         url="${services[$service]}"
