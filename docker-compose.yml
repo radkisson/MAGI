@@ -57,6 +57,8 @@ services:
 
   # --- THE SENSORIUM (Vision) ---
   searxng:
+    # Note: Requires config/searxng/settings.yml to be created before starting
+    # Run ./start.sh to auto-generate configuration, or manually create from settings.yml.example
     image: searxng/searxng:latest
     container_name: rin-vision
     restart: always
@@ -99,9 +101,10 @@ services:
       - USE_DB_AUTHENTICATION=false
       - NUM_WORKERS_PER_QUEUE=1
       # Disable NUQ database and RabbitMQ setup (prevents Docker-in-Docker errors)
-      # These are placeholder values that disable automatic container setup
-      - NUQ_DATABASE_URL=postgresql://firecrawl-disabled:not-used@localhost:5432/disabled
-      - NUQ_RABBITMQ_URL=amqp://firecrawl-disabled:not-used@localhost:5672
+      # These are non-functional placeholder values that prevent automatic container setup
+      # Do NOT use these values for actual database connections
+      - NUQ_DATABASE_URL=postgresql://disabled:disabled@127.0.0.1:1/disabled
+      - NUQ_RABBITMQ_URL=amqp://disabled:disabled@127.0.0.1:1
     depends_on:
       - redis
       - playwright-service
@@ -153,6 +156,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 5s
 
   qdrant:
     image: qdrant/qdrant

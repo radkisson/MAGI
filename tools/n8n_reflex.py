@@ -369,10 +369,15 @@ class Tools:
         # Test connection to n8n
         connection_status = "✅ Connected"
         try:
-            response = requests.get(
-                f"{self.valves.N8N_WEBHOOK_URL.replace('/webhook', '')}/healthz",
-                timeout=5
-            )
+            # Construct health check URL more robustly
+            base_url = self.valves.N8N_WEBHOOK_URL
+            if '/webhook' in base_url:
+                health_url = base_url.replace('/webhook', '/healthz')
+            else:
+                # If URL doesn't contain /webhook, assume it's a base URL
+                health_url = base_url.rstrip('/') + '/healthz'
+            
+            response = requests.get(health_url, timeout=5)
             if response.status_code != 200:
                 connection_status = f"⚠️  Connection issue (status: {response.status_code})"
         except requests.exceptions.ConnectionError:
