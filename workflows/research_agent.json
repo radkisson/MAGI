@@ -10,7 +10,10 @@
       "name": "Webhook: Research Request",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "research",
       "id": "webhook-research"
     },
@@ -21,7 +24,10 @@
       "name": "Parse Research Query",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "parse-query"
     },
     {
@@ -48,7 +54,10 @@
       "name": "Search with SearXNG",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [650, 300],
+      "position": [
+        650,
+        300
+      ],
       "id": "search-searxng"
     },
     {
@@ -58,7 +67,10 @@
       "name": "Extract URLs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [850, 300],
+      "position": [
+        850,
+        300
+      ],
       "id": "extract-urls"
     },
     {
@@ -92,7 +104,10 @@
       "name": "Scrape Content",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1050, 300],
+      "position": [
+        1050,
+        300
+      ],
       "id": "scrape-content"
     },
     {
@@ -130,7 +145,10 @@
       "name": "Synthesize Report",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1250, 300],
+      "position": [
+        1250,
+        300
+      ],
       "id": "synthesize-report"
     },
     {
@@ -140,7 +158,10 @@
       "name": "Format Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1450, 300],
+      "position": [
+        1450,
+        300
+      ],
       "id": "format-report"
     },
     {
@@ -151,7 +172,10 @@
       "name": "Send Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1650, 300],
+      "position": [
+        1650,
+        300
+      ],
       "id": "send-response"
     }
   ],
@@ -241,6 +265,5 @@
   "versionId": "1",
   "meta": {
     "instanceId": "rin-research-agent"
-  },
-  "tags": []
+  }
 }

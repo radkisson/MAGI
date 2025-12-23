@@ -83,17 +83,19 @@ engines:
     disabled: false
     categories: [general]
 
-  - name: internet archive
-    engine: archive_is
-    shortcut: ia
-    disabled: false
-    categories: [general]
+  # Note: archive_is engine removed - not available in latest SearXNG version
+  # - name: internet archive
+  #   engine: archive_is
+  #   shortcut: ia
+  #   disabled: false
+  #   categories: [general]
 
-  - name: z-library (via anna's archive)
-    engine: annas_archive
-    shortcut: aa
-    disabled: false
-    categories: [files]
+  # Note: annas_archive removed - causes ambiguous shortcut 'aa' conflict with ahmia engine
+  # - name: z-library (via anna's archive)
+  #   engine: annas_archive
+  #   shortcut: aa
+  #   disabled: false
+  #   categories: [files]
 
   # --- WIKIS & ENCYCLOPEDIAS ---
   - name: wikipedia

@@ -362,10 +362,39 @@ class Tools:
 
         Returns documentation on available workflows and how to use them
         with either trigger_reflex() or query_workflow().
+        
+        Also includes connection diagnostics to help troubleshoot issues.
         """
+        
+        # Test connection to n8n
+        connection_status = "✅ Connected"
+        try:
+            # Construct health check URL more robustly
+            base_url = self.valves.N8N_WEBHOOK_URL
+            if '/webhook' in base_url:
+                health_url = base_url.replace('/webhook', '/healthz')
+            else:
+                # If URL doesn't contain /webhook, assume it's a base URL
+                health_url = base_url.rstrip('/') + '/healthz'
+            
+            response = requests.get(health_url, timeout=5)
+            if response.status_code != 200:
+                connection_status = f"⚠️  Connection issue (status: {response.status_code})"
+        except requests.exceptions.ConnectionError:
+            connection_status = "❌ Cannot connect to n8n"
+        except requests.exceptions.Timeout:
+            connection_status = "⏱️ Connection timeout"
+        except Exception as e:
+            connection_status = f"❌ Error: {str(e)}"
 
-        return """
-# Available n8n Workflows (Reflex Arc)
+        return f"""
+# n8n Reflex Arc - Available Workflows & Status
+
+## Connection Status
+{connection_status}
+- Webhook URL: `{self.valves.N8N_WEBHOOK_URL}`
+- Cognitive Timeout: {self.valves.COGNITIVE_TIMEOUT}s
+- Reflex Timeout: {self.valves.REFLEX_TIMEOUT}s
 
 ## 🔥 Reflex Workflows (Fire-and-Forget)
 Use `trigger_reflex(workflow_id, payload)` for these:
@@ -397,13 +426,21 @@ These run automatically, no trigger needed:
 
 **Fire-and-forget (email):**
 ```
-trigger_reflex("send-email", '{"to": "user@example.com", "subject": "Hello", "body": "..."}')
+trigger_reflex("send-email", '{{"to": "user@example.com", "subject": "Hello", "body": "..."}}')
 ```
 
 **Cognitive query (research):**
 ```
 query_workflow("research", "Latest developments in quantum computing")
 ```
+
+## Troubleshooting
+
+If you see connection errors:
+1. Check that n8n is running: `docker ps | grep rin-reflex`
+2. Verify workflows are activated in n8n: http://localhost:5678
+3. Ensure webhook URLs match the workflow IDs
+4. Check n8n logs: `docker logs rin-reflex-automation`
 
 ## Configuration
 

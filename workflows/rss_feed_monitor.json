@@ -15,7 +15,10 @@
       "name": "Schedule: Every 6 Hours",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "id": "schedule-trigger"
     },
     {
@@ -26,7 +29,10 @@
       "name": "Fetch RSS Feed",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "fetch-rss",
       "notes": "Configure the RSS feed URL you want to monitor.\nDefault: Hacker News RSS feed"
     },
@@ -37,7 +43,10 @@
       "name": "Filter Top Items",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [650, 300],
+      "position": [
+        650,
+        300
+      ],
       "id": "filter-items"
     },
     {
@@ -75,7 +84,10 @@
       "name": "Summarize with LiteLLM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [850, 300],
+      "position": [
+        850,
+        300
+      ],
       "id": "summarize-llm"
     },
     {
@@ -85,7 +97,10 @@
       "name": "Format Summary",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1050, 300],
+      "position": [
+        1050,
+        300
+      ],
       "id": "format-summary"
     }
   ],
@@ -142,6 +157,5 @@
   "versionId": "1",
   "meta": {
     "instanceId": "rin-rss-monitor"
-  },
-  "tags": []
+  }
 }

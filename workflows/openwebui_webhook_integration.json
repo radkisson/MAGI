@@ -10,7 +10,10 @@
       "name": "Webhook: Receive from OpenWebUI",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "openwebui-action",
       "id": "webhook-receiver"
     },
@@ -21,7 +24,10 @@
       "name": "Parse Request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "parse-request"
     },
     {
@@ -68,7 +74,10 @@
       "name": "Route by Action",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [650, 300],
+      "position": [
+        650,
+        300
+      ],
       "id": "route-action"
     },
     {
@@ -100,7 +109,10 @@
       "name": "Format Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.3,
-      "position": [850, 300],
+      "position": [
+        850,
+        300
+      ],
       "id": "format-response"
     },
     {
@@ -111,7 +123,10 @@
       "name": "Send Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1050, 300],
+      "position": [
+        1050,
+        300
+      ],
       "id": "send-response"
     }
   ],
@@ -168,6 +183,5 @@
   "versionId": "1",
   "meta": {
     "instanceId": "rin-openwebui-integration"
-  },
-  "tags": []
+  }
 }

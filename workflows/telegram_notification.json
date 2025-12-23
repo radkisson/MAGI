@@ -10,7 +10,10 @@
       "name": "Webhook: Receive Message",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "telegram-send",
       "id": "webhook-telegram"
     },
@@ -21,7 +24,10 @@
       "name": "Parse Message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "parse-message"
     },
     {
@@ -37,7 +43,10 @@
       "name": "Send to Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.1,
-      "position": [650, 300],
+      "position": [
+        650,
+        300
+      ],
       "id": "send-telegram",
       "credentials": {
         "telegramApi": {
@@ -70,7 +79,10 @@
       "name": "Format Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.3,
-      "position": [850, 300],
+      "position": [
+        850,
+        300
+      ],
       "id": "format-response"
     },
     {
@@ -81,7 +93,10 @@
       "name": "Send Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1050, 300],
+      "position": [
+        1050,
+        300
+      ],
       "id": "send-response"
     }
   ],
@@ -138,6 +153,5 @@
   "versionId": "1",
   "meta": {
     "instanceId": "rin-telegram-integration"
-  },
-  "tags": []
+  }
 }

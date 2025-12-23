@@ -15,7 +15,10 @@
       "name": "Schedule: Daily at 6 PM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "id": "schedule-trigger"
     },
     {
@@ -25,7 +28,10 @@
       "name": "Generate Topics",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [450, 300],
+      "position": [
+        450,
+        300
+      ],
       "id": "generate-topics"
     },
     {
@@ -48,7 +54,10 @@
       "name": "Search Each Topic",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [650, 300],
+      "position": [
+        650,
+        300
+      ],
       "id": "search-topics"
     },
     {
@@ -58,7 +67,10 @@
       "name": "Aggregate Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [850, 300],
+      "position": [
+        850,
+        300
+      ],
       "id": "aggregate-results"
     },
     {
@@ -96,7 +108,10 @@
       "name": "Generate Report with LLM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1050, 300],
+      "position": [
+        1050,
+        300
+      ],
       "id": "generate-report"
     },
     {
@@ -106,7 +121,10 @@
       "name": "Format Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1250, 300],
+      "position": [
+        1250,
+        300
+      ],
       "id": "format-report"
     },
     {
@@ -120,7 +138,10 @@
       "name": "Store in Qdrant",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1450, 300],
+      "position": [
+        1450,
+        300
+      ],
       "id": "store-qdrant",
       "notes": "This node stores the report in Qdrant for long-term memory.\nConfigure Qdrant connection if needed."
     }
@@ -200,6 +221,5 @@
   "versionId": "1",
   "meta": {
     "instanceId": "rin-daily-report"
-  },
-  "tags": []
+  }
 }
