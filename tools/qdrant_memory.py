@@ -47,15 +47,18 @@ class Tools:
 
         This tool allows RIN to remember facts, conversations, and documents
         for future recall using RAG (Retrieval Augmented Generation).
+        
+        Security: Requires valid user authentication. Each memory is tagged
+        with the user's ID to ensure proper isolation.
 
         Args:
             content: The text content to store in memory
             metadata: Optional metadata (tags, source, timestamp, etc.)
-            __user__: User context (provided by Open WebUI)
+            __user__: User context (provided by Open WebUI) - REQUIRED
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
 
         Returns:
-            Confirmation message with memory ID
+            Confirmation message with memory ID, or error if no user context
         """
 
         if __event_emitter__:
@@ -70,6 +73,19 @@ class Tools:
             )
 
         try:
+            # Require valid user context for security (check FIRST before any operations)
+            user_id = __user__.get("id") if __user__ else None
+            if not user_id:
+                error_msg = "User authentication required to store memories"
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {"description": f"❌ {error_msg}", "done": True},
+                        }
+                    )
+                return f"Memory storage failed: {error_msg}"
+
             # First, ensure collection exists
             self._ensure_collection_exists()
 
@@ -84,9 +100,8 @@ class Tools:
             prepared_metadata = dict(metadata) if metadata else {}
             
             # Add user context to metadata
-            if __user__:
-                prepared_metadata["user_id"] = __user__.get("id", "unknown")
-                prepared_metadata["user_name"] = __user__.get("name", "unknown")
+            prepared_metadata["user_id"] = user_id
+            prepared_metadata["user_name"] = __user__.get("name", "unknown")
             
             # Add timestamp
             prepared_metadata["timestamp"] = time.time()
