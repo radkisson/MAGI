@@ -253,6 +253,178 @@ def test_script_imports():
         return False
 
 
+def test_popularity_scoring():
+    """Test popularity scoring function"""
+    print_test("Popularity Scoring")
+    
+    try:
+        from sync_openrouter_models import calculate_popularity_score
+        
+        # Test model with known providers
+        test_models = [
+            {'id': 'openai/gpt-4o', 'pricing': {'prompt': '0.0000025'}},
+            {'id': 'anthropic/claude-3.5-sonnet', 'pricing': {'prompt': '0.000003'}},
+            {'id': 'meta-llama/llama-3-70b', 'pricing': {'prompt': '0.0000001'}},
+        ]
+        
+        scores = [calculate_popularity_score(m) for m in test_models]
+        
+        checks = [
+            (all(0 <= s <= 100 for s in scores), "All scores in valid range (0-100)"),
+            (scores[0] > 50, "OpenAI model has decent score"),
+            (len(scores) == 3, "Scored all test models"),
+        ]
+        
+        all_passed = True
+        for check, msg in checks:
+            if check:
+                print_pass(msg)
+            else:
+                print_fail(msg)
+                all_passed = False
+        
+        return all_passed
+        
+    except Exception as e:
+        print_fail(f"Popularity scoring test failed: {e}")
+        traceback.print_exc()
+        return False
+
+
+def test_cost_metadata():
+    """Test cost metadata addition"""
+    print_test("Cost Metadata")
+    
+    try:
+        from sync_openrouter_models import add_cost_metadata
+        
+        test_model = {
+            'id': 'test/model',
+            'pricing': {
+                'prompt': '0.0000001',  # $0.10 per 1M tokens
+                'completion': '0.0000002'  # $0.20 per 1M tokens
+            }
+        }
+        
+        litellm_model = {'model_info': {}}
+        result = add_cost_metadata(test_model, litellm_model)
+        
+        checks = [
+            ('cost' in result['model_info'], "Cost metadata added"),
+            ('tier' in result['model_info']['cost'], "Cost tier present"),
+            (result['model_info']['cost']['tier'] == 'budget', "Correct tier (budget)"),
+            ('input_per_1m_tokens' in result['model_info']['cost'], "Input cost present"),
+        ]
+        
+        all_passed = True
+        for check, msg in checks:
+            if check:
+                print_pass(msg)
+            else:
+                print_fail(msg)
+                all_passed = False
+        
+        return all_passed
+        
+    except Exception as e:
+        print_fail(f"Cost metadata test failed: {e}")
+        traceback.print_exc()
+        return False
+
+
+def test_capability_tags():
+    """Test capability tagging"""
+    print_test("Capability Tags")
+    
+    try:
+        from sync_openrouter_models import add_capability_tags
+        
+        test_model = {
+            'id': 'openai/gpt-4o',
+            'architecture': {
+                'supports_function_calling': True,
+                'modality': 'multimodal'
+            },
+            'context_length': 128000
+        }
+        
+        litellm_model = {'model_info': {}}
+        result = add_capability_tags(test_model, litellm_model)
+        
+        tags = result['model_info'].get('tags', [])
+        
+        checks = [
+            ('tags' in result['model_info'], "Tags field added"),
+            ('openai' in tags, "Provider tag present"),
+            ('function-calling' in tags, "Function calling tag present"),
+            ('vision' in tags, "Vision tag present"),
+            ('long-context' in tags, "Long context tag present"),
+        ]
+        
+        all_passed = True
+        for check, msg in checks:
+            if check:
+                print_pass(msg)
+            else:
+                print_fail(msg)
+                all_passed = False
+        
+        return all_passed
+        
+    except Exception as e:
+        print_fail(f"Capability tags test failed: {e}")
+        traceback.print_exc()
+        return False
+
+
+def test_model_recommendations():
+    """Test model recommendations generation"""
+    print_test("Model Recommendations")
+    
+    try:
+        from sync_openrouter_models import generate_model_recommendations
+        
+        test_models = [
+            {
+                'id': 'openai/gpt-4o',
+                'pricing': {'prompt': '0.0000025'},
+                '_popularity_score': 80,
+                'architecture': {}
+            },
+            {
+                'id': 'openai/gpt-4o-mini',
+                'pricing': {'prompt': '0.0000001'},
+                '_popularity_score': 70,
+                'architecture': {}
+            },
+        ]
+        
+        recs = generate_model_recommendations(test_models)
+        
+        checks = [
+            ('best_value' in recs, "Best value recommendations present"),
+            ('most_capable' in recs, "Most capable recommendations present"),
+            ('fastest' in recs, "Fastest recommendations present"),
+            ('budget_friendly' in recs, "Budget friendly recommendations present"),
+            (isinstance(recs['best_value'], list), "Recommendations are lists"),
+        ]
+        
+        all_passed = True
+        for check, msg in checks:
+            if check:
+                print_pass(msg)
+            else:
+                print_fail(msg)
+                all_passed = False
+        
+        return all_passed
+        
+    except Exception as e:
+        print_fail(f"Model recommendations test failed: {e}")
+        traceback.print_exc()
+        return False
+
+
 def main():
     """Run all tests"""
     print(f"\n{'='*70}")
@@ -265,6 +437,10 @@ def main():
         ("Model Conversion", test_model_conversion),
         ("Model Filtering", test_model_filtering),
         ("Config Backup", test_config_backup),
+        ("Popularity Scoring", test_popularity_scoring),
+        ("Cost Metadata", test_cost_metadata),
+        ("Capability Tags", test_capability_tags),
+        ("Model Recommendations", test_model_recommendations),
     ]
     
     results = []

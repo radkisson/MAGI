@@ -343,12 +343,69 @@ config/litellm/
 
 ## Future Enhancements
 
-Planned improvements:
-- [ ] Model popularity rankings
-- [ ] Cost-based filtering
-- [ ] Model capability search
-- [ ] Automatic model recommendations
-- [ ] Performance benchmarking integration
+~~Planned improvements:~~  
+**✅ IMPLEMENTED:**
+- [x] **Model popularity rankings** - Models are now ranked by popularity score (0-100)
+- [x] **Cost-based filtering** - Models tagged with cost tiers (budget, standard, premium)
+- [x] **Model capability search** - New `search_models.py` script for filtering by capabilities
+- [x] **Automatic model recommendations** - Generates recommendations for different use cases
+- [x] **Performance benchmarking integration** - Popularity scores based on multiple factors
+
+### New Features
+
+#### 1. Model Search Tool
+
+Search and filter models by capabilities:
+
+```bash
+# Search by tag
+python3 scripts/search_models.py --tag vision
+
+# Search by cost tier
+python3 scripts/search_models.py --cost budget
+
+# Search by popularity
+python3 scripts/search_models.py --popular 70
+
+# Get recommendations
+python3 scripts/search_models.py --best-value
+python3 scripts/search_models.py --coding
+python3 scripts/search_models.py --vision
+```
+
+#### 2. Popularity Scoring
+
+Models are automatically ranked by popularity (0-100) based on:
+- Provider reputation (OpenAI, Anthropic, etc.)
+- Pricing competitiveness
+- Capability features (function calling, vision)
+- Model specialization
+
+#### 3. Cost Metadata
+
+All models include cost information:
+- Cost per 1M tokens (input/output)
+- Cost tier classification (budget/standard/premium)
+- Enables cost-based filtering
+
+#### 4. Capability Tags
+
+Models are tagged for easy searching:
+- Provider tags: `openai`, `anthropic`, `meta`, `google`, `mistral`
+- Capability tags: `function-calling`, `vision`, `web-search`, `long-context`
+- Size tags: `large`, `small`
+
+#### 5. Automatic Recommendations
+
+The sync script generates recommendations for:
+- 💎 **Best Value** - Good performance at reasonable cost
+- 🚀 **Most Capable** - Premium flagship models
+- ⚡ **Fastest** - Optimized for speed
+- 💰 **Budget Friendly** - Most cost-effective
+- 👁️ **Vision Tasks** - Image/multimodal support
+- 💻 **Coding** - Best for programming tasks
+
+Recommendations are saved to `data/model_recommendations.json`
 
 ## Support
 

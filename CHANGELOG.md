@@ -11,18 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic OpenRouter Model Loading**: Automatically fetch and sync the latest models from OpenRouter API
   - New `scripts/sync_openrouter_models.py` - Core sync script that fetches models from OpenRouter API
   - New `scripts/sync_models.sh` - Convenience wrapper for manual model syncing
+  - New `scripts/search_models.py` - Search and filter models by capabilities, cost, and tags
   - New `docs/DYNAMIC_MODELS.md` - Complete guide for dynamic model loading
   - Automatic model sync on startup via `start.sh`
   - Model filtering to exclude deprecated and unavailable models
   - Automatic capability detection (function calling, vision support)
   - Graceful fallback to static configuration if API is unavailable
   - Config backup before updates
-  - Test suite for model sync functionality
+  - Test suite for model sync functionality (9 tests)
+
+- **Model Intelligence Features** (Enhancement implementations):
+  - **Popularity Rankings**: Models ranked 0-100 based on provider, pricing, and capabilities
+  - **Cost Metadata**: All models tagged with cost tiers (budget/standard/premium) and per-token pricing
+  - **Capability Tags**: Searchable tags for providers, capabilities, and specializations
+  - **Automatic Recommendations**: Generated recommendations for 6 use cases (best value, coding, vision, etc.)
+  - **Model Search Tool**: Command-line tool to search/filter models by any criteria
+  - Recommendations saved to `data/model_recommendations.json`
 
 ### Changed
 - **LiteLLM Configuration**: Now supports dynamic model updates while preserving custom configurations
+- **Model Conversion**: Enhanced to include popularity scores, cost metadata, and capability tags
 - **README.md**: Updated to mention dynamic model loading feature (100+ models available)
 - **docs/MODEL_CONFIGURATION.md**: Added documentation for automatic vs manual model configuration
+- **docs/DYNAMIC_MODELS.md**: Updated with implemented enhancement features
 - **start.sh**: Integrated automatic model sync on startup with error handling
 
 ### Fixed

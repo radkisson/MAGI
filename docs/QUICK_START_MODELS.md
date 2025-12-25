@@ -4,6 +4,12 @@
 
 RIN now automatically fetches the latest models from OpenRouter instead of using a static list.
 
+**NEW: Enhanced with intelligent model features!**
+- 🏆 Popularity rankings (0-100 score)
+- 💰 Cost-based filtering (budget/standard/premium)
+- 🔍 Capability search (tags, functions, vision)
+- 🎯 Automatic recommendations (best value, coding, etc.)
+
 ## For New Users
 
 **Nothing changes!** Just run:
@@ -89,6 +95,50 @@ if not any(x in model_id for x in ['openai', 'anthropic']):
 - ✅ Backup before changes
 - ✅ Graceful fallback
 - ✅ Works without API key (uses static config)
+- ✅ **NEW: Popularity rankings** (0-100 score)
+- ✅ **NEW: Cost metadata** (budget/standard/premium tiers)
+- ✅ **NEW: Capability tags** (function-calling, vision, etc.)
+- ✅ **NEW: Smart recommendations** (best value, coding, vision)
+- ✅ **NEW: Model search tool** (filter by any criteria)
+
+## New: Search Models
+
+Find the perfect model for your needs:
+
+```bash
+# Search by capability
+python3 scripts/search_models.py --tag vision
+python3 scripts/search_models.py --tag function-calling
+
+# Search by cost
+python3 scripts/search_models.py --cost budget
+python3 scripts/search_models.py --cost premium
+
+# Search by popularity
+python3 scripts/search_models.py --popular 70
+
+# Get recommendations
+python3 scripts/search_models.py --best-value
+python3 scripts/search_models.py --coding
+python3 scripts/search_models.py --vision
+```
+
+## New: View Recommendations
+
+After syncing, recommendations are saved:
+
+```bash
+# View recommendations file
+cat data/model_recommendations.json
+```
+
+Recommendations include:
+- 💎 Best Value - Good performance at reasonable cost
+- 🚀 Most Capable - Premium flagship models
+- ⚡ Fastest - Optimized for speed
+- 💰 Budget Friendly - Most cost-effective
+- 👁️ Vision Tasks - Image/multimodal support
+- 💻 Coding - Best for programming
 
 ## More Info
 
