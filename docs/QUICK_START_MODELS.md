@@ -9,8 +9,47 @@ RIN now automatically fetches the latest models from OpenRouter instead of using
 - 💰 Cost-based filtering (budget/standard/premium)
 - 🔍 Capability search (tags, functions, vision)
 - 🎯 Automatic recommendations (best value, coding, etc.)
+- 🖥️ **Integrated into `rin` CLI command**
 
 ## For New Users
+
+**Nothing changes!** Just run:
+
+```bash
+./start.sh
+```
+
+If you have an `OPENROUTER_API_KEY` in your `.env`, RIN will automatically load all available models.
+
+## NEW: RIN CLI Integration
+
+All model management is now integrated into the `rin` command:
+
+```bash
+# Sync models from OpenRouter
+./rin models sync
+
+# List available models (limit to 25)
+./rin models list 25
+
+# Show top 10 models by popularity
+./rin models top 10
+
+# Filter models by type
+./rin models filter vision 20
+./rin models filter budget 30
+./rin models filter openrouter 50
+
+# Search models
+./rin models search --tag vision
+./rin models search --cost budget
+./rin models search --popular 70
+
+# View recommendations
+./rin models recommend
+```
+
+## For Existing Users
 
 **Nothing changes!** Just run:
 
@@ -27,8 +66,34 @@ If you have an `OPENROUTER_API_KEY` in your `.env`, RIN will automatically load 
 Run this anytime to sync the latest OpenRouter models:
 
 ```bash
+# Using rin CLI (recommended)
+./rin models sync
+docker-compose restart litellm
+
+# Or using script directly
 ./scripts/sync_models.sh
 docker-compose restart litellm
+```
+
+### View and Filter Models
+
+```bash
+# List all models (default limit: 50)
+./rin models list
+
+# List top 25 models
+./rin models list 25
+
+# Show top 10 by popularity
+./rin models top 10
+
+# Filter by type (up to 50 models)
+./rin models filter vision 20
+./rin models filter budget 30
+./rin models filter openrouter 50
+
+# View recommendations
+./rin models recommend
 ```
 
 ### How Often Should I Sync?

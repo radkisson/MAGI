@@ -28,17 +28,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Model Search Tool**: Command-line tool to search/filter models by any criteria
   - Recommendations saved to `data/model_recommendations.json`
 
+- **RIN CLI Model Management Integration**:
+  - `./rin models sync` - Sync latest models from OpenRouter
+  - `./rin models list [N] [filter]` - List available models with limit and filter
+  - `./rin models top [N]` - Show top N models by popularity
+  - `./rin models filter <type> [N]` - Filter models by type (vision, budget, etc.)
+  - `./rin models search <query>` - Search models with advanced criteria
+  - `./rin models recommend` - Show curated recommendations
+  - All model commands integrated into main `rin` CLI tool
+  - Support for limiting display (default 50, customizable)
+  - Multiple filter types: openrouter, popular, budget, vision, function-calling, provider-specific
+
 ### Changed
 - **LiteLLM Configuration**: Now supports dynamic model updates while preserving custom configurations
 - **Model Conversion**: Enhanced to include popularity scores, cost metadata, and capability tags
 - **README.md**: Updated to mention dynamic model loading feature (100+ models available)
 - **docs/MODEL_CONFIGURATION.md**: Added documentation for automatic vs manual model configuration
 - **docs/DYNAMIC_MODELS.md**: Updated with implemented enhancement features
+- **docs/QUICK_START_MODELS.md**: Added RIN CLI integration examples
+- **CLI_REFERENCE.md**: Added comprehensive model management command documentation
 - **start.sh**: Integrated automatic model sync on startup with error handling
+- **rin CLI**: Enhanced with complete model management subcommands
 
 ### Fixed
 - Model list no longer limited to hardcoded entries in config file
 - Users can now access all available OpenRouter models without manual configuration updates
+- Model display can be limited to prevent overwhelming output (configurable limit)
 
 ## [1.2.1] - 2025-12-21
 
