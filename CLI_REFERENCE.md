@@ -373,6 +373,107 @@ Once RIN is running:
 - **Qdrant (Vector DB)**: http://localhost:6333
 - **Redis**: localhost:6379
 
+## Model Management
+
+RIN v1.2+ includes integrated model management through the CLI:
+
+### `./rin models sync`
+Synchronize the latest models from OpenRouter API.
+
+**Example:**
+```bash
+./rin models sync
+```
+
+### `./rin models list [limit] [filter]`
+List available models with optional limit and filter.
+
+**Examples:**
+```bash
+# List all models (default limit: 50)
+./rin models list
+
+# List top 25 models
+./rin models list 25
+
+# List only OpenRouter models
+./rin models list 50 openrouter
+```
+
+### `./rin models top [count]`
+Show top N models by popularity score.
+
+**Examples:**
+```bash
+# Show top 10 models
+./rin models top 10
+
+# Show top 25 models
+./rin models top 25
+```
+
+### `./rin models filter <type> [limit]`
+Filter models by specific criteria.
+
+**Filter Types:**
+- `openrouter` - OpenRouter models only
+- `popular` - High popularity models (score >= 70)
+- `budget` - Budget tier models
+- `vision` - Vision capability models
+- `function-calling` - Function calling models
+- `openai` - OpenAI models
+- `anthropic` - Anthropic models
+
+**Examples:**
+```bash
+# Show 20 vision-capable models
+./rin models filter vision 20
+
+# Show 30 budget-friendly models
+./rin models filter budget 30
+
+# Show 50 OpenRouter models
+./rin models filter openrouter 50
+```
+
+### `./rin models search <query>`
+Search models using advanced criteria.
+
+**Examples:**
+```bash
+# Search by tag
+./rin models search --tag vision
+
+# Search by cost tier
+./rin models search --cost budget
+
+# Search by popularity score
+./rin models search --popular 70
+
+# Pre-built searches
+./rin models search --best-value
+./rin models search --coding
+./rin models search --vision
+```
+
+### `./rin models recommend`
+Display curated model recommendations for different use cases.
+
+**Categories:**
+- Best Value - Good performance at reasonable cost
+- Most Capable - Premium flagship models
+- Fastest - Optimized for speed
+- Budget Friendly - Most cost-effective
+- Vision Tasks - Image/multimodal support
+- Coding - Best for programming
+
+**Example:**
+```bash
+./rin models recommend
+```
+
+**Note:** Recommendations are generated during model sync and saved to `data/model_recommendations.json`.
+
 ## Backward Compatibility
 
 The original `./start.sh` script continues to work as before. The `./rin` CLI is a wrapper that adds management capabilities on top of the existing infrastructure.

@@ -1,7 +1,3 @@
-# LiteLLM Configuration for RIN v1.1
-# Enhanced Multi-model routing with OpenRouter integration
-# Supports: OpenAI, Anthropic, OpenRouter marketplace, cost tracking, and fallback chains
-
 model_list:
   # ============================================================================
   # OpenAI Models (Direct API)
@@ -239,62 +235,36 @@ model_list:
 # Router Settings - Enhanced with Fallback Chains
 # ============================================================================
 router_settings:
-  routing_strategy: usage-based-routing-v2  # Intelligent load balancing
+  routing_strategy: usage-based-routing-v2
   enable_pre_call_checks: true
-  allowed_fails: 3  # Number of failures before removing model from rotation
-  cooldown_time: 60  # Seconds to wait before retrying a failed model
-  num_retries: 2  # Retry attempts per request
-  timeout: 60  # Request timeout in seconds
+  allowed_fails: 3
+  cooldown_time: 60
+  num_retries: 2
+  timeout: 60
   fallbacks:
-    # Primary GPT-4 with fallback chain
-    - gpt-4o:
-      - openrouter/gpt-4o
-      - claude-3-5-sonnet
-      - openrouter/llama-3.1-405b
-    
-    # Primary Claude with fallback chain
-    - claude-3-5-sonnet:
-      - openrouter/claude-3-5-sonnet
-      - gpt-4o
-      - openrouter/gpt-4-turbo
-    
-    # Mini models fallback
-    - gpt-4o-mini:
-      - claude-3-5-haiku
-      - openrouter/gemini-flash
-      - openrouter/mixtral-8x7b
-
-# ============================================================================
-# General Settings
-# ============================================================================
+  - gpt-4o:
+    - openrouter/openai-gpt-4o
+    - claude-3-5-sonnet
+    - openrouter/meta-llama-llama-3.1-405b-instruct
+  - claude-3-5-sonnet:
+    - openrouter/anthropic-claude-3-5-sonnet-20241022
+    - gpt-4o
+    - openrouter/openai-gpt-4-turbo
+  - gpt-4o-mini:
+    - claude-3-5-haiku
+    - openrouter/google-gemini-flash-1.5
+    - openrouter/mistralai-mixtral-8x7b-instruct
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
-  
-  # Note: Database disabled for Zero-Config architecture (v1.2.0+)
-  # Cost tracking uses in-memory storage. For persistent cost tracking,
-  # add a PostgreSQL service and set DATABASE_URL in .env
-  
-  # Enable detailed logging for debugging
   set_verbose: false
-  
-  # Alert settings
   alerting:
-    - webhook  # Can add webhook URLs for budget alerts
-  
-  # Cache settings for cost optimization
+  - webhook
   cache:
-    type: "redis"
-    host: "redis"
+    type: redis
+    host: redis
     port: 6379
-
-# ============================================================================
-# Litellm Settings
-# ============================================================================
 litellm_settings:
-  # Drop unmapped parameters instead of failing
   drop_params: true
-  
-  # Set default parameters for all models
   default_max_tokens: 4096
   default_temperature: 0.7
   default_top_p: 1.0

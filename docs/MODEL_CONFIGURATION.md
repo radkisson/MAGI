@@ -2,6 +2,26 @@
 
 This guide explains the enhanced model support features introduced in RIN v1.1 "Expansion".
 
+## 🆕 Dynamic Model Loading
+
+**NEW**: RIN now automatically fetches the latest models from OpenRouter!
+
+Models are synchronized automatically on startup and can be manually updated at any time. This ensures you always have access to the newest models without manual configuration.
+
+📖 **See [Dynamic Models Guide](DYNAMIC_MODELS.md) for complete documentation**
+
+Quick start:
+```bash
+# Set your OpenRouter API key
+echo "OPENROUTER_API_KEY=your_key" >> .env
+
+# Sync models
+./scripts/sync_models.sh
+
+# Restart to apply
+docker-compose restart litellm
+```
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -390,7 +410,25 @@ These headers ensure proper attribution and prevent potential API response issue
 
 ## Adding New Models
 
-To add new models from OpenRouter or other providers:
+### Option 1: Automatic Sync (Recommended)
+
+The easiest way to get new OpenRouter models:
+
+```bash
+# Sync all available models from OpenRouter
+./scripts/sync_models.sh
+
+# Restart LiteLLM
+docker-compose restart litellm
+```
+
+This automatically adds all available OpenRouter models to your configuration.
+
+See [Dynamic Models Guide](DYNAMIC_MODELS.md) for full details.
+
+### Option 2: Manual Configuration
+
+To manually add models from OpenRouter or other providers:
 
 1. Browse available models at [OpenRouter](https://openrouter.ai/models)
 2. Add to `config/litellm/config.yaml`:
