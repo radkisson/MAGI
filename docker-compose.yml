@@ -150,33 +150,50 @@ services:
     container_name: rin-mcp-bridge
     restart: always
     ports:
-      - "${PORT_MCP_BRIDGE:-9000}:9000"
+      - "${PORT_MCP_BRIDGE:-9000}:${PORT_MCP_BRIDGE:-9000}"
+    environment:
+      - PORT_MCP_BRIDGE=${PORT_MCP_BRIDGE:-9000}
     command:
       - "--port"
-      - "9000"
+      - "${PORT_MCP_BRIDGE:-9000}"
       - "--"
       - "npx"
       - "-y"
       - "@modelcontextprotocol/server-sequential-thinking"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT_MCP_BRIDGE:-9000}/openapi.json || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     # This service bridges Model Context Protocol (MCP) tools to Open WebUI.
     # Sequential Thinking forces the AI to use a "Chain of Thought" approach,
     # resulting in deeper, more methodical reasoning for complex queries.
 
   # --- YOUTUBE TRANSCRIPT BRIDGE ---
   youtube-mcp:
-    image: python:3.12-slim
+    image: ghcr.io/open-webui/mcpo:main
     container_name: rin-youtube-mcp
     restart: always
     ports:
-      - "${PORT_YOUTUBE_MCP:-9001}:9001"
-    command: >
-      sh -c "
-      apt-get update && apt-get install -y nodejs npm &&
-      pip install mcpo &&
-      mcpo --port 9001 -- npx -y @sinco-lab/mcp-youtube-transcript
-      "
+      - "${PORT_YOUTUBE_MCP:-9001}:${PORT_YOUTUBE_MCP:-9001}"
+    environment:
+      - PORT_YOUTUBE_MCP=${PORT_YOUTUBE_MCP:-9001}
+    command:
+      - "--port"
+      - "${PORT_YOUTUBE_MCP:-9001}"
+      - "--"
+      - "npx"
+      - "-y"
+      - "@sinco-lab/mcp-youtube-transcript"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT_YOUTUBE_MCP:-9001}/openapi.json || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     # This service allows the AI to "watch" videos by reading YouTube subtitle tracks.
-    # It installs both Node.js (for the NPM tool) and Python mcpo (for the bridge).
+    # Uses the mcpo image which includes Node.js, npm, and mcpo pre-installed.
 
   # --- SUPPORT ---
   redis:

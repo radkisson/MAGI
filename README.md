@@ -237,7 +237,7 @@ RIN: [Calls Sequential Thinking tool iteratively]
 
 #### 2. YouTube Transcript Tool
 
-The YouTube Transcript tool allows the AI to "watch" videos by reading their hidden subtitle tracks. This enables video analysis and summarization without actually playing the video.
+The YouTube Transcript tool allows the AI to "watch" videos by reading their subtitle/caption data. This enables video analysis and summarization without actually playing the video.
 
 **How it works:**
 - The tool extracts subtitle/transcript data from YouTube videos

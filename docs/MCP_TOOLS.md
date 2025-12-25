@@ -113,7 +113,7 @@ RIN: [Breaks down the problem into sequential steps]
 
 ### Description
 
-The YouTube Transcript tool allows the AI to "watch" videos by extracting and reading their subtitle tracks. This enables video analysis, summarization, and content search without requiring actual video playback.
+The YouTube Transcript tool allows the AI to "watch" videos by extracting and reading their subtitle/caption data. This enables video analysis, summarization, and content search without requiring actual video playback.
 
 ### How It Works
 
@@ -192,11 +192,10 @@ RIN: [Extracts full transcript]
 ### Technical Details
 
 - **Service Name:** `rin-youtube-mcp`
-- **Image:** `python:3.12-slim` (with Node.js installed)
+- **Image:** `ghcr.io/open-webui/mcpo:main`
 - **Port:** 9001 (configurable via `PORT_YOUTUBE_MCP`)
 - **Package:** `@sinco-lab/mcp-youtube-transcript` (NPM)
-- **Bridge:** `mcpo` (Python)
-- **Language:** Hybrid (Python + Node.js)
+- **Language:** Node.js (JavaScript)
 
 ---
 
@@ -247,29 +246,11 @@ RIN: [Extracts full transcript]
 
 ## Adding More MCP Tools
 
-### NPM-based MCP Tools
+### Recommended Pattern
 
-For NPM-based MCP tools (like YouTube Transcript), use this pattern:
+All MCP tools should use the `ghcr.io/open-webui/mcpo:main` image for consistency and performance. This image includes Node.js, npm, and mcpo pre-installed, avoiding per-startup installations.
 
-```yaml
-services:
-  my-mcp-tool:
-    image: python:3.12-slim
-    container_name: rin-my-tool
-    restart: always
-    ports:
-      - "9002:9002"
-    command: >
-      sh -c "
-      apt-get update && apt-get install -y nodejs npm &&
-      pip install mcpo &&
-      mcpo --port 9002 -- npx -y @package-name/mcp-tool-name
-      "
-```
-
-### Docker-based MCP Tools
-
-For tools with official Docker images (like Sequential Thinking), use this pattern:
+**Basic Template:**
 
 ```yaml
 services:
@@ -278,15 +259,50 @@ services:
     container_name: rin-my-tool
     restart: always
     ports:
-      - "9002:9002"
+      - "${PORT_MY_TOOL:-9002}:${PORT_MY_TOOL:-9002}"
+    environment:
+      - PORT_MY_TOOL=${PORT_MY_TOOL:-9002}
     command:
       - "--port"
-      - "9002"
+      - "${PORT_MY_TOOL:-9002}"
       - "--"
       - "npx"
       - "-y"
       - "@package-name/mcp-tool-name"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PORT_MY_TOOL:-9002}/openapi.json || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 ```
+
+**Key Configuration Points:**
+1. Use environment variables for ports on both sides of the mapping
+2. Pass the port variable to the command
+3. Include a healthcheck that verifies the OpenAPI endpoint
+4. Use the `${VAR:-default}` syntax for default values
+
+### Security Best Practices
+
+When adding new MCP tools, consider these security measures:
+
+1. **Pin Image Versions:** For production, pin the mcpo image to a specific digest instead of using `:main`
+   ```yaml
+   image: ghcr.io/open-webui/mcpo@sha256:abc123...
+   ```
+
+2. **Pin Package Versions:** Instead of using `npx -y @package-name/mcp-tool-name`, pin to specific versions:
+   ```yaml
+   command:
+     - "npx"
+     - "-y"
+     - "@package-name/mcp-tool-name@1.2.3"
+   ```
+
+3. **Network Isolation:** MCP services are only exposed on localhost by default. Keep it that way unless external access is required.
+
+4. **Review Dependencies:** Check the NPM package's dependencies and reputation before deploying.
 
 ### Finding MCP Tools
 
@@ -326,41 +342,31 @@ Currently, the MCP bridges do not require authentication for internal Docker net
 - Minimal resources (Node.js process)
 - Typical memory: ~50-100MB
 - CPU usage: Low (only during tool calls)
+- Fast startup time (pre-built image)
 
 **YouTube Transcript:**
-- Higher initial startup time (installs Node.js and dependencies)
-- Typical memory: ~200-300MB after startup
+- Similar resource profile to Sequential Thinking
+- Typical memory: ~50-100MB
+- CPU usage: Low (only during tool calls)
 - Network bandwidth: Moderate (fetches subtitle data from YouTube)
+- Fast startup time (pre-built image)
 
-### Improving Startup Time
+### Performance Notes
 
-The YouTube MCP service can be slow to start on first run because it installs dependencies. To improve this:
+Both MCP services use the `ghcr.io/open-webui/mcpo:main` image, which includes all required dependencies pre-installed. This provides:
 
-1. **Create a custom image** with pre-installed dependencies
-2. **Use volume caching** for Node.js modules
-3. **Pre-pull the base image**: `docker pull python:3.12-slim`
+1. **Fast startup times** - No package installation on container start
+2. **Consistent behavior** - Same runtime environment across deployments
+3. **Reduced network usage** - No downloading packages on every restart
+4. **Better reliability** - No dependency on external package registries during startup
 
-Example optimized docker-compose entry:
+### Startup Time Optimization
 
-```yaml
-youtube-mcp:
-  image: python:3.12-slim
-  container_name: rin-youtube-mcp
-  restart: always
-  ports:
-    - "9001:9001"
-  volumes:
-    - youtube-mcp-cache:/root/.npm
-  command: >
-    sh -c "
-    apt-get update && apt-get install -y nodejs npm &&
-    pip install mcpo &&
-    mcpo --port 9001 -- npx -y @sinco-lab/mcp-youtube-transcript
-    "
+If you're using custom MCP tools or need further optimization:
 
-volumes:
-  youtube-mcp-cache:
-```
+1. **Pre-pull images**: `docker pull ghcr.io/open-webui/mcpo:main`
+2. **Pin image digests** for production to avoid re-pulling on restart
+3. **Use volume caching** for NPM packages if using custom tools that aren't in the base image
 
 ---
 
