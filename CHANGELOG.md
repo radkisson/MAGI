@@ -5,6 +5,56 @@ All notable changes to the Rhyzomic Intelligence Node (RIN) will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Dynamic OpenRouter Model Loading**: Automatically fetch and sync the latest models from OpenRouter API
+  - New `scripts/sync_openrouter_models.py` - Core sync script that fetches models from OpenRouter API
+  - New `scripts/sync_models.sh` - Convenience wrapper for manual model syncing
+  - New `scripts/search_models.py` - Search and filter models by capabilities, cost, and tags
+  - New `docs/DYNAMIC_MODELS.md` - Complete guide for dynamic model loading
+  - Automatic model sync on startup via `start.sh`
+  - Model filtering to exclude deprecated and unavailable models
+  - Automatic capability detection (function calling, vision support)
+  - Graceful fallback to static configuration if API is unavailable
+  - Config backup before updates
+  - Test suite for model sync functionality (9 tests)
+
+- **Model Intelligence Features** (Enhancement implementations):
+  - **Popularity Rankings**: Models ranked 0-100 based on provider, pricing, and capabilities
+  - **Cost Metadata**: All models tagged with cost tiers (budget/standard/premium) and per-token pricing
+  - **Capability Tags**: Searchable tags for providers, capabilities, and specializations
+  - **Automatic Recommendations**: Generated recommendations for 6 use cases (best value, coding, vision, etc.)
+  - **Model Search Tool**: Command-line tool to search/filter models by any criteria
+  - Recommendations saved to `data/model_recommendations.json`
+
+- **RIN CLI Model Management Integration**:
+  - `./rin models sync` - Sync latest models from OpenRouter
+  - `./rin models list [N] [filter]` - List available models with limit and filter
+  - `./rin models top [N]` - Show top N models by popularity
+  - `./rin models filter <type> [N]` - Filter models by type (vision, budget, etc.)
+  - `./rin models search <query>` - Search models with advanced criteria
+  - `./rin models recommend` - Show curated recommendations
+  - All model commands integrated into main `rin` CLI tool
+  - Support for limiting display (default 50, customizable)
+  - Multiple filter types: openrouter, popular, budget, vision, function-calling, provider-specific
+
+### Changed
+- **LiteLLM Configuration**: Now supports dynamic model updates while preserving custom configurations
+- **Model Conversion**: Enhanced to include popularity scores, cost metadata, and capability tags
+- **README.md**: Updated to mention dynamic model loading feature (100+ models available)
+- **docs/MODEL_CONFIGURATION.md**: Added documentation for automatic vs manual model configuration
+- **docs/DYNAMIC_MODELS.md**: Updated with implemented enhancement features
+- **docs/QUICK_START_MODELS.md**: Added RIN CLI integration examples
+- **CLI_REFERENCE.md**: Added comprehensive model management command documentation
+- **start.sh**: Integrated automatic model sync on startup with error handling
+- **rin CLI**: Enhanced with complete model management subcommands
+
+### Fixed
+- Model list no longer limited to hardcoded entries in config file
+- Users can now access all available OpenRouter models without manual configuration updates
+- Model display can be limited to prevent overwhelming output (configurable limit)
+
 ## [1.2.1] - 2025-12-21
 
 ### Added

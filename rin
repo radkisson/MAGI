@@ -524,6 +524,193 @@ cmd_version() {
     fi
 }
 
+cmd_models_sync() {
+    print_header "Syncing OpenRouter Models"
+    
+    validate_base_dir
+    
+    # Check if sync script exists
+    if [ ! -f "$BASE_DIR/scripts/sync_openrouter_models.py" ]; then
+        print_error "Model sync script not found"
+        exit 1
+    fi
+    
+    # Run sync script
+    python3 "$BASE_DIR/scripts/sync_openrouter_models.py"
+    
+    if [ $? -eq 0 ]; then
+        print_success "Models synced successfully"
+        print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
+    else
+        print_error "Model sync failed"
+        exit 1
+    fi
+}
+
+cmd_models_search() {
+    validate_base_dir
+    
+    # Check if search script exists
+    if [ ! -f "$BASE_DIR/scripts/search_models.py" ]; then
+        print_error "Model search script not found"
+        exit 1
+    fi
+    
+    # Pass all arguments to search script
+    python3 "$BASE_DIR/scripts/search_models.py" "$@"
+}
+
+cmd_models_list() {
+    print_header "Available Models"
+    
+    validate_base_dir
+    
+    local limit="${1:-50}"  # Default limit to 50
+    local filter="${2:-all}" # Default show all
+    
+    # Check if config exists
+    local config_path="$BASE_DIR/config/litellm/config.yaml"
+    if [ ! -f "$config_path" ]; then
+        print_error "LiteLLM config not found"
+        exit 1
+    fi
+    
+    # Use helper script to safely parse and display models
+    python3 "$BASE_DIR/scripts/list_models_helper.py" "$config_path" "$limit" "$filter"
+}
+
+cmd_models_recommend() {
+    print_header "Model Recommendations"
+    
+    validate_base_dir
+    
+    local recommendations_file="$BASE_DIR/data/model_recommendations.json"
+    
+    if [ ! -f "$recommendations_file" ]; then
+        print_warning "No recommendations found. Run './rin models sync' first."
+        exit 1
+    fi
+    
+    # Use Python to parse and display recommendations
+    python3 << EOF
+import json
+import sys
+
+try:
+    with open('$recommendations_file', 'r') as f:
+        recs = json.load(f)
+    
+    categories = {
+        'best_value': '💎 Best Value',
+        'most_capable': '🚀 Most Capable',
+        'fastest': '⚡ Fastest',
+        'budget_friendly': '💰 Budget Friendly',
+        'vision_tasks': '👁️  Vision Tasks',
+        'coding': '💻 Coding'
+    }
+    
+    for key, title in categories.items():
+        models = recs.get(key, [])
+        if models:
+            print(f"\n{title}:")
+            for i, model in enumerate(models[:3], 1):
+                print(f"  {i}. {model}")
+    
+    print()
+
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
+}
+
+cmd_models_top() {
+    local count="${1:-10}"
+    
+    print_header "Top $count Models"
+    
+    cmd_models_list "$count" "popular"
+}
+
+cmd_models_filter() {
+    local filter="${1:-all}"
+    local limit="${2:-50}"
+    
+    print_header "Models Filtered by: $filter"
+    
+    cmd_models_list "$limit" "$filter"
+}
+
+cmd_models() {
+    local subcommand="${1:-help}"
+    shift || true
+    
+    case "$subcommand" in
+        sync)
+            cmd_models_sync "$@"
+            ;;
+        search)
+            cmd_models_search "$@"
+            ;;
+        list)
+            cmd_models_list "$@"
+            ;;
+        top)
+            cmd_models_top "$@"
+            ;;
+        filter)
+            cmd_models_filter "$@"
+            ;;
+        recommend|recommendations)
+            cmd_models_recommend "$@"
+            ;;
+        help|--help|-h)
+            cat <<EOF
+Model Management Commands
+
+USAGE:
+    ./rin models <subcommand> [options]
+
+SUBCOMMANDS:
+    sync                    Sync latest models from OpenRouter API
+    search <query>          Search models by criteria
+    list [limit] [filter]   List available models (default: 50)
+    top [count]             Show top N models by popularity (default: 10)
+    filter <type> [limit]   Filter models by type (openrouter, popular, budget, vision, etc.)
+    recommend               Show model recommendations
+    help                    Show this help message
+
+EXAMPLES:
+    ./rin models sync                      # Sync all models
+    ./rin models list 25                   # List top 25 models
+    ./rin models top 10                    # Show top 10 models
+    ./rin models filter vision 20          # Show 20 vision models
+    ./rin models filter budget 30          # Show 30 budget models
+    ./rin models search --tag vision       # Search for vision models
+    ./rin models recommend                 # Show recommendations
+
+FILTERS:
+    all            - All models
+    openrouter     - OpenRouter models only
+    popular        - High popularity models (score >= 70)
+    budget         - Budget tier models
+    vision         - Vision capability models
+    function-calling - Function calling models
+    openai         - OpenAI models
+    anthropic      - Anthropic models
+
+For more information, see: docs/DYNAMIC_MODELS.md
+EOF
+            ;;
+        *)
+            print_error "Unknown models subcommand: $subcommand"
+            echo ""
+            echo "Run './rin models help' for usage information"
+            exit 1
+            ;;
+    esac
+}
+
 cmd_help() {
     cat <<EOF
 Rhyzomic Intelligence Node (RIN) - CLI Management Tool
@@ -544,19 +731,28 @@ COMMANDS:
     ps                  List all running containers
     exec <service> [cmd] Execute command in service container
     clean               Remove all containers and images
+    models              Model management (sync, search, list, filter, etc.)
     version             Show version information
     help                Show this help message
+
+MODEL MANAGEMENT:
+    models sync                 Sync latest models from OpenRouter
+    models list [N] [filter]    List models (limit N, default: 50)
+    models top [N]              Show top N by popularity (default: 10)
+    models filter <type> [N]    Filter models by type
+    models search <query>       Search models by criteria
+    models recommend            Show recommendations
 
 EXAMPLES:
     ./rin start                     # Start RIN
     ./rin stop                      # Stop RIN
+    ./rin models sync               # Sync all models
+    ./rin models list 25            # List top 25 models
+    ./rin models top 10             # Show top 10 models
+    ./rin models filter vision 20   # Show 20 vision models
     ./rin status                    # Check system status
     ./rin logs                      # View all logs
     ./rin logs open-webui -f        # Follow Open WebUI logs
-    ./rin update                    # Update Docker images
-    ./rin backup                    # Create backup
-    ./rin restore backups/20231221  # Restore from backup
-    ./rin exec redis redis-cli      # Run redis-cli in container
 
 SERVICES:
     open-webui      - Open WebUI (Cortex)
@@ -630,6 +826,9 @@ main() {
             ;;
         clean)
             cmd_clean "$@"
+            ;;
+        models)
+            cmd_models "$@"
             ;;
         version)
             cmd_version "$@"

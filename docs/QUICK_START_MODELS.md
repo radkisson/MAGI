@@ -1,0 +1,212 @@
+# Quick Start: Dynamic Model Loading
+
+## What Changed?
+
+RIN now automatically fetches the latest models from OpenRouter instead of using a static list.
+
+**NEW: Enhanced with intelligent model features!**
+- 🏆 Popularity rankings (0-100 score)
+- 💰 Cost-based filtering (budget/standard/premium)
+- 🔍 Capability search (tags, functions, vision)
+- 🎯 Automatic recommendations (best value, coding, etc.)
+- 🖥️ **Integrated into `rin` CLI command**
+
+## For New Users
+
+**Nothing changes!** Just run:
+
+```bash
+./start.sh
+```
+
+If you have an `OPENROUTER_API_KEY` in your `.env`, RIN will automatically load all available models.
+
+## NEW: RIN CLI Integration
+
+All model management is now integrated into the `rin` command:
+
+```bash
+# Sync models from OpenRouter
+./rin models sync
+
+# List available models (limit to 25)
+./rin models list 25
+
+# Show top 10 models by popularity
+./rin models top 10
+
+# Filter models by type
+./rin models filter vision 20
+./rin models filter budget 30
+./rin models filter openrouter 50
+
+# Search models
+./rin models search --tag vision
+./rin models search --cost budget
+./rin models search --popular 70
+
+# View recommendations
+./rin models recommend
+```
+
+**How it works:**
+1. The sync script fetches all available models from OpenRouter API
+2. Discovered models are written to `config/litellm/config.yaml`
+3. LiteLLM serves all models defined in config.yaml
+4. CLI commands filter the display of what's in the config for user convenience
+
+## For Existing Users
+
+### To Get New Models
+
+Run this anytime to sync the latest OpenRouter models:
+
+```bash
+# Using rin CLI (recommended)
+./rin models sync
+docker-compose restart litellm
+
+# Or using script directly
+./scripts/sync_models.sh
+docker-compose restart litellm
+```
+
+### View and Filter Models
+
+```bash
+# List all models (default limit: 50)
+./rin models list
+
+# List top 25 models
+./rin models list 25
+
+# Show top 10 by popularity
+./rin models top 10
+
+# Filter by type (up to 50 models)
+./rin models filter vision 20
+./rin models filter budget 30
+./rin models filter openrouter 50
+
+# View recommendations
+./rin models recommend
+```
+
+### How Often Should I Sync?
+
+- **Weekly**: To stay current with new models
+- **Monthly**: If you don't need cutting-edge models
+- **On-demand**: When you hear about a new model you want to try
+
+### Manual Sync
+
+```bash
+# Quick way
+./scripts/sync_models.sh
+
+# Or directly
+python3 scripts/sync_openrouter_models.py
+
+# Then restart
+docker-compose restart litellm
+```
+
+## Troubleshooting
+
+### Models Not Showing Up
+
+```bash
+# 1. Check if sync worked
+./scripts/sync_models.sh
+
+# 2. Verify LiteLLM restarted
+docker-compose logs litellm | tail -20
+
+# 3. Check model endpoint
+curl http://localhost:4000/models
+```
+
+### Sync Fails
+
+**Most Common**: No `OPENROUTER_API_KEY` set
+
+```bash
+# Check your .env
+grep OPENROUTER_API_KEY .env
+
+# Add if missing
+echo "OPENROUTER_API_KEY=your_key_here" >> .env
+```
+
+### Too Many Models
+
+Edit filtering in `scripts/sync_openrouter_models.py`:
+
+```python
+# Example: Only OpenAI and Anthropic
+if not any(x in model_id for x in ['openai', 'anthropic']):
+    continue
+```
+
+## Features
+
+- ✅ Automatic sync on startup
+- ✅ Manual sync anytime
+- ✅ Preserves custom models
+- ✅ Backup before changes
+- ✅ Graceful fallback
+- ✅ Works without API key (uses static config)
+- ✅ **NEW: Popularity rankings** (0-100 score)
+- ✅ **NEW: Cost metadata** (budget/standard/premium tiers)
+- ✅ **NEW: Capability tags** (function-calling, vision, etc.)
+- ✅ **NEW: Smart recommendations** (best value, coding, vision)
+- ✅ **NEW: Model search tool** (filter by any criteria)
+
+## New: Search Models
+
+Find the perfect model for your needs:
+
+```bash
+# Search by capability
+python3 scripts/search_models.py --tag vision
+python3 scripts/search_models.py --tag function-calling
+
+# Search by cost
+python3 scripts/search_models.py --cost budget
+python3 scripts/search_models.py --cost premium
+
+# Search by popularity
+python3 scripts/search_models.py --popular 70
+
+# Get recommendations
+python3 scripts/search_models.py --best-value
+python3 scripts/search_models.py --coding
+python3 scripts/search_models.py --vision
+```
+
+## New: View Recommendations
+
+After syncing, recommendations are saved:
+
+```bash
+# View recommendations file
+cat data/model_recommendations.json
+```
+
+Recommendations include:
+- 💎 Best Value - Good performance at reasonable cost
+- 🚀 Most Capable - Premium flagship models
+- ⚡ Fastest - Optimized for speed
+- 💰 Budget Friendly - Most cost-effective
+- 👁️ Vision Tasks - Image/multimodal support
+- 💻 Coding - Best for programming
+
+## More Info
+
+- [Complete Guide](DYNAMIC_MODELS.md)
+- [Model Configuration](MODEL_CONFIGURATION.md)
+- [OpenRouter Website](https://openrouter.ai/)
+
+---
+
+**TL;DR**: Models sync automatically. Run `./scripts/sync_models.sh` for updates. 🚀

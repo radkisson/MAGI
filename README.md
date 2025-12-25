@@ -44,7 +44,8 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 - **Sovereign Architecture**: Complete control over your AI infrastructure
 - **Privacy-First**: Anonymous web search via SearXNG, no data leakage
 - **Multi-Model Intelligence**: Route tasks to optimal LLM providers via LiteLLM
-- **OpenRouter Integration**: Access 20+ models from one unified API (GPT-4, Claude, Llama, Gemini, Mistral, and more)
+- **Dynamic Model Loading**: Automatically sync latest models from OpenRouter API
+- **OpenRouter Integration**: Access 100+ models from one unified API (GPT-4, Claude, Llama, Gemini, Mistral, and more)
 - **Cost Tracking**: Monitor spending across all models with built-in budgeting
 - **Fallback Chains**: Automatic failover to backup models for 99.9% reliability
 - **Persistent Memory**: RAG-enabled recall via Qdrant vector storage
