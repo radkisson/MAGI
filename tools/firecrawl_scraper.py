@@ -11,8 +11,9 @@ Supports both:
 
 import os
 import requests
-from typing import Callable, Any
+from typing import Callable, Any, Optional, List
 from pydantic import BaseModel, Field
+from threading import Lock
 
 
 class Valves(BaseModel):
@@ -28,6 +29,23 @@ class Valves(BaseModel):
         default_factory=lambda: os.getenv("FIRECRAWL_API_URL", "http://firecrawl:3002"),
         description="FireCrawl API URL (default: self-hosted Docker service)"
     )
+    # Improvement 1: Adjustable timeouts and limits
+    REQUEST_TIMEOUT: int = Field(
+        default=60,
+        description="Timeout in seconds for scraping requests"
+    )
+    MAX_CONTENT_LENGTH: int = Field(
+        default=20000,
+        description="Max characters to return per scrape to prevent context overflow"
+    )
+    CACHE_MAX_SIZE: int = Field(
+        default=100,
+        description="Maximum number of cached results to store in memory"
+    )
+    CRAWL_TIMEOUT_BUFFER: int = Field(
+        default=60,
+        description="Additional timeout (in seconds) to add for crawl operations beyond REQUEST_TIMEOUT"
+    )
 
 
 class Tools:
@@ -35,6 +53,47 @@ class Tools:
 
     def __init__(self):
         self.valves = Valves()
+        # Improvement 3: Simple in-memory cache with thread safety
+        self._cache = {}
+        self._cache_lock = Lock()
+        self._cache_order = []  # Track insertion order for LRU eviction
+
+    def _get_from_cache(self, key: str) -> Optional[str]:
+        """Thread-safe cache retrieval"""
+        with self._cache_lock:
+            if key in self._cache:
+                # Move to end (most recently used)
+                self._cache_order.remove(key)
+                self._cache_order.append(key)
+                return self._cache[key]
+        return None
+
+    def _add_to_cache(self, key: str, value: str) -> None:
+        """Thread-safe cache addition with LRU eviction"""
+        with self._cache_lock:
+            # Remove oldest entries if cache is full
+            while len(self._cache) >= self.valves.CACHE_MAX_SIZE:
+                if self._cache_order:
+                    oldest = self._cache_order.pop(0)
+                    del self._cache[oldest]
+            
+            # Add new entry
+            if key in self._cache:
+                self._cache_order.remove(key)
+            self._cache[key] = value
+            self._cache_order.append(key)
+
+    def _truncate_content(self, content: str, source: str) -> str:
+        """Helper to safely truncate content"""
+        limit = self.valves.MAX_CONTENT_LENGTH
+        if len(content) <= limit:
+            return content
+        
+        return (
+            f"{content[:limit]}\n\n"
+            f"> ⚠️ **System Note**: Content from {source} was truncated because it exceeded "
+            f"{limit} characters. The AI has only read the first part."
+        )
 
     def scrape_webpage(
         self,
@@ -79,6 +138,18 @@ class Tools:
 
             return error_msg
 
+        # Check Cache
+        cached_result = self._get_from_cache(url)
+        if cached_result:
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": "⚡ Retrieved from cache", "done": True}
+                    }
+                )
+            return cached_result
+
         if __event_emitter__:
             __event_emitter__(
                 {
@@ -101,7 +172,7 @@ class Tools:
                 headers={
                     "Authorization": f"Bearer {self.valves.FIRECRAWL_API_KEY}",
                 },
-                timeout=30,
+                timeout=self.valves.REQUEST_TIMEOUT,
             )
             response.raise_for_status()
 
@@ -124,13 +195,21 @@ class Tools:
                 metadata = result["data"].get("metadata", {})
 
                 if markdown_content:
-                    return (
+                    # Apply Truncation
+                    markdown_content = self._truncate_content(markdown_content, url)
+                    
+                    formatted_output = (
                         f"# Scraped Content from: {url}\n\n"
                         f"**Title**: {metadata.get('title', 'N/A')}\n"
                         f"**Source**: {metadata.get('sourceURL', url)}\n\n"
                         f"---\n\n"
                         f"{markdown_content}"
                     )
+                    
+                    # Save to Cache
+                    self._add_to_cache(url, formatted_output)
+                    
+                    return formatted_output
                 else:
                     return f"No content could be extracted from {url}"
             else:
@@ -154,6 +233,8 @@ class Tools:
         self,
         url: str,
         max_pages: int = 10,
+        include_paths: Optional[List[str]] = None,
+        exclude_paths: Optional[List[str]] = None,
         __user__: dict = {},
         __event_emitter__: Callable[[dict], Any] = None,
     ) -> str:
@@ -167,6 +248,8 @@ class Tools:
         Args:
             url: The starting URL to crawl
             max_pages: Maximum number of pages to crawl (default: 10)
+            include_paths: Only crawl URLs matching these patterns (e.g. ["/docs/*"])
+            exclude_paths: Skip URLs matching these patterns (e.g. ["/blog/*"])
             __user__: User context (provided by Open WebUI)
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
 
@@ -196,11 +279,15 @@ class Tools:
             return error_msg
 
         if __event_emitter__:
+            status_msg = f"🔥 Starting website crawl (max {max_pages} pages)"
+            if include_paths:
+                status_msg += f" focusing on {include_paths}"
+            
             __event_emitter__(
                 {
                     "type": "status",
                     "data": {
-                        "description": f"🔥 Starting website crawl (max {max_pages} pages)...",
+                        "description": status_msg,
                         "done": False,
                     },
                 }
@@ -208,19 +295,27 @@ class Tools:
 
         try:
             # Request FireCrawl to crawl the website
+            payload = {
+                "url": url,
+                "limit": max_pages,
+                "scrapeOptions": {
+                    "formats": ["markdown"],
+                },
+            }
+
+            # Add filters if the AI requested them
+            if include_paths:
+                payload["includePaths"] = include_paths
+            if exclude_paths:
+                payload["excludePaths"] = exclude_paths
+
             response = requests.post(
                 f"{self.valves.FIRECRAWL_API_URL}/v0/crawl",
-                json={
-                    "url": url,
-                    "limit": max_pages,
-                    "scrapeOptions": {
-                        "formats": ["markdown"],
-                    },
-                },
+                json=payload,
                 headers={
                     "Authorization": f"Bearer {self.valves.FIRECRAWL_API_KEY}",
                 },
-                timeout=60,
+                timeout=self.valves.REQUEST_TIMEOUT + self.valves.CRAWL_TIMEOUT_BUFFER,
             )
             response.raise_for_status()
 
@@ -253,7 +348,9 @@ class Tools:
                     combined_content += f"URL: {metadata.get('sourceURL', 'N/A')}\n\n"
                     combined_content += markdown + "\n\n---\n\n"
 
-                return combined_content
+                # Ensure combined result doesn't explode context
+                # We truncate the FINAL combined string to ensure the total package fits
+                return self._truncate_content(combined_content, f"Crawl of {url}")
             else:
                 error = result.get("error", "Unknown error")
                 return f"Crawling failed: {error}"

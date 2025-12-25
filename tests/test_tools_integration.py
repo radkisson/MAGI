@@ -105,6 +105,109 @@ def test_firecrawl_cloud_mode_configuration():
             del os.environ['FIRECRAWL_API_URL']
 
 
+def test_firecrawl_new_valves():
+    """Test that new valves are properly configured"""
+    from firecrawl_scraper import Tools as FirecrawlTools, Valves as FirecrawlValves
+    
+    firecrawl = FirecrawlTools()
+    
+    # Check new valves exist
+    assert hasattr(firecrawl.valves, 'REQUEST_TIMEOUT')
+    assert hasattr(firecrawl.valves, 'MAX_CONTENT_LENGTH')
+    assert hasattr(firecrawl.valves, 'CACHE_MAX_SIZE')
+    assert hasattr(firecrawl.valves, 'CRAWL_TIMEOUT_BUFFER')
+    
+    # Check default values
+    assert firecrawl.valves.REQUEST_TIMEOUT == 60
+    assert firecrawl.valves.MAX_CONTENT_LENGTH == 20000
+    assert firecrawl.valves.CACHE_MAX_SIZE == 100
+    assert firecrawl.valves.CRAWL_TIMEOUT_BUFFER == 60
+    
+    # Test Valves class has new fields
+    valves_fields = FirecrawlValves.model_fields.keys() if hasattr(FirecrawlValves, 'model_fields') else []
+    assert 'REQUEST_TIMEOUT' in valves_fields
+    assert 'MAX_CONTENT_LENGTH' in valves_fields
+    assert 'CACHE_MAX_SIZE' in valves_fields
+    assert 'CRAWL_TIMEOUT_BUFFER' in valves_fields
+
+
+def test_firecrawl_cache_initialization():
+    """Test that cache is initialized with thread safety"""
+    from firecrawl_scraper import Tools as FirecrawlTools
+    
+    firecrawl = FirecrawlTools()
+    assert hasattr(firecrawl, '_cache')
+    assert hasattr(firecrawl, '_cache_lock')
+    assert hasattr(firecrawl, '_cache_order')
+    assert isinstance(firecrawl._cache, dict)
+    assert len(firecrawl._cache) == 0
+
+
+def test_firecrawl_cache_operations():
+    """Test cache helper methods"""
+    from firecrawl_scraper import Tools as FirecrawlTools
+    
+    firecrawl = FirecrawlTools()
+    
+    # Test adding to cache
+    firecrawl._add_to_cache("url1", "content1")
+    assert firecrawl._get_from_cache("url1") == "content1"
+    assert len(firecrawl._cache) == 1
+    
+    # Test LRU behavior
+    firecrawl._add_to_cache("url2", "content2")
+    assert firecrawl._get_from_cache("url2") == "content2"
+    
+    # Access url1 again (should move to end)
+    result = firecrawl._get_from_cache("url1")
+    assert result == "content1"
+    
+    # Test cache miss
+    assert firecrawl._get_from_cache("nonexistent") is None
+
+
+def test_firecrawl_truncate_content_method():
+    """Test the _truncate_content helper method"""
+    from firecrawl_scraper import Tools as FirecrawlTools
+    
+    firecrawl = FirecrawlTools()
+    
+    # Test content under limit
+    short_content = "A" * 1000
+    result = firecrawl._truncate_content(short_content, "test.com")
+    assert result == short_content
+    assert "truncated" not in result
+    
+    # Test content over limit
+    long_content = "B" * 30000
+    result = firecrawl._truncate_content(long_content, "test.com")
+    assert len(result) > 20000  # Should have content + truncation message
+    assert len(result) < 21000  # But not too much more
+    assert "truncated" in result
+    assert "test.com" in result
+    assert result.startswith("B" * 20000)
+
+
+def test_firecrawl_crawl_website_signature():
+    """Test that crawl_website has new path filtering parameters"""
+    from firecrawl_scraper import Tools as FirecrawlTools
+    import inspect
+    
+    firecrawl = FirecrawlTools()
+    
+    # Get the signature of crawl_website
+    sig = inspect.signature(firecrawl.crawl_website)
+    params = list(sig.parameters.keys())
+    
+    # Check that new parameters exist
+    assert 'include_paths' in params
+    assert 'exclude_paths' in params
+    
+    # Check that they have proper defaults (Optional)
+    assert sig.parameters['include_paths'].default is None
+    assert sig.parameters['exclude_paths'].default is None
+
+
 def test_all_tools_have_proper_structure():
     """Test that all tools follow Open WebUI tool structure"""
     from tavily_search import Tools as TavilyTools
