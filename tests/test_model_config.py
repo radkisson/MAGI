@@ -281,11 +281,78 @@ def test_env_file():
     for key in required_keys:
         assert key in env_content, f"{key} missing from .env.example"
         print_success(f"{key} present in .env.example")
+    
+    # Check for OpenRouter webhook configuration
+    webhook_keys = ['OPENROUTER_SITE_URL', 'OPENROUTER_APP_NAME']
+    for key in webhook_keys:
+        assert key in env_content, f"{key} missing from .env.example"
+        print_success(f"{key} present in .env.example (webhook config)")
+
+
+def test_openrouter_webhook_headers():
+    """Test that all OpenRouter models have webhook headers configured"""
+    print_header("TEST 7: OpenRouter Webhook Configuration")
+    
+    config_path = Path(__file__).parent.parent / "config" / "litellm" / "config.yaml"
+    
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    models = config.get('model_list', [])
+    openrouter_models = [m for m in models if m['model_name'].startswith('openrouter/')]
+    
+    if not openrouter_models:
+        print_warning("No OpenRouter models found")
+        return True
+    
+    print_success(f"Found {len(openrouter_models)} OpenRouter models")
+    
+    missing_headers = []
+    for model in openrouter_models:
+        model_name = model['model_name']
+        extra_headers = model.get('litellm_params', {}).get('extra_headers', {})
+        
+        if not extra_headers:
+            missing_headers.append(model_name)
+            print_error(f"{model_name} - Missing extra_headers")
+        else:
+            has_referer = 'HTTP-Referer' in extra_headers
+            has_title = 'X-Title' in extra_headers
+            
+            if has_referer and has_title:
+                referer_value = extra_headers['HTTP-Referer']
+                title_value = extra_headers['X-Title']
+                
+                # Verify they reference environment variables
+                if 'OPENROUTER_SITE_URL' in referer_value and 'OPENROUTER_APP_NAME' in title_value:
+                    print_success(f"{model_name} - Properly configured with webhook headers")
+                else:
+                    print_warning(f"{model_name} - Has headers but may not use environment variables")
+            else:
+                missing = []
+                if not has_referer:
+                    missing.append("HTTP-Referer")
+                if not has_title:
+                    missing.append("X-Title")
+                print_error(f"{model_name} - Missing: {', '.join(missing)}")
+                missing_headers.append(model_name)
+    
+    if missing_headers:
+        print_error(f"{len(missing_headers)} models have incomplete or missing webhook headers")
+        assert False, f"OpenRouter models missing webhook configuration: {', '.join(missing_headers)}"
+    else:
+        print_success(f"All {len(openrouter_models)} OpenRouter models have proper webhook headers!")
+    
+    # Print explanation
+    print_info("\nWebhook headers explanation:")
+    print_info("  HTTP-Referer: Identifies the originating site/application")
+    print_info("  X-Title: Sets the application's display name in OpenRouter")
+    print_info("  These enable proper API attribution and prevent response issues")
 
 
 def test_start_script():
     """Test start.sh creates required directories"""
-    print_header("TEST 7: Start Script Configuration")
+    print_header("TEST 8: Start Script Configuration")
     
     start_script_path = Path(__file__).parent.parent / "start.sh"
     
@@ -317,6 +384,7 @@ def main():
         ("Fallback Chains", test_fallback_chains),
         ("Docker Compose", test_docker_compose),
         ("Environment File", test_env_file),
+        ("OpenRouter Webhook Headers", test_openrouter_webhook_headers),
         ("Start Script", test_start_script),
     ]
     
