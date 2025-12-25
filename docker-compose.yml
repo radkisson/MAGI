@@ -151,10 +151,13 @@ services:
     restart: always
     ports:
       - "${PORT_MCP_BRIDGE:-9000}:9000"
-    command: >
-      --port 9000
-      --
-      npx -y @modelcontextprotocol/server-sequential-thinking
+    command:
+      - "--port"
+      - "9000"
+      - "--"
+      - "npx"
+      - "-y"
+      - "@modelcontextprotocol/server-sequential-thinking"
     # This service bridges Model Context Protocol (MCP) tools to Open WebUI.
     # Sequential Thinking forces the AI to use a "Chain of Thought" approach,
     # resulting in deeper, more methodical reasoning for complex queries.

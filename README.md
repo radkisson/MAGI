@@ -215,6 +215,7 @@ The Sequential Thinking tool is included by default. It forces the AI to use a "
 2. In the URL field, type: `http://mcp-bridge:9000/openapi.json`
    - Use `mcp-bridge` as the hostname (same Docker network)
    - If that fails, try: `http://host.docker.internal:9000/openapi.json`
+   - On Linux, you may need to use: `http://localhost:9000/openapi.json`
 3. Click the **Download/Load** button (Cloud icon)
 4. **Activate** the tool (toggle the switch)
 
