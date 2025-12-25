@@ -63,6 +63,10 @@ router_settings:
     - claude-3-5-haiku
     - openrouter/google-gemini-flash-1.5
     - openrouter/mistralai-mixtral-8x7b-instruct
+  - claude-3-5-haiku:
+    - gpt-4o-mini
+    - openrouter/google-gemini-flash-1.5
+    - openrouter/mistralai-mixtral-8x7b-instruct
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   set_verbose: false
