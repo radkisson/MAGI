@@ -8,7 +8,8 @@ allowing RIN to store and retrieve information with RAG capabilities.
 import requests
 from typing import Callable, Any, List
 import json
-import hashlib
+import uuid
+import time
 from sentence_transformers import SentenceTransformer
 
 
@@ -76,17 +77,19 @@ class Tools:
             model = self._get_embedding_model()
             embedding = model.encode(content).tolist()
 
-            # Generate unique ID for this memory
-            memory_id = hashlib.md5(content.encode()).hexdigest()
+            # Generate unique ID using UUID to avoid collisions
+            memory_id = str(uuid.uuid4())
 
-            # Prepare metadata
-            if metadata is None:
-                metadata = {}
+            # Prepare metadata (create a new dict to avoid modifying the input)
+            prepared_metadata = dict(metadata) if metadata else {}
             
             # Add user context to metadata
             if __user__:
-                metadata["user_id"] = __user__.get("id", "unknown")
-                metadata["user_name"] = __user__.get("name", "unknown")
+                prepared_metadata["user_id"] = __user__.get("id", "unknown")
+                prepared_metadata["user_name"] = __user__.get("name", "unknown")
+            
+            # Add timestamp
+            prepared_metadata["timestamp"] = time.time()
 
             # Store in Qdrant using upsert
             upsert_payload = {
@@ -96,7 +99,7 @@ class Tools:
                         "vector": embedding,
                         "payload": {
                             "content": content,
-                            "metadata": metadata
+                            "metadata": prepared_metadata
                         }
                     }
                 ]
@@ -276,7 +279,7 @@ class Tools:
                     f"{self.qdrant_url}/collections/{self.collection_name}",
                     json={
                         "vectors": {
-                            "size": 768,  # Standard embedding dimension (text-embedding-ada-002)
+                            "size": 768,  # Dimension for all-mpnet-base-v2 model
                             "distance": "Cosine",  # Cosine similarity for semantic search
                         }
                     },
