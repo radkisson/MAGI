@@ -12,6 +12,10 @@ This guide explains the enhanced model support features introduced in RIN v1.1 "
 6. [Fallback Model Chains](#fallback-model-chains)
 7. [Configuration Examples](#configuration-examples)
 
+## Related Guides
+
+- **[OpenRouter Webhook Setup Guide](./OPENROUTER_WEBHOOK_SETUP.md)** - Detailed guide for configuring OpenRouter webhooks and HTTP headers
+
 ## Overview
 
 RIN v1.1 introduces comprehensive multi-model support with the following capabilities:
@@ -91,6 +95,8 @@ These headers help OpenRouter:
 - Enable leaderboard rankings and visibility for your application
 
 **Important:** For production deployments with public-facing URLs, always configure these parameters to ensure your API calls are properly attributed and to avoid potential issues with API responses.
+
+**📖 For detailed webhook setup instructions, troubleshooting, and advanced configuration, see the [OpenRouter Webhook Setup Guide](./OPENROUTER_WEBHOOK_SETUP.md).**
 
 ## Advanced Model Parameters
 
