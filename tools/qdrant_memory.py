@@ -199,17 +199,36 @@ class Tools:
             
             # Add user-specific filter to ensure memory isolation
             # Only return memories that belong to the current user
-            if __user__ and __user__.get("id"):
+            user_id = __user__.get("id") if __user__ else None
+            if user_id:
                 search_payload["filter"] = {
                     "must": [
                         {
                             "key": "metadata.user_id",
                             "match": {
-                                "value": __user__.get("id")
+                                "value": user_id
                             }
                         }
                     ]
                 }
+            else:
+                # No user context - return empty results for privacy
+                # This prevents accidental exposure of all users' memories
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ No user context - privacy protected",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"# Memory Recall: '{query}'\n\n"
+                    f"⚠️ No user context available. Unable to search memories.\n"
+                    f"This is a privacy protection to prevent unauthorized access."
+                )
 
             response = requests.post(
                 f"{self.qdrant_url}/collections/{self.collection_name}/points/search",
