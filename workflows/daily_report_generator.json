@@ -96,7 +96,7 @@
           "parameters": [
             {
               "name": "model",
-              "value": "gpt-4o"
+              "value": "openrouter/gpt-4o"
             },
             {
               "name": "messages",

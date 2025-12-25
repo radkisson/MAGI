@@ -72,7 +72,7 @@
           "parameters": [
             {
               "name": "model",
-              "value": "gpt-4o-mini"
+              "value": "openrouter/gpt-4o-mini"
             },
             {
               "name": "messages",

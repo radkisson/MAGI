@@ -79,11 +79,18 @@ OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 OPENROUTER_API_KEY=
 
+# --- OPENROUTER WEBHOOK CONFIGURATION (OPTIONAL) ---
+# Configure OpenRouter webhook parameters for proper API attribution
+# HTTP-Referer: The public URL of your WebUI (leave blank for localhost)
+# X-Title: Your application name (defaults to "RIN - Rhyzomic Intelligence Node")
+OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_APP_NAME=RIN - Rhyzomic Intelligence Node
+
 # --- OPEN WEBUI API (FOR TELEGRAM INTEGRATION) ---
 # Used by n8n workflows to query Open WebUI as an API
 # Generate in Open WebUI: Settings → Account → API Keys → Create new key
 OPENWEBUI_API_KEY=
-OPENWEBUI_DEFAULT_MODEL=gpt-4o    # Model to use for Telegram queries
+OPENWEBUI_DEFAULT_MODEL=openrouter/gpt-4o    # Model to use for Telegram queries (uses OpenRouter)
 
 # --- SEARCH & SCRAPING API KEYS (OPTIONAL) ---
 # Tavily: AI-optimized search engine (alternative/complement to SearXNG)
