@@ -5,6 +5,30 @@ All notable changes to the Rhyzomic Intelligence Node (RIN) will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Dynamic OpenRouter Model Loading**: Automatically fetch and sync the latest models from OpenRouter API
+  - New `scripts/sync_openrouter_models.py` - Core sync script that fetches models from OpenRouter API
+  - New `scripts/sync_models.sh` - Convenience wrapper for manual model syncing
+  - New `docs/DYNAMIC_MODELS.md` - Complete guide for dynamic model loading
+  - Automatic model sync on startup via `start.sh`
+  - Model filtering to exclude deprecated and unavailable models
+  - Automatic capability detection (function calling, vision support)
+  - Graceful fallback to static configuration if API is unavailable
+  - Config backup before updates
+  - Test suite for model sync functionality
+
+### Changed
+- **LiteLLM Configuration**: Now supports dynamic model updates while preserving custom configurations
+- **README.md**: Updated to mention dynamic model loading feature (100+ models available)
+- **docs/MODEL_CONFIGURATION.md**: Added documentation for automatic vs manual model configuration
+- **start.sh**: Integrated automatic model sync on startup with error handling
+
+### Fixed
+- Model list no longer limited to hardcoded entries in config file
+- Users can now access all available OpenRouter models without manual configuration updates
+
 ## [1.2.1] - 2025-12-21
 
 ### Added
