@@ -7,6 +7,7 @@ import os
 import sys
 import json
 import yaml
+import traceback
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -145,7 +146,6 @@ def test_model_conversion():
         
     except Exception as e:
         print_fail(f"Conversion test failed with error: {e}")
-        import traceback
         traceback.print_exc()
         return False
 
@@ -218,7 +218,6 @@ def test_model_filtering():
         
     except Exception as e:
         print_fail(f"Filtering test failed with error: {e}")
-        import traceback
         traceback.print_exc()
         return False
 
@@ -250,7 +249,6 @@ def test_script_imports():
         
     except Exception as e:
         print_fail(f"Import test failed with error: {e}")
-        import traceback
         traceback.print_exc()
         return False
 

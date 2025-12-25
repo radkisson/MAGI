@@ -12,6 +12,9 @@ import requests
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
+# Configuration constants
+YAML_LINE_WIDTH = 1000  # Width for YAML output formatting
+
 # ANSI color codes for terminal output
 GREEN = '\033[0;32m'
 BLUE = '\033[0;34m'
@@ -142,6 +145,12 @@ def filter_models_by_criteria(models: List[Dict[str, Any]]) -> List[Dict[str, An
     Returns:
         Filtered list of models
     """
+    # Extended context variants that should be included despite general filtering
+    ALLOWED_EXTENDED_KEYWORDS = ['128k-online', 'sonar']
+    
+    # Extended context patterns to exclude (unless in allowed list)
+    EXCLUDED_EXTENDED_PATTERNS = [':extended', '-extended', '32k', '64k', '128k']
+    
     filtered = []
     
     for model in models:
@@ -155,12 +164,13 @@ def filter_models_by_criteria(models: List[Dict[str, Any]]) -> List[Dict[str, An
         if not model.get('pricing'):
             continue
         
-        # Skip extended context variants for now (they clutter the list)
-        # Users can add them manually if needed
-        if any(x in model_id.lower() for x in [':extended', '-extended', '32k', '64k', '128k']):
-            # Allow some common ones
-            if not any(x in model_id.lower() for x in ['128k-online', 'sonar']):
-                continue
+        # Skip extended context variants unless explicitly allowed
+        model_id_lower = model_id.lower()
+        is_extended = any(pattern in model_id_lower for pattern in EXCLUDED_EXTENDED_PATTERNS)
+        is_allowed_extended = any(keyword in model_id_lower for keyword in ALLOWED_EXTENDED_KEYWORDS)
+        
+        if is_extended and not is_allowed_extended:
+            continue
         
         filtered.append(model)
     
@@ -218,7 +228,7 @@ def update_litellm_config(
         
         # Write updated config
         with open(config_path, 'w') as f:
-            yaml.dump(config, f, default_flow_style=False, sort_keys=False, width=1000)
+            yaml.dump(config, f, default_flow_style=False, sort_keys=False, width=YAML_LINE_WIDTH)
         
         print_success(f"Updated config with {len(new_openrouter_models)} OpenRouter models")
         print_info(f"Total models in config: {len(updated_models)}")
