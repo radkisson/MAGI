@@ -164,6 +164,19 @@ export ENABLE_FIRECRAWL
 
 # --- 5. CONFIGURATION INJECTION ---
 
+# --- 5.1 SYNC OPENROUTER MODELS ---
+echo -e "${BLUE}🔄 Synchronizing OpenRouter models...${NC}"
+if [ -f "$BASE_DIR/scripts/sync_openrouter_models.py" ]; then
+    # Try to sync models from OpenRouter API
+    python3 "$BASE_DIR/scripts/sync_openrouter_models.py" 2>/dev/null || {
+        echo "⚠️  Could not fetch latest models from OpenRouter API"
+        echo "   Using static model configuration from config/litellm/config.yaml"
+        echo "   This is normal if you haven't set OPENROUTER_API_KEY yet"
+    }
+else
+    echo "⚠️  Model sync script not found, using static configuration"
+fi
+
 # Generate SearXNG Settings (Prevents Crash Loop)
 if [ ! -f "$BASE_DIR/config/searxng/settings.yml" ]; then
     # We pull the key back out of .env to populate the config
