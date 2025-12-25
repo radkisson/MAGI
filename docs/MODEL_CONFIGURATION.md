@@ -32,6 +32,10 @@ docker-compose restart litellm
 6. [Fallback Model Chains](#fallback-model-chains)
 7. [Configuration Examples](#configuration-examples)
 
+## Related Guides
+
+- **[OpenRouter Webhook Setup Guide](./OPENROUTER_WEBHOOK_SETUP.md)** - Detailed guide for configuring OpenRouter webhooks and HTTP headers
+
 ## Overview
 
 RIN v1.1 introduces comprehensive multi-model support with the following capabilities:
@@ -81,12 +85,38 @@ The default configuration includes:
    ```bash
    OPENROUTER_API_KEY=your_key_here
    ```
-3. Restart RIN:
+3. **Configure webhook parameters (optional but recommended):**
+   ```bash
+   # The public URL of your WebUI (for production deployments)
+   OPENROUTER_SITE_URL=https://your-domain.com
+   
+   # Your application name (for OpenRouter attribution and rankings)
+   OPENROUTER_APP_NAME=RIN - Rhyzomic Intelligence Node
+   ```
+   
+   These parameters enable proper attribution of API calls to your application in OpenRouter's dashboard and rankings. For local development, the default values (`http://localhost:3000` and `RIN - Rhyzomic Intelligence Node`) work fine.
+   
+4. Restart RIN:
    ```bash
    docker-compose restart litellm
    ```
 
 All OpenRouter models will now be available in Open WebUI's model selector.
+
+#### OpenRouter Webhook Configuration Details
+
+OpenRouter uses two HTTP headers for API attribution:
+- **HTTP-Referer** (from `OPENROUTER_SITE_URL`): Identifies the originating site/application
+- **X-Title** (from `OPENROUTER_APP_NAME`): Sets your application's display name
+
+These headers help OpenRouter:
+- Track and rank your application in their ecosystem
+- Ensure proper API request attribution for billing and analytics
+- Enable leaderboard rankings and visibility for your application
+
+**Important:** For production deployments with public-facing URLs, always configure these parameters to ensure your API calls are properly attributed and to avoid potential issues with API responses.
+
+**📖 For detailed webhook setup instructions, troubleshooting, and advanced configuration, see the [OpenRouter Webhook Setup Guide](./OPENROUTER_WEBHOOK_SETUP.md).**
 
 ## Advanced Model Parameters
 
@@ -352,7 +382,31 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
       temperature: 0.7
       max_tokens: 4096
+      extra_headers:
+        HTTP-Referer: os.environ/OPENROUTER_SITE_URL
+        X-Title: os.environ/OPENROUTER_APP_NAME
 ```
+
+### Example 4: OpenRouter Models with Webhook Configuration
+
+When adding OpenRouter models, always include the webhook headers:
+
+```yaml
+model_list:
+  - model_name: openrouter/my-model
+    litellm_params:
+      model: openrouter/provider/model-name
+      api_key: os.environ/OPENROUTER_API_KEY
+      temperature: 0.7
+      max_tokens: 4096
+      extra_headers:
+        HTTP-Referer: os.environ/OPENROUTER_SITE_URL
+        X-Title: os.environ/OPENROUTER_APP_NAME
+    model_info:
+      mode: chat
+```
+
+These headers ensure proper attribution and prevent potential API response issues.
 
 ## Adding New Models
 
@@ -387,10 +441,15 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
       temperature: 0.7
       max_tokens: 4096
+      extra_headers:
+        HTTP-Referer: os.environ/OPENROUTER_SITE_URL
+        X-Title: os.environ/OPENROUTER_APP_NAME
     model_info:
       mode: chat
       supports_function_calling: false
 ```
+
+**Note:** Always include `extra_headers` for OpenRouter models to ensure proper attribution and avoid API response issues.
 
 3. Restart LiteLLM:
 ```bash

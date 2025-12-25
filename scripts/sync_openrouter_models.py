@@ -114,7 +114,11 @@ def convert_openrouter_model_to_litellm(model: Dict[str, Any]) -> Dict[str, Any]
             'api_key': 'os.environ/OPENROUTER_API_KEY',
             'temperature': 0.7,
             'max_tokens': max_tokens,
-            'top_p': 1.0
+            'top_p': 1.0,
+            'extra_headers': {
+                'HTTP-Referer': 'os.environ/OPENROUTER_SITE_URL',
+                'X-Title': 'os.environ/OPENROUTER_APP_NAME'
+            }
         },
         'model_info': {
             'mode': 'chat'

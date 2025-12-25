@@ -112,7 +112,7 @@
           "parameters": [
             {
               "name": "model",
-              "value": "={{ $env.OPENWEBUI_DEFAULT_MODEL || 'gpt-4o' }}"
+              "value": "={{ $env.OPENWEBUI_DEFAULT_MODEL || 'openrouter/gpt-4o' }}"
             },
             {
               "name": "messages",
