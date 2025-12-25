@@ -141,6 +141,7 @@ Available port configurations:
 - `PORT_FIRECRAWL=3002` - FireCrawl (Digestion) - Web scraping
 - `PORT_N8N=5678` - n8n (Reflex) - Workflow automation
 - `PORT_QDRANT=6333` - Qdrant (Memory) - Vector database
+- `PORT_MCP_BRIDGE=9000` - MCP Bridge (Sequential Thinking) - Model Context Protocol bridge
 
 For example, if port 3000 is in use, change `PORT_WEBUI=3000` to `PORT_WEBUI=3001`.
 
@@ -169,6 +170,7 @@ Once deployed, access the various subsystems:
 - **SearXNG (Search)**: http://localhost:8080
 - **FireCrawl API**: http://localhost:3002
 - **Qdrant (Vector DB)**: http://localhost:6333
+- **MCP Bridge (Sequential Thinking)**: http://localhost:9000
 - **Redis**: localhost:6379
 
 ### Synaptic Wiring (Tool Definitions)
@@ -192,6 +194,39 @@ RIN: [Uses SearXNG tool to search anonymously]
      [Stores summaries in Qdrant memory]
      [Generates comprehensive answer]
 ```
+
+### MCP Bridge (Model Context Protocol)
+
+RIN includes an **MCP Bridge** that connects Model Context Protocol (MCP) tools to Open WebUI. The bridge translates MCP tools into OpenAPI format that Open WebUI can understand.
+
+**Sequential Thinking Tool:**
+
+The Sequential Thinking tool is included by default. It forces the AI to use a "Chain of Thought" approach, resulting in deeper, more methodical reasoning for complex queries.
+
+**How it works:**
+1. The AI calls the tool with `thoughtNumber: 1` ("First, we need to solve transport...")
+2. The tool replies "Ack"
+3. The AI calls the tool again with `thoughtNumber: 2` ("Next, we need life support...")
+4. This creates a "Chain of Thought" loop that results in much smarter, deeper answers
+
+**Connecting to Open WebUI:**
+
+1. Go to **Settings → Tool Servers** (Admin Settings)
+2. In the URL field, type: `http://mcp-bridge:9000/openapi.json`
+   - Use `mcp-bridge` as the hostname (same Docker network)
+   - If that fails, try: `http://host.docker.internal:9000/openapi.json`
+3. Click the **Download/Load** button (Cloud icon)
+4. **Activate** the tool (toggle the switch)
+
+**Usage Example:**
+```
+User: "Use the sequential thinking tool to analyze exactly how we could colonize Mars, step by step."
+RIN: [Calls Sequential Thinking tool iteratively]
+     [Generates step-by-step breakdown]
+     [Provides comprehensive, well-reasoned answer]
+```
+
+**Note:** The bridge uses the official `@modelcontextprotocol/server-sequential-thinking` package maintained by the protocol creators for maximum stability.
 
 ### Autonomous Workflows (n8n)
 
