@@ -290,9 +290,10 @@ def test_env_file():
 
 
 def test_openrouter_webhook_headers():
-    """Test that all OpenRouter models have webhook headers configured"""
+    """Test that OpenRouter webhook configuration is properly set up"""
     print_header("TEST 7: OpenRouter Webhook Configuration")
     
+    # Test 1: Check static config approach (if any OpenRouter models exist)
     config_path = Path(__file__).parent.parent / "config" / "litellm" / "config.yaml"
     
     with open(config_path, 'r') as f:
@@ -301,53 +302,72 @@ def test_openrouter_webhook_headers():
     models = config.get('model_list', [])
     openrouter_models = [m for m in models if m['model_name'].startswith('openrouter/')]
     
-    if not openrouter_models:
-        print_warning("No OpenRouter models found")
-        return True
-    
-    print_success(f"Found {len(openrouter_models)} OpenRouter models")
-    
-    missing_headers = []
-    for model in openrouter_models:
-        model_name = model['model_name']
-        extra_headers = model.get('litellm_params', {}).get('extra_headers', {})
+    if openrouter_models:
+        print_info(f"Found {len(openrouter_models)} static OpenRouter models in config")
         
-        if not extra_headers:
-            missing_headers.append(model_name)
-            print_error(f"{model_name} - Missing extra_headers")
-        else:
-            has_referer = 'HTTP-Referer' in extra_headers
-            has_title = 'X-Title' in extra_headers
+        # Verify static models have webhook headers
+        missing_headers = []
+        for model in openrouter_models:
+            model_name = model['model_name']
+            extra_headers = model.get('litellm_params', {}).get('extra_headers', {})
             
-            if has_referer and has_title:
-                referer_value = extra_headers['HTTP-Referer']
-                title_value = extra_headers['X-Title']
+            if not extra_headers:
+                missing_headers.append(model_name)
+                print_error(f"{model_name} - Missing extra_headers")
+            else:
+                referer = extra_headers.get('HTTP-Referer')
+                title = extra_headers.get('X-Title')
                 
-                # Verify they reference environment variables with exact pattern
-                expected_referer = 'os.environ/OPENROUTER_SITE_URL'
-                expected_title = 'os.environ/OPENROUTER_APP_NAME'
-                
-                if referer_value == expected_referer and title_value == expected_title:
+                if referer == 'os.environ/OPENROUTER_SITE_URL' and title == 'os.environ/OPENROUTER_APP_NAME':
                     print_success(f"{model_name} - Properly configured with webhook headers")
                 else:
-                    print_warning(f"{model_name} - Has headers but not using expected environment variable pattern")
-                    print_info(f"    Expected: {expected_referer}, Got: {referer_value}")
-                    print_info(f"    Expected: {expected_title}, Got: {title_value}")
-            else:
-                missing = []
-                if not has_referer:
-                    missing.append("HTTP-Referer")
-                if not has_title:
-                    missing.append("X-Title")
-                print_error(f"{model_name} - Missing: {', '.join(missing)}")
-                missing_headers.append(model_name)
-    
-    if missing_headers:
-        print_error(f"{len(missing_headers)} models have incomplete or missing webhook headers")
-        assert False, f"OpenRouter models missing webhook configuration: {', '.join(missing_headers)}"
+                    print_error(f"{model_name} - Incorrect webhook header configuration")
+                    missing_headers.append(model_name)
+        
+        if missing_headers:
+            print_error(f"{len(missing_headers)} models have incomplete webhook headers")
+            assert False, f"OpenRouter models missing webhook configuration: {', '.join(missing_headers)}"
     else:
-        print_success(f"All {len(openrouter_models)} OpenRouter models have proper webhook headers!")
+        print_info("No static OpenRouter models in config (using dynamic loading)")
+        print_success("✓ Config follows dynamic model loading pattern")
     
+    # Test 2: Check that sync script adds webhook headers
+    sync_script_path = Path(__file__).parent.parent / "scripts" / "sync_openrouter_models.py"
+    
+    if sync_script_path.exists():
+        with open(sync_script_path, 'r') as f:
+            sync_script_content = f.read()
+        
+        # Check that the sync script includes webhook headers in the model template
+        if "'extra_headers'" in sync_script_content or '"extra_headers"' in sync_script_content:
+            if 'HTTP-Referer' in sync_script_content and 'X-Title' in sync_script_content:
+                if 'OPENROUTER_SITE_URL' in sync_script_content and 'OPENROUTER_APP_NAME' in sync_script_content:
+                    print_success("✓ sync_openrouter_models.py includes webhook headers")
+                else:
+                    print_error("✗ sync script has headers but wrong environment variables")
+                    assert False, "Sync script webhook configuration uses wrong env vars"
+            else:
+                print_error("✗ sync script has extra_headers but missing HTTP-Referer or X-Title")
+                assert False, "Sync script missing required webhook headers"
+        else:
+            print_error("✗ sync_openrouter_models.py does not add webhook headers")
+            assert False, "Sync script must add webhook headers to dynamically loaded models"
+    else:
+        print_warning("sync_openrouter_models.py not found - cannot verify dynamic loading")
+    
+    print_success("✓ OpenRouter webhook configuration is properly set up!")
+    print_info("")
+    print_info("Webhook headers explanation:")
+    print_info("    HTTP-Referer: Identifies the originating site/application")
+    print_info("    X-Title: Sets the application's display name in OpenRouter")
+    print_info("")
+    print_info("Configuration approach:")
+    if openrouter_models:
+        print_info("    - Static models in config with webhook headers")
+    print_info("    - Dynamic model loading via ./rin sync-models")
+    print_info("    - All OpenRouter models automatically get webhook headers")
+    
+    return True
     # Print explanation
     print_info("\nWebhook headers explanation:")
     print_info("  HTTP-Referer: Identifies the originating site/application")

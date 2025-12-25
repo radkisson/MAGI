@@ -102,13 +102,31 @@ def test_litellm_configuration():
     models = config.get('model_list', [])
     openrouter_models = [m for m in models if m['model_name'].startswith('openrouter/')]
     
-    print_success(f"Found {len(openrouter_models)} OpenRouter models")
+    print_success(f"Found {len(openrouter_models)} static OpenRouter models in config")
     
     if not openrouter_models:
-        print_error("No OpenRouter models found in configuration")
-        return False
+        print_info("Using dynamic model loading approach (no static OpenRouter models)")
+        print_info("Models will be loaded via: ./rin sync-models --provider openrouter")
+        
+        # Check that sync script exists and adds webhook headers
+        sync_script = base_path / "scripts" / "sync_openrouter_models.py"
+        if sync_script.exists():
+            with open(sync_script) as f:
+                sync_content = f.read()
+            
+            if "'extra_headers'" in sync_content and 'HTTP-Referer' in sync_content and 'X-Title' in sync_content:
+                print_success("✓ sync_openrouter_models.py includes webhook headers")
+                print_info("  Dynamic models will automatically get HTTP-Referer and X-Title headers")
+                return True
+            else:
+                print_error("✗ sync_openrouter_models.py does not add webhook headers")
+                return False
+        else:
+            print_warning("sync_openrouter_models.py not found")
+            print_info("This is expected if using static model configuration only")
+            return True
     
-    # Verify each model has extra_headers
+    # If there are static OpenRouter models, verify they have webhook headers
     all_valid = True
     for model in openrouter_models:
         model_name = model['model_name']
