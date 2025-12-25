@@ -68,7 +68,7 @@ def fetch_openrouter_models(api_key: Optional[str] = None) -> List[Dict[str, Any
     
     try:
         print_info("Fetching models from OpenRouter API...")
-        response = requests.get(url, headers=headers, timeout=30)
+        response = requests.get(url, headers=headers, timeout=60)
         response.raise_for_status()
         
         data = response.json()
@@ -93,7 +93,6 @@ def convert_openrouter_model_to_litellm(model: Dict[str, Any]) -> Dict[str, Any]
         LiteLLM model configuration dictionary
     """
     model_id = model.get('id', '')
-    model_name = model.get('name', model_id)
     context_length = model.get('context_length', 4096)
     
     # Determine reasonable max_tokens (typically half of context length)
@@ -158,8 +157,10 @@ def filter_models_by_criteria(models: List[Dict[str, Any]]) -> List[Dict[str, An
     # Extended context variants that should be included despite general filtering
     ALLOWED_EXTENDED_KEYWORDS = ['128k-online', 'sonar']
     
-    # Extended context patterns to exclude (unless in allowed list)
-    EXCLUDED_EXTENDED_PATTERNS = [':extended', '-extended', '32k', '64k', '128k']
+    # Extended context patterns to exclude (with delimiters to avoid false positives)
+    # Match patterns like '-32k-', ':32k', '-32k$' but not base model names
+    EXCLUDED_EXTENDED_PATTERNS = [':extended', '-extended', '-32k-', '-64k-', '-128k-',
+                                    ':32k', ':64k', ':128k']
     
     filtered = []
     
@@ -221,6 +222,7 @@ def calculate_popularity_score(model: Dict[str, Any]) -> float:
         elif prompt_cost < 0.00005:  # Moderately priced
             score += 5
     except (ValueError, TypeError):
+        # If pricing is missing or invalid, skip pricing bonus
         pass
     
     # Models with function calling are more versatile

@@ -49,15 +49,11 @@ All model management is now integrated into the `rin` command:
 ./rin models recommend
 ```
 
-## For Existing Users
-
-**Nothing changes!** Just run:
-
-```bash
-./start.sh
-```
-
-If you have an `OPENROUTER_API_KEY` in your `.env`, RIN will automatically load all available models.
+**How it works:**
+1. The sync script fetches all available models from OpenRouter API
+2. Discovered models are written to `config/litellm/config.yaml`
+3. LiteLLM serves all models defined in config.yaml
+4. CLI commands filter the display of what's in the config for user convenience
 
 ## For Existing Users
 

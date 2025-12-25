@@ -575,89 +575,8 @@ cmd_models_list() {
         exit 1
     fi
     
-    # Use Python to parse and display models
-    python3 << EOF
-import yaml
-import sys
-
-try:
-    with open('$config_path', 'r') as f:
-        config = yaml.safe_load(f)
-    
-    models = config.get('model_list', [])
-    
-    # Filter models
-    if '$filter' != 'all':
-        filtered = []
-        for model in models:
-            model_info = model.get('model_info', {})
-            tags = model_info.get('tags', [])
-            
-            if '$filter' == 'openrouter':
-                if model.get('litellm_params', {}).get('model', '').startswith('openrouter/'):
-                    filtered.append(model)
-            elif '$filter' == 'popular':
-                if model_info.get('popularity_score', 0) >= 70:
-                    filtered.append(model)
-            elif '$filter' == 'budget':
-                cost = model_info.get('cost', {})
-                if cost.get('tier') == 'budget':
-                    filtered.append(model)
-            elif '$filter' in tags:
-                filtered.append(model)
-            else:
-                filtered.append(model)
-        
-        models = filtered
-    
-    # Sort by popularity if available
-    models_sorted = sorted(
-        models, 
-        key=lambda m: m.get('model_info', {}).get('popularity_score', 0),
-        reverse=True
-    )
-    
-    # Limit results
-    limit = min(int('$limit'), len(models_sorted))
-    
-    print(f"Showing {limit} of {len(models_sorted)} total models")
-    if '$filter' != 'all':
-        print(f"Filter: $filter")
-    print()
-    
-    for i, model in enumerate(models_sorted[:limit], 1):
-        model_name = model.get('model_name', 'unknown')
-        model_info = model.get('model_info', {})
-        
-        # Get metadata
-        popularity = model_info.get('popularity_score', 0)
-        cost = model_info.get('cost', {})
-        tier = cost.get('tier', 'unknown')
-        tags = model_info.get('tags', [])
-        
-        # Display
-        print(f"{i}. {model_name}")
-        if popularity > 0:
-            print(f"   Popularity: {popularity}/100")
-        if tier != 'unknown':
-            print(f"   Cost Tier: {tier}")
-        if tags:
-            print(f"   Tags: {', '.join(tags[:5])}")
-        
-        # Capabilities
-        caps = []
-        if model_info.get('supports_function_calling'):
-            caps.append('function-calling')
-        if model_info.get('supports_vision'):
-            caps.append('vision')
-        if caps:
-            print(f"   Capabilities: {', '.join(caps)}")
-        print()
-
-except Exception as e:
-    print(f"Error: {e}", file=sys.stderr)
-    sys.exit(1)
-EOF
+    # Use helper script to safely parse and display models
+    python3 "$BASE_DIR/scripts/list_models_helper.py" "$config_path" "$limit" "$filter"
 }
 
 cmd_models_recommend() {
@@ -790,19 +709,6 @@ EOF
             exit 1
             ;;
     esac
-}
-
-cmd_version() {
-    print_header "RIN Version"
-    
-    echo "RIN Version: 1.2.1"
-    echo "CLI Tool: v1.0.0"
-    echo ""
-    
-    if [ -d .git ]; then
-        echo "Git Branch: $(git branch --show-current 2>/dev/null || echo 'unknown')"
-        echo "Git Commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
-    fi
 }
 
 cmd_help() {

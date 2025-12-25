@@ -52,17 +52,17 @@ router_settings:
   timeout: 60
   fallbacks:
   - gpt-4o:
-    - openrouter/gpt-4o
+    - openrouter/openai-gpt-4o
     - claude-3-5-sonnet
-    - openrouter/llama-3.1-405b
+    - openrouter/meta-llama-llama-3.1-405b-instruct
   - claude-3-5-sonnet:
-    - openrouter/claude-3-5-sonnet
+    - openrouter/anthropic-claude-3-5-sonnet-20241022
     - gpt-4o
-    - openrouter/gpt-4-turbo
+    - openrouter/openai-gpt-4-turbo
   - gpt-4o-mini:
     - claude-3-5-haiku
-    - openrouter/gemini-flash
-    - openrouter/mixtral-8x7b
+    - openrouter/google-gemini-flash-1.5
+    - openrouter/mistralai-mixtral-8x7b-instruct
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   set_verbose: false

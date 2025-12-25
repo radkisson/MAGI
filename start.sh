@@ -168,11 +168,25 @@ export ENABLE_FIRECRAWL
 echo -e "${BLUE}🔄 Synchronizing OpenRouter models...${NC}"
 if [ -f "$BASE_DIR/scripts/sync_openrouter_models.py" ]; then
     # Try to sync models from OpenRouter API
-    python3 "$BASE_DIR/scripts/sync_openrouter_models.py" 2>/dev/null || {
+    # Capture errors to a temporary file for better debugging
+    SYNC_ERROR=$(mktemp)
+    if python3 "$BASE_DIR/scripts/sync_openrouter_models.py" 2>"$SYNC_ERROR"; then
+        rm -f "$SYNC_ERROR"
+    else
         echo "⚠️  Could not fetch latest models from OpenRouter API"
         echo "   Using static model configuration from config/litellm/config.yaml"
         echo "   This is normal if you haven't set OPENROUTER_API_KEY yet"
-    }
+        
+        # Show error details if available
+        if [ -s "$SYNC_ERROR" ]; then
+            echo ""
+            echo "   Error details (for troubleshooting):"
+            head -5 "$SYNC_ERROR" | sed 's/^/   /'
+            echo "   Full error log saved to: $SYNC_ERROR"
+        else
+            rm -f "$SYNC_ERROR"
+        fi
+    fi
 else
     echo "⚠️  Model sync script not found, using static configuration"
 fi

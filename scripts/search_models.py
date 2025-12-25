@@ -5,7 +5,6 @@ Search and filter OpenRouter models by capabilities, cost, and other criteria
 """
 
 import sys
-import json
 import yaml
 from pathlib import Path
 from typing import Dict, List, Any, Optional

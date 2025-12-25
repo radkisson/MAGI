@@ -3,13 +3,9 @@
 Test script for dynamic OpenRouter model synchronization
 """
 
-import os
 import sys
-import json
-import yaml
 import traceback
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'scripts'))
@@ -67,15 +63,6 @@ def test_config_backup():
     try:
         from sync_openrouter_models import update_litellm_config
         
-        # Create a test model
-        test_models = [{
-            'id': 'test/model',
-            'name': 'Test Model',
-            'context_length': 4096,
-            'pricing': {'prompt': '0.0001', 'completion': '0.0002'},
-            'architecture': {}
-        }]
-        
         # Try to update config (this should create a backup)
         # We'll pass empty list to avoid actual changes
         backup_path = config_path.with_suffix('.yaml.backup')
@@ -85,7 +72,7 @@ def test_config_backup():
             backup_path.unlink()
         
         # Run update with backup=True and empty models (no actual changes)
-        result = update_litellm_config(config_path, [], backup=True)
+        update_litellm_config(config_path, [], backup=True)
         
         if backup_path.exists():
             print_pass("Backup file created successfully")
