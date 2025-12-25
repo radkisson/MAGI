@@ -323,11 +323,16 @@ def test_openrouter_webhook_headers():
                 referer_value = extra_headers['HTTP-Referer']
                 title_value = extra_headers['X-Title']
                 
-                # Verify they reference environment variables
-                if 'OPENROUTER_SITE_URL' in referer_value and 'OPENROUTER_APP_NAME' in title_value:
+                # Verify they reference environment variables with exact pattern
+                expected_referer = 'os.environ/OPENROUTER_SITE_URL'
+                expected_title = 'os.environ/OPENROUTER_APP_NAME'
+                
+                if referer_value == expected_referer and title_value == expected_title:
                     print_success(f"{model_name} - Properly configured with webhook headers")
                 else:
-                    print_warning(f"{model_name} - Has headers but may not use environment variables")
+                    print_warning(f"{model_name} - Has headers but not using expected environment variable pattern")
+                    print_info(f"    Expected: {expected_referer}, Got: {referer_value}")
+                    print_info(f"    Expected: {expected_title}, Got: {title_value}")
             else:
                 missing = []
                 if not has_referer:
