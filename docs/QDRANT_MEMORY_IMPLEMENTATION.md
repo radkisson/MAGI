@@ -28,12 +28,14 @@ The `qdrant_memory.py` tool now provides **complete RAG (Retrieval Augmented Gen
 - Returns top-k most relevant memories
 - Formats results with similarity scores
 - Handles empty result sets gracefully
+- **User Isolation**: Automatically filters results by user_id to ensure privacy
 
 ### 4. Infrastructure
 - Automatic collection creation on first use
 - Comprehensive error handling
 - UI feedback via event emitters
 - Connection timeout handling
+- Multi-user privacy protection
 
 ## Technical Details
 
@@ -119,6 +121,53 @@ Paris is the capital of France
 
 ---
 ```
+
+## Multi-User Support and Privacy
+
+### User Isolation
+The memory system implements **automatic user isolation** to ensure privacy:
+
+1. **Storage**: Each memory is tagged with the user's ID and name from Open WebUI
+2. **Retrieval**: Search results are automatically filtered to only show memories belonging to the requesting user
+3. **Privacy**: Users cannot access other users' memories, even if they exist in the same collection
+
+### How It Works
+```python
+# When User A stores a memory
+store_memory(content="My favorite color is blue", __user__={"id": "userA", "name": "Alice"})
+# Stored with metadata: {"user_id": "userA", "user_name": "Alice", "timestamp": ...}
+
+# When User A recalls memories
+recall_memory(query="favorite color", __user__={"id": "userA"})
+# Returns ONLY memories where metadata.user_id == "userA"
+
+# When User B tries the same query
+recall_memory(query="favorite color", __user__={"id": "userB"})
+# Returns ONLY memories where metadata.user_id == "userB"
+# User B will NOT see User A's memory about blue being their favorite color
+```
+
+### Qdrant Filter Implementation
+The search payload includes a filter clause:
+```json
+{
+  "vector": [0.1, 0.2, ..., 0.8],
+  "limit": 5,
+  "with_payload": true,
+  "filter": {
+    "must": [
+      {
+        "key": "metadata.user_id",
+        "match": {
+          "value": "userA"
+        }
+      }
+    ]
+  }
+}
+```
+
+This ensures Qdrant only returns vectors that match the user's ID, providing complete memory isolation between users.
 
 ## Performance Considerations
 

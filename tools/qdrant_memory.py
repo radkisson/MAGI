@@ -160,6 +160,9 @@ class Tools:
         This tool performs RAG (Retrieval Augmented Generation) by searching
         the vector database for semantically similar content to the query.
         This prevents hallucination by providing factual context.
+        
+        Memory isolation: Each user can only access their own memories.
+        Results are automatically filtered by user_id to ensure privacy.
 
         Args:
             query: What to search for in memory
@@ -168,7 +171,7 @@ class Tools:
             __event_emitter__: Event emitter for streaming results (provided by Open WebUI)
 
         Returns:
-            Relevant memories from the vector database
+            Relevant memories from the vector database (user-filtered)
         """
 
         if __event_emitter__:
@@ -187,12 +190,26 @@ class Tools:
             model = self._get_embedding_model()
             query_embedding = model.encode(query).tolist()
 
-            # Search Qdrant for similar vectors
+            # Build search payload with user filtering
             search_payload = {
                 "vector": query_embedding,
                 "limit": limit,
                 "with_payload": True
             }
+            
+            # Add user-specific filter to ensure memory isolation
+            # Only return memories that belong to the current user
+            if __user__ and __user__.get("id"):
+                search_payload["filter"] = {
+                    "must": [
+                        {
+                            "key": "metadata.user_id",
+                            "match": {
+                                "value": __user__.get("id")
+                            }
+                        }
+                    ]
+                }
 
             response = requests.post(
                 f"{self.qdrant_url}/collections/{self.collection_name}/points/search",
