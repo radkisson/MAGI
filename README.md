@@ -382,6 +382,11 @@ RIN is configured via environment variables in `.env`:
 # LLM Provider API Keys
 OPENAI_API_KEY=your_openai_key
 ANTHROPIC_API_KEY=your_anthropic_key
+OPENROUTER_API_KEY=your_openrouter_key
+
+# OpenRouter Configuration (Optional but recommended)
+OPENROUTER_SITE_URL=http://localhost:3000           # Your WebUI public URL
+OPENROUTER_APP_NAME=RIN - Rhyzomic Intelligence Node  # Your app name for attribution
 
 # Optional: Local Ollama
 OLLAMA_API_BASE=http://host.docker.internal:11434
