@@ -116,9 +116,10 @@ def convert_openrouter_model_to_litellm(model: Dict[str, Any]) -> Dict[str, Any]
             'max_tokens': max_tokens,
             'top_p': 1.0,
             'extra_headers': {
-                # Use environment variables with default fallback values
-                # Format: ${ENV_VAR:default_value} is not supported by LiteLLM
-                # So we use os.environ/ prefix with the expectation that start.sh sets defaults
+                # Use environment variables for these headers.
+                # Format like ${ENV_VAR:default_value} is not supported by LiteLLM, so we use
+                # the os.environ/ prefix and rely on docker-compose.yml to provide fallback
+                # defaults for unset variables (to avoid NoneType errors).
                 'HTTP-Referer': 'os.environ/OPENROUTER_SITE_URL',
                 'X-Title': 'os.environ/OPENROUTER_APP_NAME'
             }
