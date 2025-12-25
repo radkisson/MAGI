@@ -159,38 +159,31 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
                 columns = [row[1] for row in cursor.fetchall()]
                 has_access_control = 'access_control' in columns
                 
+                # Prepare common parameters
+                tool_name = tool_id.replace('_', ' ').title()
+                common_params = (
+                    tool_id,
+                    user_id,
+                    tool_name,
+                    content,
+                    json.dumps(specs),
+                    json.dumps(meta),
+                    json.dumps({}),  # Empty valves (will use defaults from Valves class)
+                    now,
+                    now
+                )
+                
                 # Insert tool with or without access_control column
                 if has_access_control:
                     cursor.execute("""
                         INSERT INTO tool (id, user_id, name, content, specs, meta, valves, access_control, updated_at, created_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        tool_id,
-                        user_id,
-                        tool_id.replace('_', ' ').title(),  # Human-readable name
-                        content,
-                        json.dumps(specs),
-                        json.dumps(meta),
-                        json.dumps({}),  # Empty valves (will use defaults from Valves class)
-                        None,  # Public access
-                        now,
-                        now
-                    ))
+                    """, common_params[:7] + (None,) + common_params[7:])
                 else:
                     cursor.execute("""
                         INSERT INTO tool (id, user_id, name, content, specs, meta, valves, updated_at, created_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        tool_id,
-                        user_id,
-                        tool_id.replace('_', ' ').title(),  # Human-readable name
-                        content,
-                        json.dumps(specs),
-                        json.dumps(meta),
-                        json.dumps({}),  # Empty valves (will use defaults from Valves class)
-                        now,
-                        now
-                    ))
+                    """, common_params)
 
                 conn.commit()
                 print(f"  ✅ {tool_id}: Registered with {len(specs)} function(s)")

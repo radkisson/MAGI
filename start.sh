@@ -279,9 +279,8 @@ else
     # Check if workflows already imported
     WORKFLOW_LIST=$(docker exec rin-reflex-automation n8n list:workflow 2>/dev/null || echo "")
     # Drop potential header line and count only non-empty lines as actual workflows
-    WORKFLOW_COUNT=$(printf "%s" "$WORKFLOW_LIST" | sed '1d' | grep -c '[^[:space:]]' 2>/dev/null || echo "0")
-    # Ensure WORKFLOW_COUNT is a valid integer
-    WORKFLOW_COUNT=$(echo "$WORKFLOW_COUNT" | tr -d '\n' | grep -o '[0-9]*' | head -1)
+    # Extract only numeric characters and use first number found, default to 0
+    WORKFLOW_COUNT=$(printf "%s" "$WORKFLOW_LIST" | sed '1d' | grep -c '[^[:space:]]' 2>/dev/null | grep -o '[0-9]*' | head -1)
     WORKFLOW_COUNT=${WORKFLOW_COUNT:-0}
     if [ "$WORKFLOW_COUNT" -gt 0 ] 2>/dev/null; then
         echo "  ℹ️  $WORKFLOW_COUNT workflows already present"
