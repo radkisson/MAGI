@@ -162,6 +162,22 @@ services:
     # Sequential Thinking forces the AI to use a "Chain of Thought" approach,
     # resulting in deeper, more methodical reasoning for complex queries.
 
+  # --- YOUTUBE TRANSCRIPT BRIDGE ---
+  youtube-mcp:
+    image: python:3.12-slim
+    container_name: rin-youtube-mcp
+    restart: always
+    ports:
+      - "${PORT_YOUTUBE_MCP:-9001}:9001"
+    command: >
+      sh -c "
+      apt-get update && apt-get install -y nodejs npm &&
+      pip install mcpo &&
+      mcpo --port 9001 -- npx -y @sinco-lab/mcp-youtube-transcript
+      "
+    # This service allows the AI to "watch" videos by reading YouTube subtitle tracks.
+    # It installs both Node.js (for the NPM tool) and Python mcpo (for the bridge).
+
   # --- SUPPORT ---
   redis:
     image: redis:alpine

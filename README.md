@@ -142,6 +142,7 @@ Available port configurations:
 - `PORT_N8N=5678` - n8n (Reflex) - Workflow automation
 - `PORT_QDRANT=6333` - Qdrant (Memory) - Vector database
 - `PORT_MCP_BRIDGE=9000` - MCP Bridge (Sequential Thinking) - Model Context Protocol bridge
+- `PORT_YOUTUBE_MCP=9001` - YouTube MCP (YouTube Transcript) - Video subtitle extraction
 
 For example, if port 3000 is in use, change `PORT_WEBUI=3000` to `PORT_WEBUI=3001`.
 
@@ -171,6 +172,7 @@ Once deployed, access the various subsystems:
 - **FireCrawl API**: http://localhost:3002
 - **Qdrant (Vector DB)**: http://localhost:6333
 - **MCP Bridge (Sequential Thinking)**: http://localhost:9000
+- **YouTube MCP (YouTube Transcript)**: http://localhost:9001
 - **Redis**: localhost:6379
 
 ### Synaptic Wiring (Tool Definitions)
@@ -199,7 +201,11 @@ RIN: [Uses SearXNG tool to search anonymously]
 
 RIN includes an **MCP Bridge** that connects Model Context Protocol (MCP) tools to Open WebUI. The bridge translates MCP tools into OpenAPI format that Open WebUI can understand.
 
-**Sequential Thinking Tool:**
+For detailed setup instructions, troubleshooting, and advanced usage, see the **[MCP Tools Guide](docs/MCP_TOOLS.md)**.
+
+**Available MCP Tools:**
+
+#### 1. Sequential Thinking Tool
 
 The Sequential Thinking tool is included by default. It forces the AI to use a "Chain of Thought" approach, resulting in deeper, more methodical reasoning for complex queries.
 
@@ -228,6 +234,40 @@ RIN: [Calls Sequential Thinking tool iteratively]
 ```
 
 **Note:** The bridge uses the official `@modelcontextprotocol/server-sequential-thinking` package maintained by the protocol creators for maximum stability.
+
+#### 2. YouTube Transcript Tool
+
+The YouTube Transcript tool allows the AI to "watch" videos by reading their hidden subtitle tracks. This enables video analysis and summarization without actually playing the video.
+
+**How it works:**
+- The tool extracts subtitle/transcript data from YouTube videos
+- The AI can then analyze, summarize, or search the content
+- Works with any YouTube video that has captions (automatic or manual)
+
+**Connecting to Open WebUI:**
+
+1. Go to **Settings → Tool Servers** (Admin Settings)
+2. In the URL field, type: `http://youtube-mcp:9001/openapi.json`
+   - Use `youtube-mcp` as the hostname (same Docker network)
+   - If that fails, try: `http://host.docker.internal:9001/openapi.json`
+   - On Linux, you may need to use: `http://localhost:9001/openapi.json`
+3. Click the **Download/Load** button (Cloud icon)
+4. **Activate** the tool (toggle the switch)
+
+**Usage Examples:**
+```
+User: "Summarize this video for me: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+RIN: [Retrieves video transcript]
+     [Analyzes content]
+     [Provides comprehensive summary]
+
+User: "Find the exact timestamp in this video where they talk about 'Docker': https://www.youtube.com/watch?v=..."
+RIN: [Searches transcript for keyword]
+     [Identifies relevant timestamps]
+     [Provides specific time markers with context]
+```
+
+**Technical Note:** This service uses a Python base image with Node.js installed to run the NPM-based `@sinco-lab/mcp-youtube-transcript` tool via the mcpo bridge.
 
 ### Autonomous Workflows (n8n)
 
