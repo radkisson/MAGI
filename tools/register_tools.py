@@ -154,22 +154,36 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
             if existing:
                 print(f"  ℹ️  {tool_id}: Already registered, skipping")
             else:
-                # Insert tool
-                cursor.execute("""
-                    INSERT INTO tool (id, user_id, name, content, specs, meta, valves, access_control, updated_at, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
+                # Check if access_control column exists
+                cursor.execute("PRAGMA table_info(tool)")
+                columns = [row[1] for row in cursor.fetchall()]
+                has_access_control = 'access_control' in columns
+                
+                # Prepare common parameters
+                tool_name = tool_id.replace('_', ' ').title()
+                common_params = (
                     tool_id,
                     user_id,
-                    tool_id.replace('_', ' ').title(),  # Human-readable name
+                    tool_name,
                     content,
                     json.dumps(specs),
                     json.dumps(meta),
                     json.dumps({}),  # Empty valves (will use defaults from Valves class)
-                    None,  # Public access
                     now,
                     now
-                ))
+                )
+                
+                # Insert tool with or without access_control column
+                if has_access_control:
+                    cursor.execute("""
+                        INSERT INTO tool (id, user_id, name, content, specs, meta, valves, access_control, updated_at, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, common_params[:7] + (None,) + common_params[7:])
+                else:
+                    cursor.execute("""
+                        INSERT INTO tool (id, user_id, name, content, specs, meta, valves, updated_at, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, common_params)
 
                 conn.commit()
                 print(f"  ✅ {tool_id}: Registered with {len(specs)} function(s)")

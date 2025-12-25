@@ -279,8 +279,10 @@ else
     # Check if workflows already imported
     WORKFLOW_LIST=$(docker exec rin-reflex-automation n8n list:workflow 2>/dev/null || echo "")
     # Drop potential header line and count only non-empty lines as actual workflows
-    WORKFLOW_COUNT=$(printf "%s\n" "$WORKFLOW_LIST" | sed '1d' | grep -c '[^[:space:]]' || echo "0")
-    if [ "$WORKFLOW_COUNT" -gt 0 ]; then
+    # Extract only numeric characters and use first number found, default to 0
+    WORKFLOW_COUNT=$(printf "%s" "$WORKFLOW_LIST" | sed '1d' | grep -c '[^[:space:]]' 2>/dev/null | grep -o '[0-9]*' | head -1)
+    WORKFLOW_COUNT=${WORKFLOW_COUNT:-0}
+    if [ "$WORKFLOW_COUNT" -gt 0 ] 2>/dev/null; then
         echo "  ℹ️  $WORKFLOW_COUNT workflows already present"
     else
         # Import workflows from /workflows directory
@@ -298,9 +300,15 @@ fi
 
 # Load port configuration from .env to display in output
 if [ -f "$BASE_DIR/.env" ]; then
-    export $(grep -v '^#' "$BASE_DIR/.env" | grep 'PORT_' | xargs)
-    # Load service selection
-    export $(grep -v '^#' "$BASE_DIR/.env" | grep 'ENABLE_' | xargs) 2>/dev/null || true
+    # Use a safer approach to export variables, avoiding comments and special characters
+    while IFS='=' read -r key value; do
+        # Skip empty lines and comments
+        [[ -z "$key" || "$key" =~ ^[[:space:]]*# ]] && continue
+        # Only export PORT_ and ENABLE_ variables
+        if [[ "$key" =~ ^PORT_ ]] || [[ "$key" =~ ^ENABLE_ ]]; then
+            export "$key=$value"
+        fi
+    done < <(grep -E '^(PORT_|ENABLE_)' "$BASE_DIR/.env" 2>/dev/null || true)
 fi
 
 # Use loaded values or defaults
