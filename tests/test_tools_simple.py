@@ -82,17 +82,28 @@ def test_firecrawl_integration():
         assert 'FIRECRAWL_API_URL' in valves_fields
         assert 'REQUEST_TIMEOUT' in valves_fields
         assert 'MAX_CONTENT_LENGTH' in valves_fields
+        assert 'CACHE_MAX_SIZE' in valves_fields
+        assert 'CRAWL_TIMEOUT_BUFFER' in valves_fields
         print("  ✓ Valves class properly configured")
         
         # Test new valves defaults
         assert firecrawl.valves.REQUEST_TIMEOUT == 60
         assert firecrawl.valves.MAX_CONTENT_LENGTH == 20000
+        assert firecrawl.valves.CACHE_MAX_SIZE == 100
+        assert firecrawl.valves.CRAWL_TIMEOUT_BUFFER == 60
         print("  ✓ New valves have correct defaults")
         
         # Test cache initialization
         assert hasattr(firecrawl, '_cache')
+        assert hasattr(firecrawl, '_cache_lock')
+        assert hasattr(firecrawl, '_cache_order')
         assert isinstance(firecrawl._cache, dict)
-        print("  ✓ Cache initialized")
+        print("  ✓ Cache initialized with thread safety")
+        
+        # Test cache methods
+        firecrawl._add_to_cache("test1", "content1")
+        assert firecrawl._get_from_cache("test1") == "content1"
+        print("  ✓ Cache operations work")
         
         # Test truncate method
         short_content = "A" * 1000

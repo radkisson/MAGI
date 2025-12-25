@@ -13,6 +13,7 @@ import os
 import requests
 from typing import Callable, Any, Optional, List
 from pydantic import BaseModel, Field
+from threading import Lock
 
 
 class Valves(BaseModel):
@@ -37,6 +38,14 @@ class Valves(BaseModel):
         default=20000,
         description="Max characters to return per scrape to prevent context overflow"
     )
+    CACHE_MAX_SIZE: int = Field(
+        default=100,
+        description="Maximum number of cached results to store in memory"
+    )
+    CRAWL_TIMEOUT_BUFFER: int = Field(
+        default=60,
+        description="Additional timeout (in seconds) to add for crawl operations beyond REQUEST_TIMEOUT"
+    )
 
 
 class Tools:
@@ -44,8 +53,35 @@ class Tools:
 
     def __init__(self):
         self.valves = Valves()
-        # Improvement 3: Simple in-memory cache
+        # Improvement 3: Simple in-memory cache with thread safety
         self._cache = {}
+        self._cache_lock = Lock()
+        self._cache_order = []  # Track insertion order for LRU eviction
+
+    def _get_from_cache(self, key: str) -> Optional[str]:
+        """Thread-safe cache retrieval"""
+        with self._cache_lock:
+            if key in self._cache:
+                # Move to end (most recently used)
+                self._cache_order.remove(key)
+                self._cache_order.append(key)
+                return self._cache[key]
+        return None
+
+    def _add_to_cache(self, key: str, value: str) -> None:
+        """Thread-safe cache addition with LRU eviction"""
+        with self._cache_lock:
+            # Remove oldest entries if cache is full
+            while len(self._cache) >= self.valves.CACHE_MAX_SIZE:
+                if self._cache_order:
+                    oldest = self._cache_order.pop(0)
+                    del self._cache[oldest]
+            
+            # Add new entry
+            if key in self._cache:
+                self._cache_order.remove(key)
+            self._cache[key] = value
+            self._cache_order.append(key)
 
     def _truncate_content(self, content: str, source: str) -> str:
         """Helper to safely truncate content"""
@@ -103,7 +139,8 @@ class Tools:
             return error_msg
 
         # Check Cache
-        if url in self._cache:
+        cached_result = self._get_from_cache(url)
+        if cached_result:
             if __event_emitter__:
                 __event_emitter__(
                     {
@@ -111,7 +148,7 @@ class Tools:
                         "data": {"description": "⚡ Retrieved from cache", "done": True}
                     }
                 )
-            return self._cache[url]
+            return cached_result
 
         if __event_emitter__:
             __event_emitter__(
@@ -170,7 +207,7 @@ class Tools:
                     )
                     
                     # Save to Cache
-                    self._cache[url] = formatted_output
+                    self._add_to_cache(url, formatted_output)
                     
                     return formatted_output
                 else:
@@ -278,7 +315,7 @@ class Tools:
                 headers={
                     "Authorization": f"Bearer {self.valves.FIRECRAWL_API_KEY}",
                 },
-                timeout=self.valves.REQUEST_TIMEOUT + 60,  # Crawls need more time
+                timeout=self.valves.REQUEST_TIMEOUT + self.valves.CRAWL_TIMEOUT_BUFFER,
             )
             response.raise_for_status()
 

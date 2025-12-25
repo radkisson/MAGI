@@ -114,25 +114,56 @@ def test_firecrawl_new_valves():
     # Check new valves exist
     assert hasattr(firecrawl.valves, 'REQUEST_TIMEOUT')
     assert hasattr(firecrawl.valves, 'MAX_CONTENT_LENGTH')
+    assert hasattr(firecrawl.valves, 'CACHE_MAX_SIZE')
+    assert hasattr(firecrawl.valves, 'CRAWL_TIMEOUT_BUFFER')
     
     # Check default values
     assert firecrawl.valves.REQUEST_TIMEOUT == 60
     assert firecrawl.valves.MAX_CONTENT_LENGTH == 20000
+    assert firecrawl.valves.CACHE_MAX_SIZE == 100
+    assert firecrawl.valves.CRAWL_TIMEOUT_BUFFER == 60
     
     # Test Valves class has new fields
     valves_fields = FirecrawlValves.model_fields.keys() if hasattr(FirecrawlValves, 'model_fields') else []
     assert 'REQUEST_TIMEOUT' in valves_fields
     assert 'MAX_CONTENT_LENGTH' in valves_fields
+    assert 'CACHE_MAX_SIZE' in valves_fields
+    assert 'CRAWL_TIMEOUT_BUFFER' in valves_fields
 
 
 def test_firecrawl_cache_initialization():
-    """Test that cache is initialized"""
+    """Test that cache is initialized with thread safety"""
     from firecrawl_scraper import Tools as FirecrawlTools
     
     firecrawl = FirecrawlTools()
     assert hasattr(firecrawl, '_cache')
+    assert hasattr(firecrawl, '_cache_lock')
+    assert hasattr(firecrawl, '_cache_order')
     assert isinstance(firecrawl._cache, dict)
     assert len(firecrawl._cache) == 0
+
+
+def test_firecrawl_cache_operations():
+    """Test cache helper methods"""
+    from firecrawl_scraper import Tools as FirecrawlTools
+    
+    firecrawl = FirecrawlTools()
+    
+    # Test adding to cache
+    firecrawl._add_to_cache("url1", "content1")
+    assert firecrawl._get_from_cache("url1") == "content1"
+    assert len(firecrawl._cache) == 1
+    
+    # Test LRU behavior
+    firecrawl._add_to_cache("url2", "content2")
+    assert firecrawl._get_from_cache("url2") == "content2"
+    
+    # Access url1 again (should move to end)
+    result = firecrawl._get_from_cache("url1")
+    assert result == "content1"
+    
+    # Test cache miss
+    assert firecrawl._get_from_cache("nonexistent") is None
 
 
 def test_firecrawl_truncate_content_method():
