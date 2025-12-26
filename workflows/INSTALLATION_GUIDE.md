@@ -8,6 +8,17 @@ This guide provides step-by-step instructions for installing and configuring all
 2. All services must be healthy: `./rin status`
 3. n8n must be accessible at http://localhost:5678
 
+## Python Support
+
+RIN's n8n instance includes **full Python 3.12 support** in addition to JavaScript. This means you can:
+
+- Write Python code directly in Code nodes
+- Use Python's standard library
+- Install external packages with pip (via Execute Command node)
+- Use data science libraries like pandas, numpy, scikit-learn
+
+See [`PYTHON_EXAMPLES.md`](PYTHON_EXAMPLES.md) for detailed examples and usage guide.
+
 ## Initial n8n Setup
 
 ### First-Time Access
