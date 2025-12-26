@@ -1,6 +1,6 @@
 # Rhyzomic Intelligence Node (RIN)
 
-**Version**: 1.2.0 (Stable)  
+**Version**: 1.3.0 (Stable)  
 **Status**: Active Development  
 **Classification**: Sovereign AI Infrastructure
 
@@ -708,13 +708,30 @@ Areas of focus:
   - [x] Daily report generator workflow
   - [x] Detailed workflow installation and usage guides
   - [x] FireCrawl API configuration fixes
+  - [x] Comprehensive CLI Management Tool (`./rin`)
+  - [x] Backup and restore functionality
+  - [x] Enhanced service monitoring and logs
+
+- [x] **v1.3 "Dynamic Intelligence"**: Dynamic Model Management & CLI Enhancement ✅
+  - [x] Dynamic OpenRouter model loading (100+ models)
+  - [x] Automatic model sync on startup
+  - [x] Model intelligence features (popularity rankings, cost metadata)
+  - [x] RIN CLI model management commands
+  - [x] Model search and filtering capabilities
+  - [x] Automatic model recommendations
+  - [x] MCP Bridge for Model Context Protocol tools
+  - [x] Sequential Thinking tool integration
+  - [x] YouTube Transcript tool integration
+  - [x] Auto-registration tooling for tools
+  - [x] Smart Valves pattern for API key management
 
 ### Planned
-- [ ] **v1.3 "Intelligence Plus"**: Enhanced Automation
+- [ ] **v1.4 "Workflow Automation Plus"**: Enhanced Automation
   - [ ] Auto-load workflows into n8n on first boot
   - [ ] GitHub notifications and PR summaries workflow
   - [ ] Calendar integration workflow
   - [ ] Document processing workflow
+  - [ ] Workflow templates library expansion
   
 - [ ] **v1.4 "Observability"**: Monitoring & Logging
   - [ ] Real-time health dashboard
