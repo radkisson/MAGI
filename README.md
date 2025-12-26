@@ -336,6 +336,12 @@ See [`workflows/README.md`](workflows/README.md) for detailed architecture and e
 
 RIN's n8n instance includes **full Python 3.12 support** via the `hank033/n8n-python` Docker image. This enables you to write Python code directly in Code nodes alongside JavaScript.
 
+**⚠️ Security Note**: This feature uses a community-maintained Docker image (`hank033/n8n-python:latest`) rather than the official n8n image. Consider the following:
+- The community image may not receive security updates as quickly as the official image
+- For production deployments with strict security requirements, consider building a custom image from the official `n8nio/n8n` base
+- Review the [image source](https://hub.docker.com/r/hank033/n8n-python) and [base repository](https://github.com/naskio/docker-n8n-python) for transparency
+- The `latest` tag is mutable; for production, pin to a specific version digest for reproducibility
+
 **Using Python in Code Nodes:**
 
 1. **Create a workflow** in n8n (http://localhost:5678)
@@ -369,7 +375,10 @@ To use additional Python packages in your workflows:
 
 1. Use the **Execute Command** node in your workflow
 2. Run `pip install <package-name>` to install packages
-3. Packages persist in the container and are available to all workflows
+3. **Important**: Packages are installed in the running container but may not persist across container restarts. For production use, consider:
+   - Creating a startup workflow that reinstalls required packages
+   - Building a custom Docker image with pre-installed packages
+   - Using Docker volume mounts for Python's site-packages directory
 
 **Example**: To install `requests` and `pandas`:
 ```bash

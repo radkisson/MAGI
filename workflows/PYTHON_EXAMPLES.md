@@ -2,6 +2,24 @@
 
 RIN's n8n instance includes **full Python 3.12 support** via the `hank033/n8n-python` Docker image. This guide provides examples and best practices for using Python in your workflows.
 
+## ⚠️ Security & Maintenance Considerations
+
+**Docker Image Source**: This feature uses a community-maintained Docker image (`hank033/n8n-python:latest`):
+- The image is built on top of the official n8n image with Python 3.12 added
+- Community images may not receive security updates as quickly as official images
+- For production deployments with strict security requirements, consider:
+  - Building a custom Docker image from the official `n8nio/n8n` base
+  - Pinning to a specific version digest instead of using the `latest` tag
+  - Regularly reviewing and updating the base image
+
+**Package Persistence**: Python packages installed via `pip install`:
+- Are available in the current container session
+- **May not persist** across container restarts
+- For production, implement one of these strategies:
+  - Create a startup workflow that automatically reinstalls required packages
+  - Build a custom Docker image with pre-installed packages
+  - Configure Docker volumes to persist Python's site-packages directory
+
 ## Overview
 
 The Python-enabled n8n image allows you to:
@@ -109,6 +127,11 @@ return results
 
 To use external Python packages in your workflows:
 
+**⚠️ Important**: Packages installed via `pip` are stored in the container and may not persist across container restarts. For production use:
+- Use Method 2 (startup workflow) to automatically reinstall packages on container restart
+- Build a custom Docker image with pre-installed packages
+- Configure Docker volumes for Python's site-packages directory
+
 ### Method 1: Execute Command Node
 
 1. Add an **Execute Command** node before your Python Code node
@@ -116,17 +139,18 @@ To use external Python packages in your workflows:
    ```bash
    pip install requests pandas numpy scikit-learn
    ```
-3. The packages will be available to all subsequent Python Code nodes
+3. The packages will be available to all subsequent Python Code nodes in the current container session
 
-### Method 2: Startup Installation
+### Method 2: Startup Installation (Recommended for Production)
 
-For packages you always need, you can create a workflow that runs on startup:
+For packages you always need, create a workflow that runs on startup to ensure packages are available after restarts:
 
 1. Create a workflow with a **Schedule Trigger** set to run once on startup
 2. Add an **Execute Command** node to install packages:
    ```bash
    pip install -q requests beautifulsoup4 pandas
    ```
+3. This ensures packages are automatically reinstalled whenever the container restarts
 
 ### Example with External Packages
 
@@ -136,6 +160,7 @@ Once packages are installed, use them in your Code nodes:
 import requests
 from bs4 import BeautifulSoup
 import json
+from urllib.parse import urlparse
 
 items = _input.all()
 results = []
@@ -143,9 +168,29 @@ results = []
 for item in items:
     url = item['json'].get('url', '')
     
+    # Validate URL
     try:
-        # Fetch and parse HTML
-        response = requests.get(url, timeout=10)
+        parsed = urlparse(url)
+        if parsed.scheme not in ['http', 'https']:
+            results.append({'json': {'url': url, 'error': 'Invalid URL scheme. Only http and https are allowed.'}})
+            continue
+    except Exception as e:
+        results.append({'json': {'url': url, 'error': f'Invalid URL: {str(e)}'}})
+        continue
+    
+    try:
+        # Fetch and parse HTML with security best practices
+        headers = {
+            'User-Agent': 'n8n-workflow/1.0 (RIN Automation)'
+        }
+        response = requests.get(
+            url, 
+            timeout=10, 
+            verify=True,  # Verify SSL certificates
+            headers=headers
+        )
+        response.raise_for_status()  # Raise exception for bad status codes
+        
         soup = BeautifulSoup(response.content, 'html.parser')
         
         # Extract data
@@ -158,6 +203,10 @@ for item in items:
         }
         
         results.append({'json': extracted})
+    except requests.exceptions.SSLError as e:
+        results.append({'json': {'url': url, 'error': f'SSL verification failed: {str(e)}'}})
+    except requests.exceptions.RequestException as e:
+        results.append({'json': {'url': url, 'error': f'Request failed: {str(e)}'}})
     except Exception as e:
         results.append({'json': {'url': url, 'error': str(e)}})
 
@@ -206,6 +255,7 @@ return [{'json': stats}]
 ```python
 import requests
 import json
+import os
 
 items = _input.all()
 results = []
@@ -215,12 +265,20 @@ for item in items:
     
     # Call an external API
     try:
+        # SECURITY: Use environment variables for API keys
+        # Set these in n8n: Settings → Environments → Variables
+        api_key = os.environ.get('API_KEY')
+        if not api_key:
+            raise ValueError('API_KEY environment variable not set')
+        
         response = requests.post(
             'https://api.example.com/v1/process',
             json={'query': query, 'mode': 'advanced'},
-            headers={'Authorization': 'Bearer YOUR_API_KEY'},
-            timeout=30
+            headers={'Authorization': f'Bearer {api_key}'},
+            timeout=30,
+            verify=True  # Verify SSL certificates
         )
+        response.raise_for_status()  # Raise exception for bad status codes
         
         api_result = response.json()
         
@@ -233,11 +291,17 @@ for item in items:
         
         results.append({'json': processed})
         
+    except ValueError as e:
+        results.append({'json': {'query': query, 'error': str(e), 'success': False}})
     except requests.exceptions.RequestException as e:
+        results.append({'json': {'query': query, 'error': f'Request failed: {str(e)}', 'success': False}})
+    except Exception as e:
         results.append({'json': {'query': query, 'error': str(e), 'success': False}})
 
 return results
 ```
+
+**Note**: Store API keys securely using n8n environment variables or credentials, never hardcode them in workflows.
 
 ## Error Handling Best Practices
 
@@ -246,6 +310,15 @@ Always include proper error handling in your Python code:
 ```python
 import traceback
 
+# Define helper functions before the main code
+def perform_complex_operation(data):
+    """Your custom operation logic here"""
+    # Example: validate and transform data
+    if not data:
+        raise ValueError("Data cannot be empty")
+    return data
+
+# Main processing code
 items = _input.all()
 results = []
 
@@ -283,10 +356,6 @@ for item in items:
         })
 
 return results
-
-def perform_complex_operation(data):
-    # Your operation logic
-    return data
 ```
 
 ## Python vs JavaScript: When to Use Each
