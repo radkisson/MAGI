@@ -5,6 +5,7 @@ This tool connects the Cortex (Open WebUI) to the Sensorium's Vision (SearXNG),
 allowing RIN to search the web anonymously without tracking.
 """
 
+import json
 import requests
 from typing import Callable, Any
 
@@ -61,7 +62,48 @@ class Tools:
             )
             response.raise_for_status()
 
-            results = response.json()
+            try:
+                results = response.json()
+            except json.JSONDecodeError:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "❌ Invalid JSON response from SearXNG",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"❌ SearXNG returned invalid JSON response for query: '{query}'\n\n"
+                    f"Response: {response.text[:500]}\n\n"
+                    f"This may indicate a SearXNG service error. Check the logs."
+                )
+            
+            # Check if response is empty or malformed
+            if not results or results == {}:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ Received empty response from SearXNG",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"⚠️ SearXNG returned an empty response for query: '{query}'\n\n"
+                    f"This may indicate:\n"
+                    f"1. The SearXNG service is not properly configured\n"
+                    f"2. No search engines are available or all failed\n"
+                    f"3. The search query may have been blocked\n\n"
+                    f"Try:\n"
+                    f"- Verify SearXNG is running: `docker ps | grep searxng`\n"
+                    f"- Check SearXNG logs: `docker logs rin-searxng`\n"
+                    f"- Try a different search query"
+                )
 
             if __event_emitter__:
                 __event_emitter__(

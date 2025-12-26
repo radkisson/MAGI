@@ -314,6 +314,16 @@ class Tools:
                 # Return raw JSON for LLM to interpret
                 try:
                     response_data = response.json()
+                    # Check if response is empty or missing expected data
+                    if not response_data or response_data == {}:
+                        return (
+                            f"⚠️ Workflow '{workflow_id}' returned an empty response.\n\n"
+                            f"This may indicate:\n"
+                            f"1. The workflow completed but produced no output\n"
+                            f"2. The workflow needs a 'Respond to Webhook' node to return data\n"
+                            f"3. The workflow configuration may need adjustment\n\n"
+                            f"Check the n8n dashboard for workflow execution details."
+                        )
                     return json.dumps(response_data, indent=2)
                 except json.JSONDecodeError:
                     return response.text
