@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **LiteLLM Streaming Timeout**: Increased timeout from 60s to 300s to prevent `httpx.TimeoutException` during long streaming responses
+  - Updated `router_settings.timeout` to 300 seconds
+  - Added `litellm_settings.request_timeout` parameter (300 seconds)
+  - Updated documentation to reflect new timeout values
+
 ### Planned
 - Future enhancements and features will be listed here
 
