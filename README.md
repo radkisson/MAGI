@@ -388,7 +388,7 @@ MAGI now includes a comprehensive CLI management tool for easier lifecycle manag
 ./rin help
 ```
 
-**Note on the `./rin` Command**: The CLI command remains `./rin` for backward compatibility, even though the project is now called MAGI. Think of it as: **MAGI** = project name, **rin** = command name (similar to how you use `git` for GitHub).
+**Note on the `./rin` Command**: The CLI command remains `./rin` for backward compatibility, even though the project is now called MAGI. Think of it as: **MAGI** = project name, **rin** = command name (similar to how `docker` is the command for Docker Desktop).
 
 **Backward Compatibility**: The original `./start.sh` script still works as before. The new `./rin` CLI is a comprehensive wrapper that provides additional management commands.
 
