@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2025-12-26
 
 ### Added
+- **Python 3.12 Support in n8n**: Full Python support for workflow automation
+  - Upgraded n8n to use `hank033/n8n-python:latest` Docker image with Python 3.12.12
+  - **Security Note**: Uses community-maintained image; for production with strict security requirements, consider building custom image from official n8n base or pinning to specific version digest
+  - Code nodes now support both JavaScript and Python languages
+  - Full Python standard library available in workflows
+  - Support for installing external packages via pip (pandas, numpy, scikit-learn, etc.)
+  - **Note**: Installed packages may not persist across container restarts; see documentation for production strategies
+  - New `workflows/PYTHON_EXAMPLES.md` - Comprehensive guide with real-world Python workflow examples
+  - Documentation includes data science, API integration, and text analysis examples with security best practices
+  - Updated main README.md and workflow documentation to document Python capabilities and security considerations
+
 - **Dynamic OpenRouter Model Loading**: Automatically fetch and sync the latest models from OpenRouter API
   - New `scripts/sync_openrouter_models.py` - Core sync script that fetches models from OpenRouter API
   - New `scripts/sync_models.sh` - Convenience wrapper for manual model syncing
