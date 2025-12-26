@@ -293,9 +293,9 @@ cmd_upgrade() {
     git fetch origin
     
     print_info "Current branch: $current_branch"
-    
+
     # Check for updates
-    if git diff --quiet HEAD origin/$current_branch; then
+    if git diff --quiet HEAD "origin/$current_branch"; then
         print_success "Already up to date"
         exit 0
     fi
@@ -409,14 +409,15 @@ cmd_restore() {
     # Stop services before restoring
     print_info "Stopping services..."
     docker compose down 2>/dev/null || true
-    
+
     # Create safety backup of current data
     if [ -d "$BASE_DIR/data" ]; then
-        local safety_backup="$BASE_DIR/data.pre-restore.$(date +%Y%m%d_%H%M%S)"
+        local safety_backup
+        safety_backup="$BASE_DIR/data.pre-restore.$(date +%Y%m%d_%H%M%S)"
         print_info "Creating safety backup of current data: $safety_backup"
         cp -r "$BASE_DIR/data" "$safety_backup"
     fi
-    
+
     # Restore data (with BASE_DIR validation already done)
     if [ -d "$backup_dir/data" ]; then
         print_info "Restoring data directory..."
@@ -534,11 +535,9 @@ cmd_models_sync() {
         print_error "Model sync script not found"
         exit 1
     fi
-    
+
     # Run sync script
-    python3 "$BASE_DIR/scripts/sync_openrouter_models.py"
-    
-    if [ $? -eq 0 ]; then
+    if python3 "$BASE_DIR/scripts/sync_openrouter_models.py"; then
         print_success "Models synced successfully"
         print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
     else

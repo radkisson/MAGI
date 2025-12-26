@@ -80,7 +80,7 @@ class Tools:
                     f"Response: {response.text[:500]}\n\n"
                     f"This may indicate a SearXNG service error. Check the logs."
                 )
-            
+
             # Check if response is empty or malformed
             if not results or results == {}:
                 if __event_emitter__:

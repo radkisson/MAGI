@@ -132,7 +132,7 @@ class Tools:
                     f"Response: {response.text[:500]}\n\n"
                     f"This may indicate a Tavily API error. Check your API key and account status."
                 )
-            
+
             # Check if response is empty or malformed
             if not result or result == {}:
                 if __event_emitter__:

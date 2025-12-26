@@ -158,7 +158,7 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
                 cursor.execute("PRAGMA table_info(tool)")
                 columns = [row[1] for row in cursor.fetchall()]
                 has_access_control = 'access_control' in columns
-                
+
                 # Prepare common parameters
                 tool_name = tool_id.replace('_', ' ').title()
                 common_params = (
@@ -172,7 +172,7 @@ def register_tool(db_path: str, tool_id: str, tool_path: Path, user_id: str):
                     now,
                     now
                 )
-                
+
                 # Insert tool with or without access_control column
                 if has_access_control:
                     cursor.execute("""
