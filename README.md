@@ -44,13 +44,18 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 - **Sovereign Architecture**: Complete control over your AI infrastructure
 - **Privacy-First**: Anonymous web search via SearXNG, no data leakage
 - **Multi-Model Intelligence**: Route tasks to optimal LLM providers via LiteLLM
-- **Dynamic Model Loading**: Automatically sync latest models from OpenRouter API
+- **Dynamic Model Loading**: Automatically sync latest models from OpenRouter API (100+ models)
 - **OpenRouter Integration**: Access 100+ models from one unified API (GPT-4, Claude, Llama, Gemini, Mistral, and more)
+- **Model Intelligence**: Popularity rankings, cost metadata, and automatic recommendations
 - **Cost Tracking**: Monitor spending across all models with built-in budgeting
 - **Fallback Chains**: Automatic failover to backup models for 99.9% reliability
 - **Persistent Memory**: RAG-enabled recall via Qdrant vector storage
 - **Asynchronous Coordination**: Redis-powered task queuing and execution
 - **Biological Design**: Five subsystems working as a unified organism
+- **Comprehensive CLI**: Complete system management via `./rin` command
+- **Auto-Registration**: Tools auto-authenticate and appear instantly in UI
+- **MCP Bridge**: Model Context Protocol tools for advanced reasoning
+- **Workflow Automation**: 8 pre-configured n8n workflows for autonomous operations
 
 ## Quick Start
 
@@ -421,7 +426,12 @@ RIN functions as a biological organism with specialized subsystems:
 ### The Nervous System (Reflex)
 - **Redis**: Asynchronous task coordination and message bus
 
+### The Reflex Arc (Autonomy)
+- **n8n**: Workflow automation enabling scheduled tasks and external integrations
+
 See [DESIGN.md](DESIGN.md) for detailed architecture documentation.
+
+**Future Vision**: See [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md) for the roadmap through v2.0 and beyond, including multi-agent orchestration, multimodal capabilities, and production hardening features.
 
 ## Project Structure
 
@@ -726,32 +736,52 @@ Areas of focus:
   - [x] Smart Valves pattern for API key management
 
 ### Planned
-- [ ] **v1.4 "Workflow Automation Plus"**: Enhanced Automation
-  - [ ] Auto-load workflows into n8n on first boot
-  - [ ] GitHub notifications and PR summaries workflow
-  - [ ] Calendar integration workflow
-  - [ ] Document processing workflow
-  - [ ] Workflow templates library expansion
-  
-- [ ] **v1.4 "Observability"**: Monitoring & Logging
-  - [ ] Real-time health dashboard
-  - [ ] Usage analytics and insights
-  - [ ] Performance metrics (latency, token usage)
-  - [ ] Workflow execution history in n8n
-  - [ ] Advanced cost analytics and reporting
+
+- [ ] **v1.4 "Observability"**: Monitoring & Analytics
+  - [ ] Real-time health dashboard with service monitoring
+  - [ ] Advanced analytics engine (token usage, cost forecasting)
+  - [ ] Structured logging with correlation IDs
+  - [ ] Alerting framework (health, cost, performance alerts)
+  - [ ] Metrics collection (Prometheus + Grafana)
+  - [ ] Log aggregation and search capabilities
   
 - [ ] **v1.5 "Resilience"**: Production Hardening
-  - [ ] Automated backups for vector database and chat history
-  - [ ] Health checks and auto-restart for failed services
+  - [ ] Automated backup system (local + S3-compatible storage)
+  - [ ] High availability features (health checks, circuit breakers)
+  - [ ] Multi-user authentication with RBAC
+  - [ ] Data retention policies and cleanup
+  - [ ] Disaster recovery procedures
   - [ ] Rate limiting and quota management
-  - [ ] Multi-user authentication and access control
   
-- [ ] **v2.0 "Evolution"**: Advanced Capabilities
-  - [ ] Voice interface (Whisper integration)
-  - [ ] Image generation (Stable Diffusion)
-  - [ ] Code execution sandbox
-  - [ ] Multi-agent orchestration
-  - [ ] Custom model fine-tuning pipeline
+- [ ] **v1.6 "Workflow Intelligence"**: Enhanced Automation
+  - [ ] Auto-load workflows into n8n on first boot
+  - [ ] Expanded workflow library (GitHub, Calendar, Document processing)
+  - [ ] Intelligent workflow triggers and scheduling
+  - [ ] Workflow marketplace for community sharing
+  - [ ] Workflow dependency resolution
+  
+- [ ] **v1.7 "Multimodal Perception"**: Voice & Vision
+  - [ ] Voice interface (Whisper speech-to-text + TTS)
+  - [ ] Image generation (Stable Diffusion XL)
+  - [ ] Advanced vision capabilities (GPT-4 Vision, OCR)
+  - [ ] Video processing and transcription
+  - [ ] Document understanding (PDF, Office docs)
+  
+- [ ] **v1.8 "Code Intelligence"**: Development Partner
+  - [ ] Secure code execution sandbox
+  - [ ] GitHub deep integration (code review, PR analysis)
+  - [ ] Development tools (refactoring, bug detection, test generation)
+  - [ ] Local development server with hot reload
+  
+- [ ] **v2.0 "Multi-Agent Orchestration"**: Ecosystem Evolution
+  - [ ] Specialized agent architecture (Research, Coding, Writing agents)
+  - [ ] Agent coordination and swarm intelligence
+  - [ ] Agent development framework and SDK
+  - [ ] Advanced reasoning capabilities (Tree of Thoughts, self-reflection)
+  - [ ] Distributed deployment across multiple nodes
+  - [ ] Agent marketplace for community agents
+
+For detailed architectural vision and feature descriptions, see [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md).
 
 ## Philosophy
 
