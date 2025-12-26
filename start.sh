@@ -106,12 +106,37 @@ PORT_SEARXNG=8080      # SearXNG (Vision) - Search engine
 PORT_FIRECRAWL=3002    # FireCrawl (Digestion) - Web scraping
 PORT_N8N=5678          # n8n (Reflex) - Workflow automation
 PORT_QDRANT=6333       # Qdrant (Memory) - Vector database
+PORT_MCP_BRIDGE=9000   # MCP Bridge (Sequential Thinking) - Model Context Protocol bridge
+PORT_YOUTUBE_MCP=9001  # YouTube MCP (YouTube Transcript) - Video subtitle extraction
 
 # --- SERVICE SELECTION ---
 # Services can be disabled to reduce resource usage or if using alternatives
 # Set to Y to enable, N to disable
 # Note: start.sh will prompt you interactively on first run
 ENABLE_FIRECRAWL=Y     # Set to N if using Tavily or other scraping APIs
+
+# --- HTTPS/TLS CONFIGURATION (OPTIONAL) ---
+# Enable HTTPS for services that support it
+# Set to 'true' to enable HTTPS, 'false' to use HTTP (default)
+ENABLE_HTTPS=false
+
+# SSL Certificate paths (required if ENABLE_HTTPS=true)
+# You can use self-signed certificates for development or proper CA-signed certificates for production
+# Generate self-signed certificates with: ./scripts/generate-certs.sh
+SSL_CERT_PATH=./config/ssl/cert.pem
+SSL_KEY_PATH=./config/ssl/key.pem
+SSL_CA_PATH=./config/ssl/ca.pem
+
+# HTTPS Port configuration (only used when ENABLE_HTTPS=true)
+# These ports will be used instead of the HTTP ports above
+PORT_WEBUI_HTTPS=3443       # Open WebUI HTTPS port
+PORT_LITELLM_HTTPS=4443     # LiteLLM HTTPS port  
+PORT_SEARXNG_HTTPS=8443     # SearXNG HTTPS port
+PORT_FIRECRAWL_HTTPS=3003   # FireCrawl HTTPS port
+PORT_N8N_HTTPS=5679         # n8n HTTPS port
+PORT_QDRANT_HTTPS=6334      # Qdrant HTTPS port
+PORT_MCP_BRIDGE_HTTPS=9443  # MCP Bridge HTTPS port
+PORT_YOUTUBE_MCP_HTTPS=9444 # YouTube MCP HTTPS port
 EOF
     echo "✅ .env created with secure internal keys."
 else
@@ -142,10 +167,40 @@ if [ -t 0 ]; then
     ENABLE_FIRECRAWL=$(echo "$ENABLE_FIRECRAWL" | tr '[:lower:]' '[:upper:]')
     
     echo ""
+    
+    # HTTPS Selection
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔒 HTTPS/TLS Configuration"
+    echo "   Enable HTTPS for secure communication (requires SSL certificates)"
+    echo "   Use HTTP for local development, HTTPS for production"
+    echo ""
+    read -p "   Enable HTTPS? [y/N]: " ENABLE_HTTPS_INPUT
+    ENABLE_HTTPS_INPUT=${ENABLE_HTTPS_INPUT:-N}
+    
+    # Convert to lowercase for true/false
+    if [[ "$ENABLE_HTTPS_INPUT" =~ ^[Yy]$ ]]; then
+        ENABLE_HTTPS="true"
+        
+        # Check if SSL certificates exist
+        if [ ! -f "$BASE_DIR/config/ssl/cert.pem" ] || [ ! -f "$BASE_DIR/config/ssl/key.pem" ]; then
+            echo ""
+            echo "⚠️  SSL certificates not found in config/ssl/"
+            echo "   Generating self-signed certificates for development..."
+            echo ""
+            bash "$BASE_DIR/scripts/generate-certs.sh"
+        else
+            echo "   ✅ Using existing SSL certificates in config/ssl/"
+        fi
+    else
+        ENABLE_HTTPS="false"
+    fi
+    
+    echo ""
 else
-    # Non-interactive mode - enable all services by default
+    # Non-interactive mode - enable all services by default, disable HTTPS
     echo "⚙️  Non-interactive mode detected. Enabling all services by default."
     ENABLE_FIRECRAWL="Y"
+    ENABLE_HTTPS="false"
 fi
 
 # Store selections in .env for persistence
@@ -154,20 +209,24 @@ if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS requires -i with extension
         sed -i '' "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+        sed -i '' "s/^ENABLE_HTTPS=.*/ENABLE_HTTPS=${ENABLE_HTTPS}/" "$BASE_DIR/.env"
     else
         # Linux doesn't need extension
         sed -i "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+        sed -i "s/^ENABLE_HTTPS=.*/ENABLE_HTTPS=${ENABLE_HTTPS}/" "$BASE_DIR/.env"
     fi
 else
-    # Add new value
+    # Add new values
     echo "" >> "$BASE_DIR/.env"
     echo "# --- SERVICE SELECTION ---" >> "$BASE_DIR/.env"
     echo "# Services can be disabled to reduce resource usage" >> "$BASE_DIR/.env"
     echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}" >> "$BASE_DIR/.env"
+    echo "ENABLE_HTTPS=${ENABLE_HTTPS}" >> "$BASE_DIR/.env"
 fi
 
 # Export for docker-compose profiles
 export ENABLE_FIRECRAWL
+export ENABLE_HTTPS
 
 # --- 5. CONFIGURATION INJECTION ---
 
@@ -352,21 +411,30 @@ PORT_SEARXNG=${PORT_SEARXNG:-8080}
 PORT_FIRECRAWL=${PORT_FIRECRAWL:-3002}
 PORT_LITELLM=${PORT_LITELLM:-4000}
 
+# Determine protocol based on HTTPS setting
+if [ "${ENABLE_HTTPS}" = "true" ]; then
+    PROTOCOL="https"
+    echo ""
+    echo -e "${GREEN}🔒 HTTPS is ENABLED. Services will use SSL/TLS encryption.${NC}"
+else
+    PROTOCOL="http"
+fi
+
 echo ""
 echo -e "${GREEN}✅ RIN IS ALIVE.${NC}"
 echo ""
 echo "=== Post-Deployment Verification ==="
 echo "Verify the biological subsystems are active:"
 echo ""
-echo "🧠 Cortex (UI):        http://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
-echo "🔄 Reflex (n8n):       http://localhost:${PORT_N8N}      (n8n workflow editor)"
-echo "👁️  Sensorium:         http://localhost:${PORT_SEARXNG}      (SearXNG search bar)"
+echo "🧠 Cortex (UI):        ${PROTOCOL}://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
+echo "🔄 Reflex (n8n):       ${PROTOCOL}://localhost:${PORT_N8N}      (n8n workflow editor)"
+echo "👁️  Sensorium:         ${PROTOCOL}://localhost:${PORT_SEARXNG}      (SearXNG search bar)"
 if [ "$ENABLE_FIRECRAWL" = "Y" ]; then
-    echo "🔥 Digestion:          http://localhost:${PORT_FIRECRAWL}      (FireCrawl API - returns {\"status\":\"ok\"})"
+    echo "🔥 Digestion:          ${PROTOCOL}://localhost:${PORT_FIRECRAWL}      (FireCrawl API - returns {\"status\":\"ok\"})"
 else
     echo "🔥 Digestion:          [DISABLED] (Use Tavily or other APIs in OpenWebUI)"
 fi
-echo "🚦 Router:             http://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
+echo "🚦 Router:             ${PROTOCOL}://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
 echo ""
 echo "=== Tools (Auto-Registered) ==="
 echo "✅ FireCrawl Scraper   - Web scraping with headless browser"
@@ -375,7 +443,7 @@ echo "✅ SearXNG Search      - Academic search (Google Scholar, arXiv, PubMed)"
 echo "✅ Qdrant Memory       - Long-term RAG memory"
 echo "✅ n8n Reflex          - Synaptic Bridge (trigger_reflex + query_workflow)"
 echo ""
-echo "View tools: http://localhost:${PORT_WEBUI} → Workspace → Tools"
+echo "View tools: ${PROTOCOL}://localhost:${PORT_WEBUI} → Workspace → Tools"
 echo ""
 echo "=== n8n Workflows (Auto-Imported) ==="
 echo "🔥 Reflex Workflows (fire-and-forget via trigger_reflex):"
@@ -392,7 +460,7 @@ echo "   - Morning Briefing  : 8 AM daily news summary"
 echo "   - RSS Monitor       : Every 6 hours feed digest"
 echo "   - Daily Report      : 6 PM intelligence report"
 echo ""
-echo "Manage workflows: http://localhost:${PORT_N8N}"
+echo "Manage workflows: ${PROTOCOL}://localhost:${PORT_N8N}"
 echo ""
 echo "=== Next Steps ==="
 echo "1. Add API keys: nano .env (add OPENAI_API_KEY or ANTHROPIC_API_KEY)"

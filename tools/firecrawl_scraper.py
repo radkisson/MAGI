@@ -27,8 +27,8 @@ class Valves(BaseModel):
         description="FireCrawl API Key (auto-loaded from .env or set manually)"
     )
     FIRECRAWL_API_URL: str = Field(
-        default_factory=lambda: os.getenv("FIRECRAWL_API_URL", "http://firecrawl:3002"),
-        description="FireCrawl API URL (default: self-hosted Docker service)"
+        default_factory=lambda: _get_firecrawl_url(),
+        description="FireCrawl API URL (default: self-hosted Docker service, auto-detects HTTP/HTTPS)"
     )
     # Improvement 1: Adjustable timeouts and limits
     REQUEST_TIMEOUT: int = Field(
@@ -47,6 +47,19 @@ class Valves(BaseModel):
         default=60,
         description="Additional timeout (in seconds) to add for crawl operations beyond REQUEST_TIMEOUT"
     )
+
+
+def _get_firecrawl_url() -> str:
+    """Get FireCrawl URL, auto-detecting HTTP or HTTPS based on configuration."""
+    # If explicitly set in env, use that
+    env_url = os.getenv("FIRECRAWL_API_URL")
+    if env_url:
+        return env_url
+    
+    # Otherwise, auto-detect protocol
+    enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
+    protocol = "https" if enable_https else "http"
+    return f"{protocol}://firecrawl:3002"
 
 
 class Tools:

@@ -7,6 +7,7 @@ allowing RIN to search the web anonymously without tracking.
 
 import json
 import requests
+import os
 from typing import Callable, Any
 
 
@@ -14,7 +15,13 @@ class Tools:
     """Open WebUI Tool: Anonymous Web Search via SearXNG"""
 
     def __init__(self):
-        self.searxng_url = "http://searxng:8080"
+        self.searxng_url = self._get_searxng_url()
+
+    def _get_searxng_url(self) -> str:
+        """Get SearXNG URL, auto-detecting HTTP or HTTPS based on configuration."""
+        enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
+        protocol = "https" if enable_https else "http"
+        return f"{protocol}://searxng:8080"
 
     def web_search(
         self,

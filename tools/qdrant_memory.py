@@ -17,10 +17,17 @@ class Tools:
     """Open WebUI Tool: Long-Term Memory via Qdrant Vector Database"""
 
     def __init__(self):
-        self.qdrant_url = "http://qdrant:6333"
+        self.qdrant_url = self._get_qdrant_url()
         self.collection_name = "rin_memory"
         self.embedding_model = None
         self.embedding_dim = 768  # Standard dimension for many models
+
+    def _get_qdrant_url(self) -> str:
+        """Get Qdrant URL, auto-detecting HTTP or HTTPS based on configuration."""
+        import os
+        enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
+        protocol = "https" if enable_https else "http"
+        return f"{protocol}://qdrant:6333"
 
     def _get_embedding_model(self):
         """

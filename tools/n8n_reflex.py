@@ -27,8 +27,8 @@ class Valves(BaseModel):
     """Configuration valves for n8n Reflex integration (tunable via UI)"""
 
     N8N_WEBHOOK_URL: str = Field(
-        default_factory=lambda: os.getenv("N8N_WEBHOOK_URL", "http://rin-reflex-automation:5678/webhook"),
-        description="n8n webhook base URL (default: internal Docker DNS)"
+        default_factory=lambda: _get_n8n_webhook_url(),
+        description="n8n webhook base URL (default: internal Docker DNS, auto-detects HTTP/HTTPS)"
     )
     COGNITIVE_TIMEOUT: int = Field(
         default=300,
@@ -42,6 +42,13 @@ class Valves(BaseModel):
         default=15,
         description="Interval in seconds between 'waiting' status updates for cognitive workflows"
     )
+
+
+def _get_n8n_webhook_url() -> str:
+    """Get n8n webhook URL, auto-detecting HTTP or HTTPS based on configuration."""
+    enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
+    protocol = "https" if enable_https else "http"
+    return os.getenv("N8N_WEBHOOK_URL", f"{protocol}://rin-reflex-automation:5678/webhook")
 
 
 class Tools:
