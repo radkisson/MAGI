@@ -169,13 +169,17 @@ for item in items:
     url = item['json'].get('url', '')
     
     # Validate URL
-    try:
-        parsed = urlparse(url)
-        if parsed.scheme not in ['http', 'https']:
-            results.append({'json': {'url': url, 'error': 'Invalid URL scheme. Only http and https are allowed.'}})
-            continue
-    except Exception as e:
-        results.append({'json': {'url': url, 'error': f'Invalid URL: {str(e)}'}})
+    if not url:
+        results.append({'json': {'url': url, 'error': 'URL is required'}})
+        continue
+    
+    parsed = urlparse(url)
+    if parsed.scheme not in ['http', 'https']:
+        results.append({'json': {'url': url, 'error': 'Invalid URL scheme. Only http and https are allowed.'}})
+        continue
+    
+    if not parsed.netloc:
+        results.append({'json': {'url': url, 'error': 'Invalid URL format. Missing domain.'}})
         continue
     
     try:
