@@ -1,13 +1,14 @@
-# Project Design Document: Rhyzomic Intelligence Node (RIN)
+# Project Design Document: MAGI (Multi-Agent General Intelligence)
+### (formerly Rhyzomic Intelligence Node)
 
-**Version**: 1.2.0 (Stable)  
+**Version**: 1.3.0 (Stable)  
 **Status**: Active Development  
 **Classification**: Sovereign AI Infrastructure  
 **Architect**: CTO (Acting)
 
 ## Overview
 
-Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a sovereign organism equipped with:
+MAGI (Multi-Agent General Intelligence) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. Like the MAGI supercomputers from Neon Genesis Evangelion (Melchior, Balthasar, Casper), it is not merely a chatbot, but a sovereign organism equipped with:
 
 - **The Cortex** (cognition)
 - **The Sensorium** (perception)
@@ -16,21 +17,21 @@ Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system d
 
 ## Philosophy
 
-Commercial AI models (ChatGPT, Claude) are "Brains in a Jar"—intelligent but disconnected, censored, and reliant on their creators for input. RIN is a sovereign, self-hosted entity. It treats commercial APIs merely as "compute," while retaining its own memory, eyes, and agency on your infrastructure.
+Commercial AI models (ChatGPT, Claude) are "Brains in a Jar"—intelligent but disconnected, censored, and reliant on their creators for input. MAGI is a sovereign, self-hosted entity. It treats commercial APIs merely as "compute," while retaining its own memory, eyes, and agency on your infrastructure.
 
 ## System Architecture
 
-The RIN is composed of five biological subsystems that function as a single organism via Docker orchestration.
+MAGI is composed of five biological subsystems that function as a single organism via Docker orchestration.
 
 ### A. The Cortex (Cognition)
 
-The brain of RIN, responsible for reasoning and human interaction.
+The brain of MAGI, responsible for reasoning and human interaction.
 
 **Components:**
 
 - **Open WebUI**: The unified interface for human-agent interaction. It manages chat history, user authentication, and tool invocation. This is the primary interface where users interact with RIN.
 
-- **LiteLLM (The Router)**: An API Gateway that sits between the Cortex and the Models. It allows RIN to route "thoughts" to the most appropriate provider (e.g., GPT-4o for logic, Claude 3.5 for coding, local Llama 3 for privacy) without changing the frontend code. This provides flexibility and independence from any single AI provider.
+- **LiteLLM (The Router)**: An API Gateway that sits between the Cortex and the Models. It allows MAGI to route "thoughts" to the most appropriate provider (e.g., GPT-4o for logic, Claude 3.5 for coding, local Llama 3 for privacy) without changing the frontend code. This provides flexibility and independence from any single AI provider.
 
 **Key Functions:**
 - Human-agent interaction and conversation management
@@ -41,11 +42,11 @@ The brain of RIN, responsible for reasoning and human interaction.
 
 ### B. The Sensorium (Perception)
 
-The sensory organs of RIN, enabling it to perceive and gather information from the external world.
+The sensory organs of MAGI, enabling it to perceive and gather information from the external world.
 
 **Components:**
 
-- **SearXNG (Vision)**: A privacy-respecting metasearch engine. It aggregates results from Google/Bing without passing your IP or tracking data to them, allowing RIN to "see" the web anonymously. This provides sovereign web search capabilities without sacrificing privacy.
+- **SearXNG (Vision)**: A privacy-respecting metasearch engine. It aggregates results from Google/Bing without passing your IP or tracking data to them, allowing MAGI to "see" the web anonymously. This provides sovereign web search capabilities without sacrificing privacy.
 
 - **FireCrawl (Digestion)**: A specialized scraping array that uses headless browsers to navigate complex JavaScript-heavy sites (like dynamic dashboards) and converts them into clean Markdown. This "nutrient" format is optimized for LLM consumption.
 
@@ -58,11 +59,11 @@ The sensory organs of RIN, enabling it to perceive and gather information from t
 
 ### C. The Memory (Recall)
 
-The knowledge storage and retrieval system, enabling RIN to remember and learn from past interactions.
+The knowledge storage and retrieval system, enabling MAGI to remember and learn from past interactions.
 
 **Components:**
 
-- **Qdrant**: A Vector Database that stores the semantic meaning of every interaction and scraped document. This enables RAG (Retrieval Augmented Generation), allowing RIN to recall facts from months ago rather than hallucinating. Qdrant provides fast, scalable vector similarity search.
+- **Qdrant**: A Vector Database that stores the semantic meaning of every interaction and scraped document. This enables RAG (Retrieval Augmented Generation), allowing MAGI to recall facts from months ago rather than hallucinating. Qdrant provides fast, scalable vector similarity search.
 
 **Key Functions:**
 - Semantic storage of conversations and documents
