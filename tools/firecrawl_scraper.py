@@ -55,7 +55,7 @@ def _get_firecrawl_url() -> str:
     env_url = os.getenv("FIRECRAWL_API_URL")
     if env_url:
         return env_url
-    
+
     # Otherwise, auto-detect protocol
     enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
     protocol = "https" if enable_https else "http"

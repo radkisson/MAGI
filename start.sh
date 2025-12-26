@@ -199,13 +199,13 @@ if [ -t 0 ]; then
 else
     # Non-interactive mode - enable all services by default, disable HTTPS
     echo "⚙️  Non-interactive mode detected. Enabling all services by default."
-    ENABLE_FIRECRAWL="Y"
-    ENABLE_HTTPS="false"
+    ENABLE_FIRECRAWL="Y"      # Uses Y/N for docker-compose profiles
+    ENABLE_HTTPS="false"      # Uses true/false for boolean logic
 fi
 
 # Store selections in .env for persistence
 if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
-    # Update existing value (use different sed syntax based on OS)
+    # Update existing values (use different sed syntax based on OS)
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS requires -i with extension
         sed -i '' "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"

@@ -5,6 +5,7 @@ This tool connects the Cortex (Open WebUI) to the Memory (Qdrant),
 allowing RIN to store and retrieve information with RAG capabilities.
 """
 
+import os
 import requests
 from typing import Callable, Any, List
 import json
@@ -24,7 +25,6 @@ class Tools:
 
     def _get_qdrant_url(self) -> str:
         """Get Qdrant URL, auto-detecting HTTP or HTTPS based on configuration."""
-        import os
         enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
         protocol = "https" if enable_https else "http"
         return f"{protocol}://qdrant:6333"
