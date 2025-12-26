@@ -38,6 +38,7 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 - **n8n**: Workflow automation enabling scheduled tasks and external integrations
 - **Capabilities**: Email, Telegram, Slack integration without cloud dependencies
 - **Synaptic Bridges**: Webhooks connecting Cortex ↔ Reflex for autonomous actions
+- **Python Support**: Full Python 3.12 support in Code nodes for advanced scripting
 
 ## Key Features
 
@@ -330,6 +331,57 @@ You can create your own workflows in the n8n visual editor:
 3. Export your workflows as JSON to the `workflows/` directory
 
 See [`workflows/README.md`](workflows/README.md) for detailed architecture and examples.
+
+#### Python Support in n8n
+
+RIN's n8n instance includes **full Python 3.12 support** via the `hank033/n8n-python` Docker image. This enables you to write Python code directly in Code nodes alongside JavaScript.
+
+**Using Python in Code Nodes:**
+
+1. **Create a workflow** in n8n (http://localhost:5678)
+2. **Add a Code node** to your workflow
+3. **Select "Python" as the language** in the Code node settings
+4. **Write your Python code** - full Python 3.12 syntax is supported
+
+**Example Python Code Node:**
+```python
+# Access input items
+items = _input.all()
+
+# Process data with Python
+results = []
+for item in items:
+    data = item['json']
+    # Use Python libraries and syntax
+    processed = {
+        'original': data,
+        'uppercase': str(data.get('text', '')).upper(),
+        'length': len(str(data.get('text', '')))
+    }
+    results.append({'json': processed})
+
+return results
+```
+
+**Installing Python Packages:**
+
+To use additional Python packages in your workflows:
+
+1. Use the **Execute Command** node in your workflow
+2. Run `pip install <package-name>` to install packages
+3. Packages persist in the container and are available to all workflows
+
+**Example**: To install `requests` and `pandas`:
+```bash
+pip install requests pandas
+```
+
+**Python vs JavaScript:**
+
+- **JavaScript Code nodes**: Great for JSON manipulation, API calls, and n8n-native operations
+- **Python Code nodes**: Perfect for data analysis, machine learning, scientific computing, and complex algorithms
+
+Both languages are fully supported and can be mixed within the same workflow!
 
 ### Managing the Organism
 

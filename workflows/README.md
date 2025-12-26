@@ -288,6 +288,35 @@ workflows/
 3. Export workflows as JSON files to this directory
 4. Workflows are automatically loaded when n8n starts
 
+### Python Support
+
+RIN's n8n instance includes **full Python 3.12 support** in addition to JavaScript:
+
+- **Code nodes** support both JavaScript and Python
+- **Switch between languages** in the Code node settings
+- **Python packages** can be installed via Execute Command node: `pip install <package>`
+- **Use cases**: Data analysis, machine learning, scientific computing, complex algorithms
+
+**Example Python Code Node:**
+```python
+# Process items with Python
+items = _input.all()
+results = []
+
+for item in items:
+    data = item['json']
+    # Full Python 3.12 syntax supported
+    processed = {
+        'text': str(data.get('text', '')).upper(),
+        'length': len(str(data.get('text', '')))
+    }
+    results.append({'json': processed})
+
+return results
+```
+
+See the main README for detailed Python usage examples.
+
 ## Internal Connectivity
 
 n8n can communicate with other RIN services using Docker network names:

@@ -124,7 +124,7 @@ services:
 
   # --- THE REFLEX (Autonomy) ---
   n8n:
-    image: n8nio/n8n:latest
+    image: hank033/n8n-python:latest
     container_name: rin-reflex-automation
     restart: always
     ports:
