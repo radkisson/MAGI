@@ -71,3 +71,9 @@ htmlcov/
 logs/
 *.log
 config/searxng/settings.yml
+
+# SSL/TLS Certificates (never commit private keys or certificates)
+config/ssl/*.pem
+config/ssl/*.key
+config/ssl/*.crt
+config/ssl/*.csr

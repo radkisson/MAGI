@@ -164,14 +164,44 @@ The start script will display the actual ports being used.
 
 If you see a warning about n8n's secure cookie configuration when accessing http://localhost:5678, this is expected for local development over HTTP.
 
-**Already Fixed**: The `docker-compose.yml` is configured with `N8N_SECURE_COOKIE=false` to disable this security feature for local HTTP development.
+**Already Fixed**: RIN automatically configures secure cookies based on HTTP/HTTPS mode.
 
-**Note**: If deploying to production with HTTPS/TLS, you should remove this setting to enable secure cookies for better security.
+**For Production**: See the [HTTPS Configuration Guide](docs/HTTPS_CONFIGURATION.md) to enable HTTPS/TLS for secure communication.
+
+### HTTPS/TLS Configuration
+
+RIN supports running all services with HTTPS/TLS encryption for production deployments. This provides:
+
+- Encrypted communication between client and services
+- Secure cookie handling for authentication
+- Protection against man-in-the-middle attacks
+
+**Quick Start:**
+
+```bash
+# Generate self-signed certificates (for development)
+./scripts/generate-certs.sh
+
+# Enable HTTPS in .env
+nano .env
+# Set: ENABLE_HTTPS=true
+
+# Restart services
+./rin restart
+```
+
+**Full Documentation:** See [docs/HTTPS_CONFIGURATION.md](docs/HTTPS_CONFIGURATION.md) for:
+- Production setup with Let's Encrypt
+- Custom certificate configuration
+- Reverse proxy setup
+- Troubleshooting
+- Security best practices
 
 ### Service Access Points
 
 Once deployed, access the various subsystems:
 
+**Default (HTTP):**
 - **Open WebUI (Cortex)**: http://localhost:3000
 - **n8n (Reflex/Automation)**: http://localhost:5678
 - **LiteLLM API**: http://localhost:4000
@@ -181,6 +211,9 @@ Once deployed, access the various subsystems:
 - **MCP Bridge (Sequential Thinking)**: http://localhost:9000
 - **YouTube MCP (YouTube Transcript)**: http://localhost:9001
 - **Redis**: localhost:6379
+
+**With HTTPS Enabled:**
+Replace `http://` with `https://` for all services above. See [HTTPS Configuration Guide](docs/HTTPS_CONFIGURATION.md).
 
 ### Synaptic Wiring (Tool Definitions)
 

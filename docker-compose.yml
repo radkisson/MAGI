@@ -159,15 +159,16 @@ services:
       - ./workflows:/workflows:ro
       # Mount SSL certificates if HTTPS is enabled
       - ./config/ssl:/ssl:ro
+      # Mount custom entrypoint for HTTPS configuration
+      - ./scripts/docker-entrypoints/n8n-entrypoint.sh:/custom-entrypoint.sh:ro
+    entrypoint: ["/custom-entrypoint.sh"]
+    command: ["n8n"]
     environment:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
-      - N8N_PROTOCOL=${ENABLE_HTTPS:-false}
-      - WEBHOOK_URL=${ENABLE_HTTPS:-false}
       - GENERIC_TIMEZONE=UTC
-      - N8N_EDITOR_BASE_URL=${ENABLE_HTTPS:-false}
-      - N8N_SECURE_COOKIE=${ENABLE_HTTPS:-false}
-      # HTTPS Configuration for n8n
+      # HTTPS Configuration for n8n (processed by entrypoint)
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
       - N8N_SSL_KEY=${SSL_KEY_PATH:-/ssl/key.pem}
       - N8N_SSL_CERT=${SSL_CERT_PATH:-/ssl/cert.pem}
     env_file: .env
