@@ -1,6 +1,6 @@
 # Rhyzomic Intelligence Node (RIN)
 
-**Version**: 1.2.0 (Stable)  
+**Version**: 1.3.0 (Stable)  
 **Status**: Active Development  
 **Classification**: Sovereign AI Infrastructure
 
@@ -44,13 +44,18 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 - **Sovereign Architecture**: Complete control over your AI infrastructure
 - **Privacy-First**: Anonymous web search via SearXNG, no data leakage
 - **Multi-Model Intelligence**: Route tasks to optimal LLM providers via LiteLLM
-- **Dynamic Model Loading**: Automatically sync latest models from OpenRouter API
+- **Dynamic Model Loading**: Automatically sync latest models from OpenRouter API (100+ models)
 - **OpenRouter Integration**: Access 100+ models from one unified API (GPT-4, Claude, Llama, Gemini, Mistral, and more)
+- **Model Intelligence**: Popularity rankings, cost metadata, and automatic recommendations
 - **Cost Tracking**: Monitor spending across all models with built-in budgeting
 - **Fallback Chains**: Automatic failover to backup models for 99.9% reliability
 - **Persistent Memory**: RAG-enabled recall via Qdrant vector storage
 - **Asynchronous Coordination**: Redis-powered task queuing and execution
 - **Biological Design**: Five subsystems working as a unified organism
+- **Comprehensive CLI**: Complete system management via `./rin` command
+- **Auto-Registration**: Tools auto-authenticate and appear instantly in UI
+- **MCP Bridge**: Model Context Protocol tools for advanced reasoning
+- **Workflow Automation**: 8 pre-configured n8n workflows for autonomous operations
 
 ## Quick Start
 
@@ -421,7 +426,12 @@ RIN functions as a biological organism with specialized subsystems:
 ### The Nervous System (Reflex)
 - **Redis**: Asynchronous task coordination and message bus
 
+### The Reflex Arc (Autonomy)
+- **n8n**: Workflow automation enabling scheduled tasks and external integrations
+
 See [DESIGN.md](DESIGN.md) for detailed architecture documentation.
+
+**Future Vision**: See [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md) for the granular roadmap through v3.0, focusing on production readiness, observability, backups, multi-user support, and enterprise features.
 
 ## Project Structure
 
@@ -708,33 +718,69 @@ Areas of focus:
   - [x] Daily report generator workflow
   - [x] Detailed workflow installation and usage guides
   - [x] FireCrawl API configuration fixes
+  - [x] Comprehensive CLI Management Tool (`./rin`)
+  - [x] Backup and restore functionality
+  - [x] Enhanced service monitoring and logs
+
+- [x] **v1.3 "Dynamic Intelligence"**: Dynamic Model Management & CLI Enhancement ✅
+  - [x] Dynamic OpenRouter model loading (100+ models)
+  - [x] Automatic model sync on startup
+  - [x] Model intelligence features (popularity rankings, cost metadata)
+  - [x] RIN CLI model management commands
+  - [x] Model search and filtering capabilities
+  - [x] Automatic model recommendations
+  - [x] MCP Bridge for Model Context Protocol tools
+  - [x] Sequential Thinking tool integration
+  - [x] YouTube Transcript tool integration
+  - [x] Auto-registration tooling for tools
+  - [x] Smart Valves pattern for API key management
 
 ### Planned
-- [ ] **v1.3 "Intelligence Plus"**: Enhanced Automation
-  - [ ] Auto-load workflows into n8n on first boot
-  - [ ] GitHub notifications and PR summaries workflow
-  - [ ] Calendar integration workflow
-  - [ ] Document processing workflow
+
+- [ ] **v1.4 "Observability Core"**: Basic Monitoring (Q1 2026)
+  - [ ] Health check system and status reporting
+  - [ ] Basic cost tracking and usage reports
+  - [ ] Enhanced log viewing with filtering
+  - [ ] Simple HTML status dashboard
   
-- [ ] **v1.4 "Observability"**: Monitoring & Logging
-  - [ ] Real-time health dashboard
-  - [ ] Usage analytics and insights
-  - [ ] Performance metrics (latency, token usage)
-  - [ ] Workflow execution history in n8n
-  - [ ] Advanced cost analytics and reporting
+- [ ] **v1.5 "Backup Foundation"**: Data Safety (Q2 2026)
+  - [ ] Automated scheduled backups (local filesystem)
+  - [ ] Simple restore functionality
+  - [ ] Backup verification and integrity checks
+  - [ ] Container health checks and auto-restart
   
-- [ ] **v1.5 "Resilience"**: Production Hardening
-  - [ ] Automated backups for vector database and chat history
-  - [ ] Health checks and auto-restart for failed services
-  - [ ] Rate limiting and quota management
-  - [ ] Multi-user authentication and access control
+- [ ] **v1.6 "Resilience Basics"**: Fault Tolerance (Q3 2026)
+  - [ ] Graceful degradation when services fail
+  - [ ] Circuit breakers for external API protection
+  - [ ] Basic rate limiting and quota management
+  - [ ] Automatic error recovery
   
-- [ ] **v2.0 "Evolution"**: Advanced Capabilities
-  - [ ] Voice interface (Whisper integration)
-  - [ ] Image generation (Stable Diffusion)
-  - [ ] Code execution sandbox
-  - [ ] Multi-agent orchestration
-  - [ ] Custom model fine-tuning pipeline
+- [ ] **v1.7 "Multi-User Foundation"**: User Management (Q4 2026)
+  - [ ] Basic user account management via CLI
+  - [ ] Two-role system (Admin/User)
+  - [ ] Per-user chat history and quotas
+  - [ ] Simple authentication and session management
+  
+- [ ] **v2.0 "Advanced Monitoring"**: Production Observability (Q1 2027)
+  - [ ] Web-based real-time monitoring dashboard
+  - [ ] Metrics collection with 30-day retention
+  - [ ] Email/webhook alerting system
+  - [ ] Centralized log search and aggregation
+  
+- [ ] **v2.5 "Cloud Backup"**: Remote Storage (Q2 2027)
+  - [ ] S3-compatible backup storage integration
+  - [ ] Encrypted backups with client-side encryption
+  - [ ] Incremental cloud sync
+  - [ ] Remote restore capability
+  
+- [ ] **v3.0 "Production Ready"**: Enterprise Features (Q3 2027)
+  - [ ] High availability mode (optional service redundancy)
+  - [ ] Advanced RBAC with custom roles
+  - [ ] Point-in-time recovery
+  - [ ] SLA monitoring and reporting
+  - [ ] Security audit compliance
+
+For detailed feature descriptions and technical specifications, see [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md).
 
 ## Philosophy
 

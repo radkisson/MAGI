@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Future enhancements and features will be listed here
+
+## [1.3.0] - 2025-12-26
+
 ### Added
 - **Dynamic OpenRouter Model Loading**: Automatically fetch and sync the latest models from OpenRouter API
   - New `scripts/sync_openrouter_models.py` - Core sync script that fetches models from OpenRouter API
@@ -39,6 +44,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support for limiting display (default 50, customizable)
   - Multiple filter types: openrouter, popular, budget, vision, function-calling, provider-specific
 
+- **MCP (Model Context Protocol) Integration**:
+  - MCP Bridge service for connecting MCP tools to Open WebUI
+  - Sequential Thinking tool for chain-of-thought reasoning
+  - YouTube Transcript tool for video analysis
+  - OpenAPI translation layer for MCP tools
+
+- **Auto-Registration Tooling**:
+  - `scripts/register_tools.py` - Automatic tool registration on startup
+  - Tools auto-authenticate using Smart Valves pattern
+  - Zero-friction tool configuration via environment variables
+  - Pre-authenticated tools appear immediately in Open WebUI
+
 ### Changed
 - **LiteLLM Configuration**: Now supports dynamic model updates while preserving custom configurations
 - **Model Conversion**: Enhanced to include popularity scores, cost metadata, and capability tags
@@ -49,11 +66,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI_REFERENCE.md**: Added comprehensive model management command documentation
 - **start.sh**: Integrated automatic model sync on startup with error handling
 - **rin CLI**: Enhanced with complete model management subcommands
+- **Version**: Updated to 1.3.0 to reflect new dynamic intelligence features
 
 ### Fixed
 - Model list no longer limited to hardcoded entries in config file
 - Users can now access all available OpenRouter models without manual configuration updates
 - Model display can be limited to prevent overwhelming output (configurable limit)
+- Tool visibility issues resolved with auto-registration
+- OpenRouter exception handling improvements
 
 ## [1.2.1] - 2025-12-21
 
