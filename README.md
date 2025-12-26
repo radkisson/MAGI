@@ -431,7 +431,7 @@ RIN functions as a biological organism with specialized subsystems:
 
 See [DESIGN.md](DESIGN.md) for detailed architecture documentation.
 
-**Future Vision**: See [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md) for the roadmap through v2.0 and beyond, including multi-agent orchestration, multimodal capabilities, and production hardening features.
+**Future Vision**: See [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md) for the granular roadmap through v3.0, focusing on production readiness, observability, backups, multi-user support, and enterprise features.
 
 ## Project Structure
 
@@ -737,51 +737,50 @@ Areas of focus:
 
 ### Planned
 
-- [ ] **v1.4 "Observability"**: Monitoring & Analytics
-  - [ ] Real-time health dashboard with service monitoring
-  - [ ] Advanced analytics engine (token usage, cost forecasting)
-  - [ ] Structured logging with correlation IDs
-  - [ ] Alerting framework (health, cost, performance alerts)
-  - [ ] Metrics collection (Prometheus + Grafana)
-  - [ ] Log aggregation and search capabilities
+- [ ] **v1.4 "Observability Core"**: Basic Monitoring (Q1 2026)
+  - [ ] Health check system and status reporting
+  - [ ] Basic cost tracking and usage reports
+  - [ ] Enhanced log viewing with filtering
+  - [ ] Simple HTML status dashboard
   
-- [ ] **v1.5 "Resilience"**: Production Hardening
-  - [ ] Automated backup system (local + S3-compatible storage)
-  - [ ] High availability features (health checks, circuit breakers)
-  - [ ] Multi-user authentication with RBAC
-  - [ ] Data retention policies and cleanup
-  - [ ] Disaster recovery procedures
-  - [ ] Rate limiting and quota management
+- [ ] **v1.5 "Backup Foundation"**: Data Safety (Q2 2026)
+  - [ ] Automated scheduled backups (local filesystem)
+  - [ ] Simple restore functionality
+  - [ ] Backup verification and integrity checks
+  - [ ] Container health checks and auto-restart
   
-- [ ] **v1.6 "Workflow Intelligence"**: Enhanced Automation
-  - [ ] Auto-load workflows into n8n on first boot
-  - [ ] Expanded workflow library (GitHub, Calendar, Document processing)
-  - [ ] Intelligent workflow triggers and scheduling
-  - [ ] Workflow marketplace for community sharing
-  - [ ] Workflow dependency resolution
+- [ ] **v1.6 "Resilience Basics"**: Fault Tolerance (Q3 2026)
+  - [ ] Graceful degradation when services fail
+  - [ ] Circuit breakers for external API protection
+  - [ ] Basic rate limiting and quota management
+  - [ ] Automatic error recovery
   
-- [ ] **v1.7 "Multimodal Perception"**: Voice & Vision
-  - [ ] Voice interface (Whisper speech-to-text + TTS)
-  - [ ] Image generation (Stable Diffusion XL)
-  - [ ] Advanced vision capabilities (GPT-4 Vision, OCR)
-  - [ ] Video processing and transcription
-  - [ ] Document understanding (PDF, Office docs)
+- [ ] **v1.7 "Multi-User Foundation"**: User Management (Q4 2026)
+  - [ ] Basic user account management via CLI
+  - [ ] Two-role system (Admin/User)
+  - [ ] Per-user chat history and quotas
+  - [ ] Simple authentication and session management
   
-- [ ] **v1.8 "Code Intelligence"**: Development Partner
-  - [ ] Secure code execution sandbox
-  - [ ] GitHub deep integration (code review, PR analysis)
-  - [ ] Development tools (refactoring, bug detection, test generation)
-  - [ ] Local development server with hot reload
+- [ ] **v2.0 "Advanced Monitoring"**: Production Observability (Q1 2027)
+  - [ ] Web-based real-time monitoring dashboard
+  - [ ] Metrics collection with 30-day retention
+  - [ ] Email/webhook alerting system
+  - [ ] Centralized log search and aggregation
   
-- [ ] **v2.0 "Multi-Agent Orchestration"**: Ecosystem Evolution
-  - [ ] Specialized agent architecture (Research, Coding, Writing agents)
-  - [ ] Agent coordination and swarm intelligence
-  - [ ] Agent development framework and SDK
-  - [ ] Advanced reasoning capabilities (Tree of Thoughts, self-reflection)
-  - [ ] Distributed deployment across multiple nodes
-  - [ ] Agent marketplace for community agents
+- [ ] **v2.5 "Cloud Backup"**: Remote Storage (Q2 2027)
+  - [ ] S3-compatible backup storage integration
+  - [ ] Encrypted backups with client-side encryption
+  - [ ] Incremental cloud sync
+  - [ ] Remote restore capability
+  
+- [ ] **v3.0 "Production Ready"**: Enterprise Features (Q3 2027)
+  - [ ] High availability mode (optional service redundancy)
+  - [ ] Advanced RBAC with custom roles
+  - [ ] Point-in-time recovery
+  - [ ] SLA monitoring and reporting
+  - [ ] Security audit compliance
 
-For detailed architectural vision and feature descriptions, see [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md).
+For detailed feature descriptions and technical specifications, see [ARCHITECTURAL_VISION.md](ARCHITECTURAL_VISION.md).
 
 ## Philosophy
 

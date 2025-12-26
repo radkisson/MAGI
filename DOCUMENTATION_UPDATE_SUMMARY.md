@@ -89,71 +89,75 @@ All dates and content verified for accuracy.
 A comprehensive 600+ line vision document covering:
 
 #### Executive Summary
-- Three core pillars: Intelligence Amplification, Operational Excellence, Ecosystem Expansion
+- Three core pillars: Operational Excellence, Data Safety, Enterprise Readiness
 - Current state assessment with strengths and growth areas
+- Focus on gradual, incremental improvements
 
 #### Vision Statement
-> "RIN will evolve from a sovereign AI organism into a **self-organizing intelligence ecosystem**"
+> "RIN will evolve from a sovereign AI organism into a **production-ready, enterprise-grade system** through gradual, incremental improvements"
 
-#### Detailed Version Roadmap
+#### Detailed Version Roadmap (Granular Approach)
 
-**v1.4 "Observability"** (Q1 2026)
-- Real-time health dashboard (Grafana + Prometheus)
-- Advanced analytics engine
-- Enhanced logging system with correlation IDs
-- Alerting framework (health, cost, performance)
+**v1.4 "Observability Core"** (Q1 2026)
+- Lightweight health monitoring
+- Basic cost tracking and reports
+- Enhanced log viewing
+- Simple HTML status dashboard
 
-**v1.5 "Resilience"** (Q2 2026)
-- Automated backup system (local + S3)
-- High availability features
-- Multi-user authentication with RBAC
-- Data retention policies
-- Disaster recovery procedures
+**v1.5 "Backup Foundation"** (Q2 2026)
+- Automated scheduled backups (local)
+- Simple restore functionality
+- Backup verification
+- Container health checks
 
-**v1.6 "Workflow Intelligence"** (Q3 2026)
-- Auto-loading workflows from directory
-- Expanded workflow library (GitHub, Calendar, Documents)
-- Intelligent triggers and scheduling
-- Workflow marketplace
+**v1.6 "Resilience Basics"** (Q3 2026)
+- Graceful degradation
+- Circuit breakers for external APIs
+- Basic rate limiting
+- Automatic error recovery
 
-**v1.7 "Multimodal Perception"** (Q4 2026)
-- Voice interface (Whisper + TTS)
-- Image generation (Stable Diffusion XL)
-- Advanced vision (GPT-4 Vision, OCR)
-- Video processing
-- Document understanding (PDF, Office)
+**v1.7 "Multi-User Foundation"** (Q4 2026)
+- Simple user account management
+- Two-role system (Admin/User)
+- Per-user chat history
+- Basic quotas
 
-**v1.8 "Code Intelligence"** (Q1 2027)
-- Secure code execution sandbox
-- GitHub deep integration
-- Development tools (refactoring, testing, bug detection)
-- Local development server
+**v2.0 "Advanced Monitoring"** (Q1 2027)
+- Web-based real-time dashboard
+- Metrics collection (30-day retention)
+- Email/webhook alerting
+- Centralized log search
 
-**v2.0 "Multi-Agent Orchestration"** (Q2 2027)
-- Specialized agent architecture
-- Agent coordination system
-- Swarm intelligence
-- Agent development framework
-- Distributed deployment
+**v2.5 "Cloud Backup & Storage"** (Q2 2027)
+- S3-compatible backup storage
+- Encrypted backups
+- Incremental cloud sync
+- Remote restore capability
 
-**Beyond v2.0**:
-- Blockchain & Web3 integration
-- IoT & Edge computing
-- Advanced privacy & security
-- Autonomous operations
-- Enterprise features
+**v3.0 "Production Ready"** (Q3 2027)
+- High availability mode
+- Advanced RBAC with custom roles
+- Point-in-time recovery
+- SLA monitoring
+- Security audit compliance
+
+**Beyond v3.0** (Future Considerations):
+- Workflow enhancements (auto-loading, marketplace)
+- Advanced integrations (voice, image generation, code sandbox)
+- Architecture evolution (multi-agent, distributed deployment)
 
 #### Technical Architecture Evolution
 - Current architecture diagram (v1.3)
-- Target architecture diagram (v2.0)
-- Scalability considerations
-- Deployment options
+- Target architecture diagram (v3.0) - Production-ready with monitoring, auth, backups
+- Scalability path (single machine → small deployment → production)
+- Quarterly release timeline
 
 #### Additional Sections
 - Migration & compatibility strategy
 - Success metrics for each version
-- Community & ecosystem vision
-- Security & privacy roadmap
+- Implementation timeline (Q1 2026 - Q3 2027)
+- Community feedback mechanisms
+- Security considerations throughout
 - Feature voting appendix
 
 ---
@@ -164,17 +168,21 @@ A comprehensive 600+ line vision document covering:
 - Line 3: Version 1.2.0 → 1.3.0
 - Lines 42-56: Enhanced Key Features (added 6 new features)
 - Lines 411-434: Updated Architecture section with vision link
-- Lines 711-762: Restructured roadmap with v1.3 completed + v1.4-v2.0 planned
+- Lines 738-788: **Restructured roadmap** with granular v1.4-v3.0 versions (7 versions instead of 6, more focused on production readiness)
 
 ### CHANGELOG.md
 - Lines 8-11: New Unreleased section (empty placeholder)
 - Lines 13-81: New v1.3.0 entry (2025-12-26) with complete changelog
 - Verified all existing entries remain accurate
 
-### ARCHITECTURAL_VISION.md (NEW)
-- 600+ lines of comprehensive architectural vision
-- Detailed roadmap for 6 future versions (v1.4-v2.0+)
-- Technical specifications and implementation details
+### ARCHITECTURAL_VISION.md (NEW - Revised)
+- 750+ lines of comprehensive architectural vision
+- **Granular roadmap**: 7 quarterly versions (v1.4-v3.0) instead of previous 6
+- **Focus shift**: From "multi-agent ecosystem" to "production-ready platform"
+- **Timeline**: 18 months (Q1 2026 - Q3 2027) to reach v3.0
+- Each version has smaller, focused scope
+- Production features (backups, monitoring, multi-user) spread across versions
+- Advanced features (voice, multi-agent) moved to "Future Considerations"
 - Community engagement framework
 
 ---

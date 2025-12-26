@@ -1,6 +1,6 @@
-# RIN Architectural Vision: Evolution to v2.0 and Beyond
+# RIN Architectural Vision: Evolution to v3.0
 
-**Document Version**: 1.0  
+**Document Version**: 2.0  
 **Date**: December 26, 2025  
 **Status**: Proposed for Review  
 **Prepared By**: AI Architect
@@ -9,11 +9,11 @@
 
 ## Executive Summary
 
-This document outlines the architectural vision for the Rhyzomic Intelligence Node (RIN) from its current state (v1.3.0) through version 2.0 and beyond. RIN has successfully established itself as a sovereign, self-hosted AI agent system with a unique biological architecture. The next phase of evolution focuses on three core pillars:
+This document outlines the architectural vision for the Rhyzomic Intelligence Node (RIN) from its current state (v1.3.0) through version 3.0. RIN has successfully established itself as a sovereign, self-hosted AI agent system with a unique biological architecture. The next phase of evolution focuses on gradual, incremental improvements across three core pillars:
 
-1. **Intelligence Amplification** - Enhanced autonomy, multi-agent orchestration, and advanced reasoning
-2. **Operational Excellence** - Production-grade observability, resilience, and enterprise features
-3. **Ecosystem Expansion** - Broader integrations, multimodal capabilities, and community tools
+1. **Operational Excellence** - Production-grade observability, monitoring, and reliability
+2. **Data Safety** - Comprehensive backup, recovery, and resilience features
+3. **Enterprise Readiness** - Multi-user support, authentication, and production hardening
 
 ---
 
@@ -32,12 +32,11 @@ This document outlines the architectural vision for the Rhyzomic Intelligence No
 
 ### Growth Areas
 - Limited observability and monitoring
-- Single-agent architecture (no multi-agent coordination)
+- No automated backup system
+- Single-user authentication only
 - Manual workflow management
-- No voice or multimodal capabilities
-- Limited production hardening features
-- No distributed deployment options
 - Basic error handling and recovery
+- No production-grade features (HA, disaster recovery)
 
 ---
 
@@ -45,406 +44,414 @@ This document outlines the architectural vision for the Rhyzomic Intelligence No
 
 ### Vision Statement
 
-> "RIN will evolve from a sovereign AI organism into a **self-organizing intelligence ecosystem** capable of autonomous multi-agent coordination, multimodal perception, and enterprise-grade reliability—all while maintaining complete user sovereignty and privacy."
+> "RIN will evolve from a sovereign AI organism into a **production-ready, enterprise-grade system** through gradual, incremental improvements—while maintaining complete user sovereignty, privacy, and the zero-friction operational philosophy."
 
 ### Core Principles
 
 1. **Biological Fidelity**: Maintain the organism metaphor as the system grows in complexity
 2. **Zero-Friction Operations**: Every feature should reduce cognitive load, not increase it
 3. **Sovereign First**: User control and privacy are non-negotiable
-4. **Production Ready**: Enterprise features without enterprise complexity
-5. **Community Driven**: Open architecture for community extensions
+4. **Incremental Evolution**: Small, focused improvements in each version
+5. **Production Ready**: Enterprise features without enterprise complexity
 
 ---
 
-## Version Roadmap: v1.4 - v2.0
+## Version Roadmap: v1.4 - v3.0
 
-### v1.4 "Observability" - Q1 2026
+### v1.4 "Observability Core" - Q1 2026
 
-**Theme**: "Know your organism inside out"
+**Theme**: "See what's happening inside your organism"
 
-#### Real-Time Health Dashboard
+**Focus**: Basic monitoring and visibility without heavy infrastructure
+
+#### Lightweight Health Monitoring
 - **Problem**: Currently no visibility into system health without checking logs
-- **Solution**: Unified web-based dashboard showing all subsystem metrics
+- **Solution**: Simple health check system with basic metrics
 - **Features**:
-  - Real-time service health indicators (green/yellow/red)
-  - CPU, memory, disk usage per container
-  - API request rates and latencies
-  - Model usage statistics and costs
-  - Active workflow executions
-  - Vector database size and query performance
-  - Redis queue depths and throughput
-  - Live log streaming with filtering
+  - Service health status checks (up/down indicators)
+  - Basic resource monitoring (CPU, memory, disk per container)
+  - Container restart tracking
+  - Simple status dashboard (HTML page served by RIN CLI)
+  - Health check API endpoint for external monitoring
 
-#### Advanced Analytics Engine
-- **Token Usage Analytics**: Per-model, per-user, per-day breakdowns
-- **Cost Forecasting**: Predict monthly costs based on usage trends
-- **Performance Metrics**: 
-  - Average response times by model
-  - Cache hit rates (Redis)
-  - Search relevance scores (SearXNG)
-  - Workflow execution success rates
-- **Usage Patterns**: Identify most-used models, peak usage times, common queries
+#### Enhanced Logging
+- **Structured Logging**: JSON format for easier parsing
+- **Log Levels**: Proper log level configuration (DEBUG, INFO, WARN, ERROR)
+- **Service Identification**: Clear service names in all log entries
+- **Log Timestamps**: Consistent timestamp format across services
+- **Log Viewing**: `./rin logs` with filtering by service and level
 
-#### Enhanced Logging System
-- **Structured Logging**: JSON format with correlation IDs across services
-- **Log Aggregation**: Centralized logging with Loki or similar
-- **Log Retention**: Configurable retention policies
-- **Log Search**: Full-text search across all service logs
-- **Audit Trail**: Track all administrative actions
-
-#### Alerting Framework
-- **Health Alerts**: Service failures, high resource usage
-- **Cost Alerts**: Budget thresholds (50%, 80%, 100%)
-- **Performance Alerts**: Slow responses, high error rates
-- **Security Alerts**: Failed authentication attempts, unusual access patterns
-- **Delivery Channels**: Email, Slack, Telegram, Webhook
-
-**Technical Implementation**:
-```yaml
-New Services:
-  - grafana: Visualization and dashboards
-  - prometheus: Metrics collection
-  - loki: Log aggregation (optional)
-  - alertmanager: Alert routing and management
-
-New Tools:
-  - ./rin metrics - View real-time metrics
-  - ./rin dashboard - Open health dashboard
-  - ./rin alerts - Configure alerting rules
-```
-
----
-
-### v1.5 "Resilience" - Q2 2026
-
-**Theme**: "Production-grade reliability and data safety"
-
-#### Automated Backup System
-- **Automatic Backups**: Scheduled backups (daily, weekly, monthly)
-- **Backup Targets**:
-  - Qdrant vector database (conversations and memory)
-  - Open WebUI chat history and user data
-  - LiteLLM cost tracking database
-  - n8n workflow definitions
-  - Configuration files (.env, litellm_config.yaml)
-- **Backup Strategies**:
-  - Local filesystem backups
-  - S3-compatible storage (MinIO, AWS S3, Backblaze B2)
-  - Incremental backups to save space
-  - Encrypted backups for sensitive data
-- **Restore Testing**: Automated restore validation
-
-#### High Availability Features
-- **Health Checks**: Container-level health checks with auto-restart
-- **Graceful Degradation**: System continues operating with reduced functionality
-- **Circuit Breakers**: Prevent cascade failures when external APIs fail
-- **Rate Limiting**: Protect against API quota exhaustion
-- **Request Queuing**: Handle traffic spikes without dropping requests
-- **Service Redundancy** (optional): Run multiple instances of critical services
-
-#### Multi-User Authentication & Authorization
-- **User Management**: Create, manage, and delete users via CLI
-- **Role-Based Access Control (RBAC)**:
-  - Admin: Full system access
-  - User: Chat access, tool usage
-  - Guest: Read-only access
-- **API Key Management**: Per-user API keys for programmatic access
-- **Session Management**: Secure session handling with timeouts
-- **SSO Integration** (optional): OAuth2, SAML support
-
-#### Data Retention Policies
-- **Conversation Retention**: Configurable TTL for chat history
-- **Vector Storage Cleanup**: Remove old, unused embeddings
-- **Log Rotation**: Automatic log file rotation and cleanup
-- **Backup Cleanup**: Retain last N backups, delete older ones
-
-#### Disaster Recovery
-- **Backup Verification**: Automated integrity checks
-- **Recovery Procedures**: Documented step-by-step recovery
-- **Failover Strategies**: Hot/cold standby configurations
-- **Data Export**: Export all data in portable formats
-
-**Technical Implementation**:
-```yaml
-New Services:
-  - backup-service: Automated backup orchestration
-  - minio: Optional S3-compatible storage
-
-New Tools:
-  - ./rin backup auto - Configure automatic backups
-  - ./rin restore --verify - Test backup restoration
-  - ./rin users add/remove/list - User management
-  - ./rin health check - Comprehensive system health check
-```
-
----
-
-### v1.6 "Workflow Intelligence" - Q3 2026
-
-**Theme**: "Intelligent automation without manual configuration"
-
-#### Auto-Loading Workflows
-- **Problem**: Users must manually import workflows into n8n
-- **Solution**: Workflows auto-load from `workflows/` directory on first boot
-- **Features**:
-  - Detect new workflow files automatically
-  - Version control for workflows
-  - Workflow dependency resolution
-  - Credential templating from environment variables
-  - One-click workflow updates
-
-#### Expanded Workflow Library
-- **GitHub Integration**: 
-  - PR notifications and summaries
-  - Issue tracking and updates
-  - Repository activity monitoring
-  - Automated code review summaries
-- **Calendar Integration**:
-  - Google Calendar sync
-  - Meeting reminders and summaries
-  - Schedule-based task triggers
-- **Document Processing**:
-  - PDF text extraction and summarization
-  - Document Q&A with RAG
-  - Batch document processing
-- **Social Media Integration**:
-  - Twitter/X monitoring
-  - LinkedIn post automation
-  - Reddit monitoring
-- **Database Connectors**:
-  - PostgreSQL, MySQL query workflows
-  - Data export and reporting
-  - Automated data validation
-
-#### Intelligent Workflow Triggers
-- **Context-Aware Triggers**: Workflows trigger based on conversation context
-- **Smart Scheduling**: AI determines optimal execution times
-- **Conditional Execution**: Workflows run only when conditions are met
-- **Chain Workflows**: Auto-compose workflows into larger processes
-
-#### Workflow Marketplace (Community)
-- **Workflow Sharing**: Users can publish workflows to community repository
-- **Workflow Discovery**: Browse and install community workflows
-- **Workflow Ratings**: Community feedback on workflow quality
-- **Version Management**: Track workflow versions and updates
+#### Basic Cost Tracking
+- **Token Usage Display**: Show token usage per model in CLI
+- **Simple Cost Reports**: Daily/weekly cost summaries
+- **Cost Alerts**: Basic threshold warnings (80%, 100% of budget)
+- **Usage History**: Track historical usage patterns
 
 **Technical Implementation**:
 ```yaml
 New Scripts:
-  - scripts/auto_load_workflows.py - Automatic workflow loading
-  - scripts/workflow_manager.py - Workflow lifecycle management
+  - scripts/health_check.py - Basic health monitoring
+  - scripts/generate_status_report.py - Simple HTML status page
 
-New Tools:
-  - ./rin workflows install <name> - Install community workflow
-  - ./rin workflows list - List available workflows
-  - ./rin workflows update - Update installed workflows
+New CLI Commands:
+  - ./rin health - Show system health status
+  - ./rin costs - Display cost summary
+  - ./rin logs --service <name> --level <level> - Enhanced log viewing
 ```
+
+**Success Criteria**:
+- Users can see system health at a glance
+- No need to manually check Docker logs for basic status
+- Cost tracking visible via simple CLI commands
+- Implementation adds <100MB memory overhead
 
 ---
 
-### v1.7 "Multimodal Perception" - Q4 2026
+### v1.5 "Backup Foundation" - Q2 2026
 
-**Theme**: "Beyond text - voice, vision, and document understanding"
+**Theme**: "Protect your data before scaling up"
 
-#### Voice Interface (Whisper Integration)
-- **Speech-to-Text**: Convert voice input to text using OpenAI Whisper
-- **Text-to-Speech**: Natural voice output using Coqui TTS or ElevenLabs
-- **Voice Commands**: Hands-free RIN interaction
-- **Multi-Language Support**: Support for 50+ languages
-- **Voice Profiles**: Per-user voice recognition
-- **Conversational AI**: Natural voice conversations with context retention
+**Focus**: Essential backup capabilities without complex infrastructure
 
-#### Image Generation (Stable Diffusion)
-- **Local Image Generation**: Self-hosted Stable Diffusion XL
-- **API Integration**: DALL-E 3, Midjourney via API
-- **Image Editing**: InstructPix2Pix for image modifications
-- **Style Transfer**: Apply artistic styles to images
-- **Workflow Integration**: Generate images in automated workflows
+#### Basic Automated Backups
+- **Scheduled Backups**: Simple cron-based backup system
+- **Backup Targets**:
+  - Qdrant vector database (conversations and memory)
+  - Open WebUI chat history and user data
+  - LiteLLM cost tracking database
+  - Configuration files (.env, litellm_config.yaml)
+- **Backup Location**: Local filesystem only (./backups directory)
+- **Backup Frequency**: Configurable (daily/weekly)
+- **Backup Retention**: Keep last N backups (configurable)
 
-#### Advanced Vision Capabilities
-- **Image Understanding**: GPT-4 Vision, Claude 3 Opus for image analysis
-- **OCR**: Extract text from images and PDFs (Tesseract)
-- **Visual Search**: Search for images similar to a reference
-- **Screenshot Analysis**: Analyze and explain screenshots
-- **Document Intelligence**: Parse forms, invoices, receipts
+#### Simple Restore Functionality
+- **Restore Command**: `./rin restore <backup-name>`
+- **Backup Listing**: `./rin backup list` shows available backups
+- **Restore Validation**: Verify backup before restoring
+- **Rollback Safety**: Automatic backup before restore operation
 
-#### Video Processing
-- **Video Transcription**: Extract audio and transcribe (existing YouTube tool++)
-- **Video Summarization**: AI-generated video summaries
-- **Keyframe Extraction**: Extract important frames from videos
-- **Video Q&A**: Ask questions about video content
+#### Basic Health Checks
+- **Container Health**: Docker health checks for critical services
+- **Auto-Restart**: Restart unhealthy containers automatically
+- **Health History**: Track container restart events
+- **Startup Validation**: Verify all services start correctly
 
-#### Document Understanding
-- **PDF Processing**: Extract text, tables, images from PDFs
-- **Office Documents**: Parse Word, Excel, PowerPoint files
-- **Code Analysis**: Understand and explain code repositories
-- **Academic Papers**: Extract citations, figures, methodology
+#### Data Integrity
+- **Backup Checksums**: Verify backup integrity with checksums
+- **Corruption Detection**: Detect corrupted database files
+- **Backup Testing**: `./rin backup verify` tests restore process
+
+**Technical Implementation**:
+```yaml
+New Scripts:
+  - scripts/backup_system.py - Automated backup orchestration
+  - scripts/restore_system.py - Restore functionality
+  - scripts/verify_backup.py - Backup integrity checks
+
+New CLI Commands:
+  - ./rin backup create [--now] - Create backup immediately
+  - ./rin backup list - List available backups
+  - ./rin backup verify <name> - Verify backup integrity
+  - ./rin backup auto --schedule daily|weekly - Configure automatic backups
+  - ./rin restore <backup-name> - Restore from backup
+```
+
+**Success Criteria**:
+- Backups complete in < 5 minutes for typical installations
+- Restore works reliably (99%+ success rate)
+- Zero data loss from backup/restore cycle
+- Users feel confident their data is protected
+
+---
+
+### v1.6 "Resilience Basics" - Q3 2026
+
+**Theme**: "Handle failures gracefully"
+
+**Focus**: Basic fault tolerance and error recovery
+
+#### Graceful Degradation
+- **Service Dependencies**: Map service dependencies
+- **Fallback Behavior**: System continues with degraded functionality
+- **User Notifications**: Clear messages when services are unavailable
+- **Partial Operation**: Core features work even if optional services fail
+
+#### Circuit Breakers (Basic)
+- **External API Protection**: Detect failing external APIs
+- **Automatic Retry**: Smart retry logic with exponential backoff
+- **Failure Tracking**: Log and track external API failures
+- **Timeout Management**: Proper timeouts for all external calls
+
+#### Basic Rate Limiting
+- **Request Queuing**: Queue requests during high load
+- **Rate Limit Configuration**: Configurable per-model rate limits
+- **Quota Management**: Simple daily/monthly quota tracking
+- **Throttling**: Slow down requests to stay within limits
+
+#### Error Recovery
+- **Automatic Recovery**: Auto-recover from transient failures
+- **Error Logging**: Detailed error logs with context
+- **Recovery Procedures**: Document recovery steps for common issues
+- **Health-based Restart**: Restart services based on health checks
+
+**Technical Implementation**:
+```yaml
+New Components:
+  - Circuit breaker middleware for API calls
+  - Request queue with priority handling
+  - Rate limiter per model/API
+
+New CLI Commands:
+  - ./rin limits set <model> <requests/min> - Configure rate limits
+  - ./rin limits show - Display current limits and usage
+  - ./rin errors recent - Show recent error summary
+```
+
+**Success Criteria**:
+- System remains operational when external APIs fail
+- No cascading failures from single service issues
+- Users notified clearly when features unavailable
+- Auto-recovery from 80%+ of transient failures
+
+---
+
+### v1.7 "Multi-User Foundation" - Q4 2026
+
+**Theme**: "Share your RIN safely"
+
+**Focus**: Basic multi-user support without complex enterprise features
+
+#### Simple User Management
+- **User Accounts**: Create and manage user accounts via CLI
+- **Basic Authentication**: Username/password authentication
+- **User Database**: SQLite-based user database
+- **Session Management**: Secure sessions with reasonable timeouts
+- **Password Reset**: Simple password reset via CLI (admin only)
+
+#### Basic Access Control
+- **Two Roles Only**:
+  - Admin: Full system access, user management
+  - User: Chat access, tool usage, no system management
+- **Per-User History**: Separate chat history per user
+- **Basic Permissions**: Users can only see their own data
+
+#### User Activity Tracking
+- **Login Tracking**: Track login times and sessions
+- **Usage Tracking**: Track per-user token usage and costs
+- **Basic Audit Log**: Log user actions (login, logout, config changes)
+
+#### Resource Quotas (Basic)
+- **Per-User Quotas**: Simple daily token limits per user
+- **Quota Enforcement**: Stop requests when quota exceeded
+- **Quota Reset**: Automatic daily quota reset
+- **Quota Display**: Users can see their quota usage
 
 **Technical Implementation**:
 ```yaml
 New Services:
-  - whisper-service: Speech-to-text
-  - tts-service: Text-to-speech
-  - stable-diffusion: Image generation
-  - tesseract-ocr: Optical character recognition
-  - video-processor: Video analysis
-
-New Tools:
-  - ./rin voice start - Start voice interface
-  - ./rin generate image "description" - Generate images
-  - ./rin analyze image <path> - Analyze images
+  - Simple auth middleware for Open WebUI
+  
+New CLI Commands:
+  - ./rin users add <username> --role admin|user - Add user
+  - ./rin users remove <username> - Remove user
+  - ./rin users list - List all users
+  - ./rin users reset-password <username> - Reset password
+  - ./rin users quota set <username> <tokens/day> - Set quota
+  - ./rin users activity - Show user activity log
 ```
+
+**Success Criteria**:
+- Support 5-10 concurrent users comfortably
+- Clear separation of user data and history
+- Simple enough to set up in < 10 minutes
+- No security vulnerabilities in authentication
 
 ---
 
-### v1.8 "Code Intelligence" - Q1 2027
+### v2.0 "Advanced Monitoring" - Q1 2027
 
-**Theme**: "RIN as a development partner"
+**Theme**: "Production-grade observability"
 
-#### Code Execution Sandbox
-- **Secure Execution**: Isolated Docker containers for code execution
-- **Multi-Language Support**: Python, JavaScript, Go, Rust, Java, C++
-- **Package Management**: Auto-install dependencies (pip, npm, cargo)
-- **Resource Limits**: CPU, memory, time limits per execution
-- **Output Capture**: Capture stdout, stderr, return values
-- **Interactive REPL**: Run interactive Python/Node.js sessions
+**Focus**: Professional monitoring without infrastructure complexity
 
-#### GitHub Deep Integration
-- **Repository Analysis**: Analyze code structure, dependencies, complexity
-- **Code Review**: AI-powered code review with security checks
-- **Issue Triage**: Auto-categorize and prioritize issues
-- **PR Summaries**: Generate comprehensive PR descriptions
-- **Commit Message Generation**: Smart commit messages from diffs
-- **Documentation Generation**: Auto-generate docs from code
+#### Real-Time Dashboard
+- **Web-Based Dashboard**: Simple web UI for monitoring
+- **Real-Time Metrics**: Live updates every 5 seconds
+- **Service Status**: Visual indicators (green/yellow/red)
+- **Resource Graphs**: CPU, memory, disk usage over time
+- **Request Metrics**: API request rates and latencies
+- **Cost Visualization**: Real-time cost tracking charts
 
-#### Development Tools
-- **Code Search**: Semantic code search across repositories
-- **Refactoring Suggestions**: AI-powered refactoring recommendations
-- **Bug Detection**: Static analysis and vulnerability scanning
-- **Test Generation**: Auto-generate unit tests
-- **API Documentation**: Generate OpenAPI specs from code
+#### Metrics Collection
+- **Time-Series Data**: Store metrics history (30 days)
+- **Metric Export**: Export metrics as JSON/CSV
+- **Custom Metrics**: Add application-specific metrics
+- **Performance Tracking**: Track response times per model
 
-#### Local Development Server
-- **Hot Reload**: Watch files and auto-reload code
-- **Debug Mode**: Attach debuggers to running code
-- **Environment Management**: Create isolated dev environments
-- **Port Forwarding**: Access services running in sandbox
+#### Alerting System (Basic)
+- **Alert Rules**: Configure alert thresholds
+- **Alert Channels**: Email and webhook notifications
+- **Alert History**: Track triggered alerts
+- **Alert Acknowledgment**: Mark alerts as resolved
+
+#### Log Aggregation
+- **Centralized Logs**: Collect logs from all services
+- **Log Search**: Full-text search across logs
+- **Log Filtering**: Filter by time, service, level, text
+- **Log Retention**: Configurable retention (7-90 days)
 
 **Technical Implementation**:
 ```yaml
 New Services:
-  - code-sandbox: Secure code execution environment
-  - github-analyzer: GitHub integration service
+  - monitoring-dashboard: Simple web-based dashboard
+  - metrics-collector: Collect and store metrics
 
-New Tools:
-  - ./rin code run <file> - Execute code safely
-  - ./rin code review <repo> - Analyze repository
-  - ./rin dev start - Start development mode
+New CLI Commands:
+  - ./rin dashboard start - Start monitoring dashboard
+  - ./rin metrics export --range 7d - Export metrics
+  - ./rin alerts configure - Configure alert rules
+  - ./rin logs search "error" --since 24h - Search logs
 ```
+
+**Success Criteria**:
+- Dashboard accessible at http://localhost:9090
+- Metrics retained for 30 days minimum
+- Alerts deliver within 1 minute of trigger
+- Dashboard adds <200MB memory overhead
 
 ---
 
-### v2.0 "Multi-Agent Orchestration" - Q2 2027
+### v2.5 "Cloud Backup & Storage" - Q2 2027
 
-**Theme**: "One organism becomes an ecosystem"
+**Theme**: "Backup to the cloud safely"
 
-#### Multi-Agent Architecture
-- **Specialized Agents**: Each agent has a specific role and expertise
-  - **Research Agent**: Deep web research and fact-checking
-  - **Coding Agent**: Software development and debugging
-  - **Writing Agent**: Content creation and editing
-  - **Analysis Agent**: Data analysis and visualization
-  - **Planning Agent**: Project planning and task breakdown
-  - **QA Agent**: Quality assurance and testing
-  - **Security Agent**: Security analysis and vulnerability detection
+**Focus**: Secure cloud backup without vendor lock-in
 
-#### Agent Coordination System
-- **Agent Manager**: Orchestrates agent lifecycle and task routing
-- **Task Queue**: Distribute tasks across available agents
-- **Agent Communication**: Agents can request help from other agents
-- **Shared Memory**: Agents share context via unified memory layer
-- **Conflict Resolution**: Handle conflicting agent recommendations
-- **Priority System**: High-priority tasks interrupt lower-priority work
+#### S3-Compatible Storage
+- **Cloud Backup**: Backup to S3-compatible storage
+- **Supported Providers**: AWS S3, Backblaze B2, MinIO, Wasabi
+- **Encrypted Backups**: Client-side encryption before upload
+- **Incremental Backups**: Only upload changed data
+- **Backup Verification**: Verify uploads with checksums
 
-#### Swarm Intelligence
-- **Parallel Processing**: Multiple agents work on different aspects simultaneously
-- **Consensus Building**: Agents vote on best approach
-- **Iterative Refinement**: Agents review and improve each other's work
-- **Specialization**: Agents develop expertise over time
-- **Collaboration Patterns**: Pre-defined agent collaboration workflows
+#### Backup Strategy Options
+- **3-2-1 Backup**: 3 copies, 2 media types, 1 offsite
+- **Automated Cloud Sync**: Automatic upload after local backup
+- **Retention Policies**: Different retention for local vs. cloud
+- **Cost Optimization**: Compress before upload
 
-#### Agent Development Framework
-- **Agent SDK**: Create custom agents with Python/JavaScript
-- **Agent Templates**: Starter templates for common agent types
-- **Agent Marketplace**: Share and discover community agents
-- **Agent Metrics**: Track agent performance and effectiveness
-- **Agent Training**: Fine-tune agents for specific tasks
+#### Disaster Recovery
+- **Remote Restore**: Restore from cloud backup directly
+- **Backup Testing**: Automated restore testing
+- **Recovery Time Objective**: Target < 30 min restore time
+- **Recovery Documentation**: Step-by-step recovery procedures
 
-#### Advanced Reasoning Capabilities
-- **Chain-of-Thought**: Forced reasoning chains (expanded from Sequential Thinking)
-- **Tree of Thoughts**: Explore multiple reasoning paths simultaneously
-- **Self-Reflection**: Agents critique their own outputs
-- **Meta-Learning**: Learn from past successes and failures
-- **Causal Reasoning**: Understand cause and effect relationships
+**Technical Implementation**:
+```yaml
+New Configuration:
+  - S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY
+  - BACKUP_ENCRYPTION_KEY (auto-generated)
 
-#### Distributed Deployment
-- **Multi-Node Support**: Run RIN across multiple machines
-- **Load Balancing**: Distribute load across agent instances
-- **Geo-Redundancy**: Deploy agents in multiple regions
-- **Edge Deployment**: Run lightweight agents on edge devices
-- **Hybrid Cloud**: Mix of local and cloud-deployed agents
+New CLI Commands:
+  - ./rin backup cloud configure - Set up cloud backup
+  - ./rin backup cloud upload <backup> - Upload to cloud
+  - ./rin backup cloud list - List cloud backups
+  - ./rin restore --from-cloud <backup> - Restore from cloud
+```
+
+**Success Criteria**:
+- Encrypted backups upload successfully to S3
+- Restore from cloud works reliably
+- Incremental backups reduce upload time by 70%+
+- Support for at least 3 S3-compatible providers
+
+---
+
+### v3.0 "Production Ready" - Q3 2027
+
+**Theme**: "Enterprise-grade reliability"
+
+**Focus**: Complete the production hardening journey
+
+#### Advanced High Availability
+- **Service Redundancy**: Run multiple instances of critical services (optional)
+- **Load Balancing**: Distribute requests across instances
+- **Health-Based Routing**: Route only to healthy instances
+- **Zero-Downtime Updates**: Rolling updates without service interruption
+
+#### Advanced RBAC
+- **Role-Based Access Control**: Define custom roles
+- **Fine-Grained Permissions**: Control access to specific features
+- **Team Management**: Group users into teams
+- **API Key Management**: Per-user API keys for programmatic access
+- **SSO Integration** (optional): OAuth2 provider support
+
+#### Data Retention Policies
+- **Conversation Retention**: Configurable TTL for chat history
+- **Vector Storage Cleanup**: Automatic cleanup of old embeddings
+- **Log Rotation**: Automatic log rotation with compression
+- **Backup Cleanup**: Intelligent backup retention policies
+
+#### Advanced Recovery
+- **Point-in-Time Recovery**: Restore to specific timestamp
+- **Partial Restore**: Restore specific services or databases
+- **Recovery Validation**: Verify restored data integrity
+- **Failover Testing**: Test failover procedures automatically
+
+#### Production Monitoring
+- **SLA Monitoring**: Track uptime and availability
+- **Performance Budgets**: Alert on performance degradation
+- **Capacity Planning**: Predict resource needs
+- **Trend Analysis**: Identify usage patterns and anomalies
 
 **Technical Implementation**:
 ```yaml
 New Services:
-  - agent-manager: Multi-agent orchestration
-  - agent-registry: Track available agents and capabilities
-  - agent-{name}: Individual specialized agents
+  - load-balancer: Optional load balancing (Nginx/Traefik)
+  - auth-service: Advanced authentication/authorization
 
-New Tools:
-  - ./rin agents list - List available agents
-  - ./rin agents create <name> - Create new agent
-  - ./rin agents deploy - Deploy agent to cluster
-  - ./rin swarm start - Start multi-agent collaboration
+New CLI Commands:
+  - ./rin ha enable - Enable high availability mode
+  - ./rin roles create <name> --permissions <list> - Create custom role
+  - ./rin retention set conversations --ttl 90d - Set retention
+  - ./rin restore --timestamp "2027-01-15 14:30:00" - Point-in-time restore
+  - ./rin sla report - Generate SLA report
 ```
+
+**Success Criteria**:
+- 99.9% uptime target achievable
+- Support 50+ concurrent users
+- Zero-downtime updates work reliably
+- Complete disaster recovery in < 1 hour
+- Pass basic security audit
 
 ---
 
-## Beyond v2.0: Future Horizons
+## Beyond v3.0: Future Considerations
 
-### v2.1+ Potential Features
+Once RIN reaches production readiness at v3.0, future versions could explore:
 
-#### Blockchain & Web3 Integration
-- Smart contract interaction and analysis
-- Cryptocurrency portfolio management
-- DeFi protocol monitoring
-- NFT analysis and generation
+### Potential Future Directions (v3.5+)
 
-#### IoT & Edge Computing
-- Smart home integration (Home Assistant)
-- Sensor data processing
-- Edge AI deployment
-- Real-time alerting from IoT devices
+#### Workflow Enhancements
+- Auto-loading workflows from directory
+- Workflow marketplace for community sharing
+- Intelligent workflow triggers
+- GitHub, Calendar, and document processing workflows
 
-#### Advanced Privacy & Security
-- End-to-end encryption for all data
-- Zero-knowledge proofs for sensitive operations
-- Homomorphic encryption for cloud deployments
-- Decentralized identity (DID) support
+#### Advanced Integrations
+- Voice interface (Whisper + TTS)
+- Image generation capabilities
+- Code execution sandbox
+- Enhanced development tools
 
-#### Autonomous Operations
-- Self-healing system (auto-recovery from failures)
-- Self-optimization (tune parameters based on usage)
-- Self-updating (safe automatic updates)
-- Predictive maintenance (anticipate failures)
+#### Architecture Evolution
+- Multi-agent coordination (specialized agents)
+- Distributed deployment options
+- Kubernetes support
+- Multi-datacenter replication
 
-#### Enterprise Features
-- LDAP/Active Directory integration
-- Compliance reporting (GDPR, HIPAA, SOC2)
-- Audit logging with immutable records
-- Multi-tenancy with tenant isolation
-- SLA monitoring and reporting
+These features are documented for future consideration but are beyond the scope of the v1.4-v3.0 roadmap.
 
 ---
 
@@ -469,59 +476,50 @@ New Tools:
     └──────────────────────────────────┘
 ```
 
-### Target Architecture (v2.0)
+### Target Architecture (v3.0)
 ```
-┌──────────────────────────────────────────────────┐
-│         Unified Dashboard & Monitoring           │
-│      (Grafana + Prometheus + AlertManager)       │
-└───────────────────┬──────────────────────────────┘
+┌──────────────────────────────────────────┐
+│       Monitoring Dashboard & Alerts      │
+│        (Metrics + Logs + Status)         │
+└───────────────────┬──────────────────────┘
                     │
-┌───────────────────▼──────────────────────────────┐
-│            Agent Manager & Orchestrator          │
-│         (Multi-Agent Coordination Layer)         │
-└───────────────────┬──────────────────────────────┘
+┌───────────────────▼──────────────────────┐
+│          Auth & User Management          │
+│         (Multi-User + RBAC)              │
+└───────────────────┬──────────────────────┘
                     │
-        ┌───────────┼───────────┐
-        │           │           │
-    ┌───▼────┐  ┌──▼───┐  ┌───▼────┐
-    │Research│  │Coding│  │Writing │  ... (Multiple Agents)
-    │ Agent  │  │Agent │  │ Agent  │
-    └───┬────┘  └──┬───┘  └───┬────┘
-        │          │          │
-        └──────────┼──────────┘
-                   │
-    ┌──────────────▼──────────────┐
-    │    Shared Services Layer     │
-    │  • Cortex (Open WebUI)       │
-    │  • LiteLLM (Model Router)    │
-    │  • Memory (Qdrant)           │
-    │  • Search (SearXNG)          │
-    │  • Scraping (FireCrawl)      │
-    │  • Workflows (n8n)           │
-    │  • Voice (Whisper + TTS)     │
-    │  • Vision (Stable Diffusion) │
-    │  • Code Sandbox              │
-    └──────────────────────────────┘
+┌───────────────────▼──────────────────────┐
+│            Core RIN Services             │
+│  • Cortex (Open WebUI + LiteLLM)         │
+│  • Sensorium (SearXNG + FireCrawl)       │
+│  • Memory (Qdrant)                       │
+│  • Nervous System (Redis)                │
+│  • Reflex Arc (n8n)                      │
+└───────────────────┬──────────────────────┘
+                    │
+┌───────────────────▼──────────────────────┐
+│         Backup & Recovery Layer          │
+│    (Local Backups + Cloud Sync)          │
+└──────────────────────────────────────────┘
 ```
 
-### Scalability Considerations
+### Scalability Path
 
-#### Horizontal Scaling
-- **Stateless Services**: Open WebUI, LiteLLM can run multiple instances
-- **Load Balancing**: Nginx or Traefik for request distribution
-- **Database Sharding**: Qdrant collections can be distributed
-- **Cache Clustering**: Redis cluster mode for high availability
+#### Single Machine (v1.4 - v2.0)
+- **Target**: 5-10 concurrent users
+- **Resources**: 8GB RAM, 4 CPU cores, 50GB disk
+- **All services run on one machine**
 
-#### Vertical Scaling
-- **Resource Allocation**: Dynamic container resource limits
-- **GPU Support**: Optional GPU acceleration for models
-- **Memory Management**: Intelligent memory allocation per service
+#### Small Deployment (v2.5 - v3.0)
+- **Target**: 10-50 concurrent users
+- **Resources**: 16GB RAM, 8 CPU cores, 200GB disk
+- **Optional**: Separate backup server
 
-#### Deployment Options
-- **Single Machine**: Current default (v1.x)
-- **Small Cluster**: 3-5 machines (v1.8+)
-- **Large Cluster**: 10+ machines (v2.0+)
-- **Kubernetes**: Full k8s deployment (v2.1+)
+#### Production Deployment (v3.0)
+- **Target**: 50+ concurrent users
+- **Resources**: 32GB+ RAM, 16+ CPU cores, 500GB+ disk
+- **Optional**: Load balancer, redundant services
+- **Cloud**: Optional S3 for backups
 
 ---
 
@@ -535,88 +533,161 @@ New Tools:
 
 ### Upgrade Strategy
 - **In-Place Upgrades**: `./rin upgrade` handles everything
-- **Zero-Downtime**: Rolling updates for multi-node deployments
-- **Rollback Support**: `./rin rollback` to previous version
-- **Testing Environment**: `./rin test-upgrade` in sandbox
+- **Backup Before Upgrade**: Automatic backup before any upgrade
+- **Rollback Support**: `./rin rollback` to previous version if needed
+- **Testing Environment**: `./rin test-upgrade` in sandbox (v2.0+)
+
+### Version Upgrade Path
+```
+v1.3.0 → v1.4 → v1.5 → v1.6 → v1.7 → v2.0 → v2.5 → v3.0
+```
+
+Each upgrade is incremental and tested. Skip versions at your own risk.
 
 ---
 
 ## Success Metrics
 
-### v1.4 Success Criteria
-- ✅ Dashboard provides 90% of needed visibility
-- ✅ Alerts detect 95% of issues before user impact
-- ✅ Metrics retained for 30+ days
-- ✅ Zero manual log checking needed
+### v1.4 "Observability Core" Success Criteria
+- Users can see system health via `./rin health`
+- Basic cost tracking shows token usage
+- Log filtering works correctly
+- Implementation adds <100MB memory overhead
 
-### v1.5 Success Criteria
-- ✅ Backups complete in < 5 minutes
-- ✅ Restore works on first try 99% of time
-- ✅ System recovers from failures automatically
-- ✅ Multi-user support for 100+ users
+### v1.5 "Backup Foundation" Success Criteria  
+- Backups complete in < 5 minutes
+- Restore works on first try (99%+ success rate)
+- Zero data loss from backup/restore cycle
+- Users feel confident their data is protected
 
-### v2.0 Success Criteria
-- ✅ Multi-agent system 3x faster than single agent
-- ✅ Agent coordination overhead < 10%
-- ✅ Distributed deployment across 10+ nodes
-- ✅ Community has created 50+ custom agents
+### v1.6 "Resilience Basics" Success Criteria
+- System remains operational when external APIs fail
+- No cascading failures from single service issues
+- Auto-recovery from 80%+ of transient failures
+- Clear user notifications when services unavailable
+
+### v1.7 "Multi-User Foundation" Success Criteria
+- Support 5-10 concurrent users comfortably
+- Clear separation of user data
+- Setup completed in < 10 minutes
+- No security vulnerabilities in authentication
+
+### v2.0 "Advanced Monitoring" Success Criteria
+- Dashboard provides 90% of needed visibility
+- Alerts deliver within 1 minute of trigger
+- Metrics retained for 30 days
+- Dashboard adds <200MB memory overhead
+
+### v2.5 "Cloud Backup & Storage" Success Criteria
+- Encrypted backups upload successfully to S3
+- Restore from cloud works reliably
+- Incremental backups reduce upload time 70%+
+- Support at least 3 S3-compatible providers
+
+### v3.0 "Production Ready" Success Criteria
+- 99.9% uptime achievable
+- Support 50+ concurrent users
+- Zero-downtime updates work reliably
+- Complete disaster recovery in < 1 hour
+- Pass basic security audit
 
 ---
 
-## Community & Ecosystem
+## Implementation Timeline
 
-### Community Contributions
-- **Agent Marketplace**: Share custom agents
-- **Workflow Library**: Community-contributed workflows
-- **Tool Registry**: Third-party tool integrations
-- **Documentation**: Community-maintained guides
-- **Translations**: Multi-language support
+### Quarterly Releases
 
-### Integration Ecosystem
-- **MCP Tools**: Expand MCP tool library
-- **Open WebUI Plugins**: Custom UI extensions
-- **n8n Nodes**: Custom n8n nodes for RIN
-- **LiteLLM Models**: Support for new model providers
-- **API Clients**: Libraries for Python, JS, Go, Rust
+| Version | Quarter | Theme | Key Deliverables |
+|---------|---------|-------|------------------|
+| v1.4 | Q1 2026 | Observability Core | Health checks, basic monitoring, cost tracking |
+| v1.5 | Q2 2026 | Backup Foundation | Automated backups, restore, health checks |
+| v1.6 | Q3 2026 | Resilience Basics | Circuit breakers, rate limiting, error recovery |
+| v1.7 | Q4 2026 | Multi-User Foundation | User management, basic RBAC, quotas |
+| v2.0 | Q1 2027 | Advanced Monitoring | Dashboard, metrics, alerting, logs |
+| v2.5 | Q2 2027 | Cloud Backup | S3 integration, encrypted backups, DR |
+| v3.0 | Q3 2027 | Production Ready | HA, advanced RBAC, SLA monitoring |
+
+### Development Approach
+- **One feature at a time**: Focus on quality over quantity
+- **User feedback**: Each release incorporates community feedback
+- **Backward compatible**: No breaking changes within major versions
+- **Well-tested**: Each feature thoroughly tested before release
+- **Documented**: Complete documentation with each release
 
 ---
 
-## Security & Privacy Roadmap
+## Community & Feedback
 
-### Enhanced Privacy Features
-- **Tor Integration**: Route all web searches through Tor
-- **Local Models Only Mode**: Operate without any external APIs
-- **Data Anonymization**: Automatic PII removal from logs
-- **Secure Enclaves**: Intel SGX support for sensitive operations
+### How to Provide Feedback
 
-### Security Hardening
-- **Container Hardening**: Minimal base images, no root
-- **Network Policies**: Strict firewall rules between services
-- **Secrets Management**: HashiCorp Vault integration
-- **Vulnerability Scanning**: Automated CVE scanning
-- **Penetration Testing**: Regular security audits
+1. **GitHub Issues**: Feature requests and bug reports
+2. **GitHub Discussions**: General feedback and questions
+3. **Pull Requests**: Community contributions welcome
+4. **Feature Voting**: Vote on features in the Appendix below
+
+### Community Contributions Welcome
+
+We welcome contributions in these areas:
+- Documentation improvements
+- Testing and bug reports
+- Feature development (aligned with roadmap)
+- Integration examples
+- Community tools and scripts
+
+---
+
+## Security & Privacy Considerations
+
+### Security Principles (Maintained Throughout)
+- **Privacy First**: No data leaves your infrastructure without explicit config
+- **Zero Trust**: All communication between services is controlled
+- **Minimal Attack Surface**: Only necessary ports exposed
+- **Regular Updates**: Security patches in minor releases
+- **Audit Ready**: Comprehensive logging for security audits
+
+### Security Enhancements by Version
+- **v1.4**: Basic security logging
+- **v1.5**: Backup encryption
+- **v1.6**: Rate limiting, circuit breakers
+- **v1.7**: Multi-user authentication, session management
+- **v2.0**: Advanced audit logging
+- **v2.5**: Encrypted cloud storage
+- **v3.0**: Full RBAC, SSO support, security audit compliance
 
 ---
 
 ## Conclusion
 
-This architectural vision transforms RIN from a sovereign AI organism into a **self-organizing intelligence ecosystem** while preserving the core principles of sovereignty, privacy, and zero-friction operations.
+This architectural vision transforms RIN from a powerful single-user AI system into a **production-ready, multi-user platform** through careful, incremental improvements over 7 quarterly releases.
 
 ### Key Takeaways
 
-1. **Phased Evolution**: Each version builds on previous capabilities
-2. **User-Centric**: Features driven by real user needs
-3. **Production Ready**: Enterprise features without complexity
-4. **Community First**: Open architecture for community innovation
-5. **Privacy Always**: User sovereignty is non-negotiable
+1. **Gradual Evolution**: Each version adds focused improvements
+2. **User-Centric**: Features solve real operational needs
+3. **Production Ready**: v3.0 achieves enterprise-grade reliability
+4. **Sovereignty Maintained**: Privacy and control never compromised
+5. **Zero-Friction**: Complexity hidden behind simple CLI commands
 
-### Next Steps
+### What Success Looks Like
 
-1. **Review & Feedback**: Community reviews this vision document
-2. **Prioritization**: Vote on which features to implement first
-3. **Prototyping**: Build proof-of-concepts for v1.4 features
-4. **Documentation**: Detailed design docs for approved features
-5. **Implementation**: Begin development on highest-priority items
+By v3.0, RIN will be:
+- **Reliable**: 99.9% uptime with automatic recovery
+- **Safe**: Comprehensive backup and disaster recovery
+- **Observable**: Complete visibility into system health
+- **Scalable**: Support 50+ concurrent users
+- **Secure**: Enterprise-grade authentication and authorization
+- **Maintainable**: Simple upgrades and configuration
+
+All while maintaining the core philosophy: **A sovereign AI organism, run by you, for you.**
+
+---
+
+## Next Steps
+
+1. **Review this document** - Does this roadmap align with your needs?
+2. **Provide feedback** - What's missing? What's not needed?
+3. **Vote on priorities** - Use the Feature Voting section below
+4. **Start with v1.4** - Begin implementing basic observability
 
 ---
 
@@ -624,32 +695,53 @@ This architectural vision transforms RIN from a sovereign AI organism into a **s
 
 To help prioritize development, please indicate which features are most important to you:
 
-### High Priority (Must Have for v1.4-1.5)
-- [ ] Real-time health dashboard
-- [ ] Automated backup system
-- [ ] Multi-user authentication
-- [ ] Auto-loading workflows
-- [ ] Cost analytics and forecasting
+### v1.4 "Observability Core" Features
+- [ ] Health check system (`./rin health`)
+- [ ] Basic cost tracking and reports
+- [ ] Enhanced log viewing with filtering
+- [ ] Simple status dashboard (HTML)
 
-### Medium Priority (Nice to Have for v1.6-1.7)
-- [ ] Voice interface
-- [ ] Image generation
-- [ ] Code execution sandbox
-- [ ] GitHub deep integration
-- [ ] Workflow marketplace
+### v1.5 "Backup Foundation" Features
+- [ ] Automated scheduled backups
+- [ ] Simple restore functionality
+- [ ] Backup verification and testing
+- [ ] Container health checks
 
-### Future Consideration (v2.0+)
-- [ ] Multi-agent orchestration
-- [ ] Distributed deployment
-- [ ] Blockchain integration
-- [ ] IoT/Edge computing
-- [ ] Kubernetes deployment
+### v1.6 "Resilience Basics" Features
+- [ ] Graceful degradation
+- [ ] Circuit breakers for external APIs
+- [ ] Basic rate limiting
+- [ ] Automatic error recovery
 
-### Custom Requests
-*(Please suggest additional features you'd like to see)*
+### v1.7 "Multi-User Foundation" Features
+- [ ] User account management
+- [ ] Basic admin/user roles
+- [ ] Per-user chat history
+- [ ] Simple usage quotas
+
+### v2.0 "Advanced Monitoring" Features
+- [ ] Web-based monitoring dashboard
+- [ ] Real-time metrics collection
+- [ ] Email/webhook alerting
+- [ ] Centralized log search
+
+### v2.5 "Cloud Backup" Features
+- [ ] S3-compatible backup storage
+- [ ] Encrypted backups
+- [ ] Incremental cloud sync
+- [ ] Remote restore capability
+
+### v3.0 "Production Ready" Features
+- [ ] High availability mode
+- [ ] Advanced RBAC with custom roles
+- [ ] Point-in-time recovery
+- [ ] SLA monitoring and reporting
+
+### What Would You Add?
+*(Please suggest additional features or changes to the roadmap)*
 
 ---
 
 **Document End**
 
-*This is a living document. It will be updated as the community provides feedback and as development priorities evolve.*
+*This is a living document. Version 2.0 reflects a more granular, production-focused roadmap based on community feedback. It will continue to evolve as we learn from each release.*
