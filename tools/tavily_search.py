@@ -13,6 +13,7 @@ Tavily offers:
 """
 
 import os
+import json
 import requests
 from typing import Callable, Any
 from pydantic import BaseModel, Field
@@ -113,7 +114,48 @@ class Tools:
             )
             response.raise_for_status()
 
-            result = response.json()
+            try:
+                result = response.json()
+            except json.JSONDecodeError:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "❌ Invalid JSON response from Tavily",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"❌ Tavily API returned invalid JSON response for query: '{query}'\n\n"
+                    f"Response: {response.text[:500]}\n\n"
+                    f"This may indicate a Tavily API error. Check your API key and account status."
+                )
+            
+            # Check if response is empty or malformed
+            if not result or result == {}:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ Received empty response from Tavily",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"⚠️ Tavily API returned an empty response for query: '{query}'\n\n"
+                    f"This may indicate:\n"
+                    f"1. The Tavily API key may be invalid or expired\n"
+                    f"2. API rate limits may have been reached\n"
+                    f"3. The search query may not have returned any results\n\n"
+                    f"Try:\n"
+                    f"- Verify your TAVILY_API_KEY in .env is valid\n"
+                    f"- Check your Tavily account at https://tavily.com\n"
+                    f"- Try a different search query"
+                )
 
             if __event_emitter__:
                 __event_emitter__(

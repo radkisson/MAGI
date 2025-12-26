@@ -256,7 +256,39 @@ class Tools:
                     f"Failed to search Qdrant: {response.status_code} - {response.text}"
                 )
 
-            results = response.json().get("result", [])
+            # Parse response and check for empty result
+            try:
+                response_json = response.json()
+            except json.JSONDecodeError:
+                raise Exception(
+                    f"Qdrant returned invalid JSON response: {response.text[:200]}"
+                )
+            
+            # Check if response is empty or malformed
+            if not response_json or response_json == {}:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ Received empty response from Qdrant",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"⚠️ Qdrant returned an empty response for query: '{query}'\n\n"
+                    f"This may indicate:\n"
+                    f"1. The Qdrant service is not properly configured\n"
+                    f"2. The collection may be empty or not initialized\n"
+                    f"3. The query format may be incorrect\n\n"
+                    f"Try:\n"
+                    f"- Verify Qdrant is running: `docker ps | grep qdrant`\n"
+                    f"- Check Qdrant logs: `docker logs rin-qdrant`\n"
+                    f"- Store some memories first using `store_memory()`"
+                )
+            
+            results = response_json.get("result", [])
 
             if __event_emitter__:
                 __event_emitter__(

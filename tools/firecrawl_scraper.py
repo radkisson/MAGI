@@ -10,6 +10,7 @@ Supports both:
 """
 
 import os
+import json
 import requests
 from typing import Callable, Any, Optional, List
 from pydantic import BaseModel, Field
@@ -176,7 +177,48 @@ class Tools:
             )
             response.raise_for_status()
 
-            result = response.json()
+            try:
+                result = response.json()
+            except json.JSONDecodeError:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "❌ Invalid JSON response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"❌ FireCrawl returned invalid JSON response for {url}\n\n"
+                    f"Response: {response.text[:500]}\n\n"
+                    f"This may indicate a FireCrawl service error. Check the logs."
+                )
+            
+            # Check if response is empty or malformed
+            if not result or result == {}:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ Received empty response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"⚠️ FireCrawl returned an empty response for {url}\n\n"
+                    f"This may indicate:\n"
+                    f"1. The FireCrawl service is not properly configured\n"
+                    f"2. The URL may be inaccessible or blocked\n"
+                    f"3. The FireCrawl API may be experiencing issues\n\n"
+                    f"Try:\n"
+                    f"- Verify FireCrawl is running: `docker ps | grep firecrawl`\n"
+                    f"- Check FireCrawl logs: `docker logs rin-firecrawl`\n"
+                    f"- Test with a simpler URL"
+                )
 
             if __event_emitter__:
                 __event_emitter__(
@@ -319,7 +361,48 @@ class Tools:
             )
             response.raise_for_status()
 
-            result = response.json()
+            try:
+                result = response.json()
+            except json.JSONDecodeError:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "❌ Invalid JSON response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"❌ FireCrawl returned invalid JSON response for crawl of {url}\n\n"
+                    f"Response: {response.text[:500]}\n\n"
+                    f"This may indicate a FireCrawl service error. Check the logs."
+                )
+            
+            # Check if response is empty or malformed
+            if not result or result == {}:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ Received empty response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"⚠️ FireCrawl returned an empty response for crawl of {url}\n\n"
+                    f"This may indicate:\n"
+                    f"1. The FireCrawl service is not properly configured\n"
+                    f"2. The website may be blocking crawlers\n"
+                    f"3. The FireCrawl API may be experiencing issues\n\n"
+                    f"Try:\n"
+                    f"- Verify FireCrawl is running: `docker ps | grep firecrawl`\n"
+                    f"- Check FireCrawl logs: `docker logs rin-firecrawl`\n"
+                    f"- Try scraping a single page first with `scrape_webpage()`"
+                )
 
             if __event_emitter__:
                 __event_emitter__(
