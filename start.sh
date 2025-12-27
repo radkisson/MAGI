@@ -118,6 +118,8 @@ ENABLE_FIRECRAWL=Y     # Set to N if using Tavily or other scraping APIs
 # --- HTTPS/TLS CONFIGURATION (OPTIONAL) ---
 # Enable HTTPS for services that support it
 # Set to 'true' to enable HTTPS, 'false' to use HTTP (default)
+# Note: HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination
+# See docs/HTTPS_CONFIGURATION.md for setup instructions
 ENABLE_HTTPS=false
 
 # SSL Certificate paths (required if ENABLE_HTTPS=true)
@@ -126,17 +128,6 @@ ENABLE_HTTPS=false
 SSL_CERT_PATH=./config/ssl/cert.pem
 SSL_KEY_PATH=./config/ssl/key.pem
 SSL_CA_PATH=./config/ssl/ca.pem
-
-# HTTPS Port configuration (only used when ENABLE_HTTPS=true)
-# These ports will be used instead of the HTTP ports above
-PORT_WEBUI_HTTPS=3443       # Open WebUI HTTPS port
-PORT_LITELLM_HTTPS=4443     # LiteLLM HTTPS port  
-PORT_SEARXNG_HTTPS=8443     # SearXNG HTTPS port
-PORT_FIRECRAWL_HTTPS=3003   # FireCrawl HTTPS port
-PORT_N8N_HTTPS=5679         # n8n HTTPS port
-PORT_QDRANT_HTTPS=6334      # Qdrant HTTPS port
-PORT_MCP_BRIDGE_HTTPS=9443  # MCP Bridge HTTPS port
-PORT_YOUTUBE_MCP_HTTPS=9444 # YouTube MCP HTTPS port
 EOF
     echo "✅ .env created with secure internal keys."
 else

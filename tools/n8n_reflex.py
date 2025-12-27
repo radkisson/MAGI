@@ -21,13 +21,19 @@ import threading
 import requests
 from typing import Callable, Any
 from pydantic import BaseModel, Field
+from .utils import get_service_url
+
+
+def _get_n8n_webhook_url() -> str:
+    """Get n8n webhook URL, auto-detecting HTTP or HTTPS based on configuration."""
+    return get_service_url("rin-reflex-automation", 5678, check_env_var="N8N_WEBHOOK_URL") + "/webhook"
 
 
 class Valves(BaseModel):
     """Configuration valves for n8n Reflex integration (tunable via UI)"""
 
     N8N_WEBHOOK_URL: str = Field(
-        default_factory=lambda: _get_n8n_webhook_url(),
+        default_factory=_get_n8n_webhook_url,
         description="n8n webhook base URL (default: internal Docker DNS, auto-detects HTTP/HTTPS)"
     )
     COGNITIVE_TIMEOUT: int = Field(
@@ -42,13 +48,6 @@ class Valves(BaseModel):
         default=15,
         description="Interval in seconds between 'waiting' status updates for cognitive workflows"
     )
-
-
-def _get_n8n_webhook_url() -> str:
-    """Get n8n webhook URL, auto-detecting HTTP or HTTPS based on configuration."""
-    enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
-    protocol = "https" if enable_https else "http"
-    return os.getenv("N8N_WEBHOOK_URL", f"{protocol}://rin-reflex-automation:5678/webhook")
 
 
 class Tools:

@@ -12,22 +12,17 @@ import json
 import uuid
 import time
 from sentence_transformers import SentenceTransformer
+from .utils import get_service_url
 
 
 class Tools:
     """Open WebUI Tool: Long-Term Memory via Qdrant Vector Database"""
 
     def __init__(self):
-        self.qdrant_url = self._get_qdrant_url()
+        self.qdrant_url = get_service_url("qdrant", 6333)
         self.collection_name = "rin_memory"
         self.embedding_model = None
         self.embedding_dim = 768  # Standard dimension for many models
-
-    def _get_qdrant_url(self) -> str:
-        """Get Qdrant URL, auto-detecting HTTP or HTTPS based on configuration."""
-        enable_https = os.getenv("ENABLE_HTTPS", "false").lower() == "true"
-        protocol = "https" if enable_https else "http"
-        return f"{protocol}://qdrant:6333"
 
     def _get_embedding_model(self):
         """
