@@ -170,30 +170,35 @@ If you see a warning about n8n's secure cookie configuration when accessing http
 
 ### HTTPS/TLS Configuration
 
-RIN supports running all services with HTTPS/TLS encryption for production deployments. This provides:
+RIN provides infrastructure for HTTPS/TLS encryption via reverse proxy for production deployments. This provides:
 
 - Encrypted communication between client and services
 - Secure cookie handling for authentication
 - Protection against man-in-the-middle attacks
 
+**Architecture:** HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination. RIN services run HTTP internally behind the proxy.
+
 **Quick Start:**
 
 ```bash
-# Generate self-signed certificates (for development)
+# 1. Generate certificates for development
 ./scripts/generate-certs.sh
 
-# Enable HTTPS in .env
+# 2. Set up reverse proxy (see docs for nginx/Traefik/Caddy examples)
+# Configure nginx, Traefik, or Caddy with SSL certificates
+
+# 3. Enable HTTPS mode in RIN
 nano .env
 # Set: ENABLE_HTTPS=true
 
-# Restart services
+# 4. Restart services
 ./rin restart
 ```
 
 **Full Documentation:** See [docs/HTTPS_CONFIGURATION.md](docs/HTTPS_CONFIGURATION.md) for:
+- Reverse proxy configuration (nginx, Traefik, Caddy)
 - Production setup with Let's Encrypt
 - Custom certificate configuration
-- Reverse proxy setup
 - Troubleshooting
 - Security best practices
 
@@ -212,8 +217,8 @@ Once deployed, access the various subsystems:
 - **YouTube MCP (YouTube Transcript)**: http://localhost:9001
 - **Redis**: localhost:6379
 
-**With HTTPS Enabled:**
-Replace `http://` with `https://` for all services above. See [HTTPS Configuration Guide](docs/HTTPS_CONFIGURATION.md).
+**With HTTPS (via reverse proxy):**
+Access services through your configured reverse proxy (e.g., https://yourdomain.com). Services themselves remain HTTP internally.
 
 ### Synaptic Wiring (Tool Definitions)
 

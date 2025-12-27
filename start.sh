@@ -171,10 +171,11 @@ if [ -t 0 ]; then
     # HTTPS Selection
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "🔒 HTTPS/TLS Configuration"
-    echo "   Enable HTTPS for secure communication (requires SSL certificates)"
+    echo "   Enable HTTPS mode to prepare RIN for reverse proxy deployment"
+    echo "   Note: Requires nginx/Traefik/Caddy for SSL termination"
     echo "   Use HTTP for local development, HTTPS for production"
     echo ""
-    read -p "   Enable HTTPS? [y/N]: " ENABLE_HTTPS_INPUT
+    read -p "   Enable HTTPS mode? [y/N]: " ENABLE_HTTPS_INPUT
     ENABLE_HTTPS_INPUT=${ENABLE_HTTPS_INPUT:-N}
     
     # Convert to lowercase for true/false
@@ -191,6 +192,9 @@ if [ -t 0 ]; then
         else
             echo "   ✅ Using existing SSL certificates in config/ssl/"
         fi
+        echo ""
+        echo "   📝 Next: Configure reverse proxy (nginx/Traefik/Caddy)"
+        echo "   See: docs/HTTPS_CONFIGURATION.md for setup instructions"
     else
         ENABLE_HTTPS="false"
     fi
@@ -415,7 +419,10 @@ PORT_LITELLM=${PORT_LITELLM:-4000}
 if [ "${ENABLE_HTTPS}" = "true" ]; then
     PROTOCOL="https"
     echo ""
-    echo -e "${GREEN}🔒 HTTPS is ENABLED. Services will use SSL/TLS encryption.${NC}"
+    echo -e "${GREEN}🔒 HTTPS MODE ENABLED${NC}"
+    echo "   Tools will generate HTTPS URLs"
+    echo "   Services run HTTP internally - configure reverse proxy for SSL termination"
+    echo "   See: docs/HTTPS_CONFIGURATION.md"
 else
     PROTOCOL="http"
 fi
@@ -424,18 +431,22 @@ echo ""
 echo -e "${GREEN}✅ RIN IS ALIVE.${NC}"
 echo ""
 echo "=== Post-Deployment Verification ==="
-echo "Verify the biological subsystems are active:"
+echo "Verify the biological subsystems are active (direct HTTP access):"
 echo ""
-echo "🧠 Cortex (UI):        ${PROTOCOL}://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
-echo "🔄 Reflex (n8n):       ${PROTOCOL}://localhost:${PORT_N8N}      (n8n workflow editor)"
-echo "👁️  Sensorium:         ${PROTOCOL}://localhost:${PORT_SEARXNG}      (SearXNG search bar)"
+echo "🧠 Cortex (UI):        http://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
+echo "🔄 Reflex (n8n):       http://localhost:${PORT_N8N}      (n8n workflow editor)"
+echo "👁️  Sensorium:         http://localhost:${PORT_SEARXNG}      (SearXNG search bar)"
 if [ "$ENABLE_FIRECRAWL" = "Y" ]; then
-    echo "🔥 Digestion:          ${PROTOCOL}://localhost:${PORT_FIRECRAWL}      (FireCrawl API - returns {\"status\":\"ok\"})"
+    echo "🔥 Digestion:          http://localhost:${PORT_FIRECRAWL}      (FireCrawl API - returns {\"status\":\"ok\"})"
 else
     echo "🔥 Digestion:          [DISABLED] (Use Tavily or other APIs in OpenWebUI)"
 fi
-echo "🚦 Router:             ${PROTOCOL}://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
+echo "🚦 Router:             http://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
 echo ""
+if [ "${ENABLE_HTTPS}" = "true" ]; then
+    echo "Note: Services above are HTTP. Access via reverse proxy for HTTPS."
+    echo ""
+fi
 echo "=== Tools (Auto-Registered) ==="
 echo "✅ FireCrawl Scraper   - Web scraping with headless browser"
 echo "✅ Tavily Search       - AI-optimized web search"
@@ -443,7 +454,7 @@ echo "✅ SearXNG Search      - Academic search (Google Scholar, arXiv, PubMed)"
 echo "✅ Qdrant Memory       - Long-term RAG memory"
 echo "✅ n8n Reflex          - Synaptic Bridge (trigger_reflex + query_workflow)"
 echo ""
-echo "View tools: ${PROTOCOL}://localhost:${PORT_WEBUI} → Workspace → Tools"
+echo "View tools: http://localhost:${PORT_WEBUI} → Workspace → Tools"
 echo ""
 echo "=== n8n Workflows (Auto-Imported) ==="
 echo "🔥 Reflex Workflows (fire-and-forget via trigger_reflex):"
@@ -460,7 +471,7 @@ echo "   - Morning Briefing  : 8 AM daily news summary"
 echo "   - RSS Monitor       : Every 6 hours feed digest"
 echo "   - Daily Report      : 6 PM intelligence report"
 echo ""
-echo "Manage workflows: ${PROTOCOL}://localhost:${PORT_N8N}"
+echo "Manage workflows: http://localhost:${PORT_N8N}"
 echo ""
 echo "=== Next Steps ==="
 echo "1. Add API keys: nano .env (add OPENAI_API_KEY or ANTHROPIC_API_KEY)"

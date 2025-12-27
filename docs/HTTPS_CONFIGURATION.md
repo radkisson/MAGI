@@ -4,14 +4,30 @@ This guide explains how to enable HTTPS/TLS encryption for all RIN services.
 
 ## Overview
 
-RIN supports running all services with HTTPS/TLS encryption for secure communication. This is especially important for:
+RIN provides infrastructure for HTTPS/TLS encryption for secure communication. **HTTPS requires a reverse proxy (nginx, Traefik, or Caddy) for SSL termination.** This is especially important for:
 
 - Production deployments
 - Accessing RIN over the internet
 - Compliance requirements
 - Preventing man-in-the-middle attacks
 
-By default, RIN runs with HTTP for ease of local development. You can enable HTTPS with a single configuration change.
+By default, RIN runs with HTTP for ease of local development. When you enable HTTPS mode, RIN's internal tools will generate HTTPS URLs, and you'll need to configure a reverse proxy to handle SSL termination.
+
+## Architecture
+
+```
+Internet → [Reverse Proxy with SSL] → [RIN Services over HTTP]
+          (nginx/Traefik/Caddy)        (Docker containers)
+```
+
+RIN provides:
+- Certificate management and mounting
+- Protocol awareness for tools and URLs
+- Configuration infrastructure
+
+You provide:
+- Reverse proxy for SSL termination
+- Domain name and DNS configuration (for production)
 
 ## Quick Start
 
@@ -30,7 +46,69 @@ This creates:
 
 **Note:** Self-signed certificates will trigger browser security warnings. This is expected and safe for development.
 
-### 2. Enable HTTPS in Configuration
+### 2. Set Up Reverse Proxy (Required)
+
+**HTTPS requires a reverse proxy for SSL termination.** Choose one:
+
+**Option A: nginx (Recommended for production)**
+
+Create `/etc/nginx/sites-available/rin`:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name localhost;  # Change to your domain for production
+
+    ssl_certificate /path/to/rin/config/ssl/cert.pem;
+    ssl_certificate_key /path/to/rin/config/ssl/key.pem;
+
+    # Open WebUI
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Enable and restart nginx:
+```bash
+sudo ln -s /etc/nginx/sites-available/rin /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+**Option B: Traefik (Easier for Docker)**
+
+Add to `docker-compose.yml`:
+```yaml
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/ssl:/certs:ro
+```
+
+**Option C: Caddy (Automatic HTTPS)**
+
+Create `Caddyfile`:
+```
+localhost {
+    reverse_proxy localhost:3000
+    tls /path/to/rin/config/ssl/cert.pem /path/to/rin/config/ssl/key.pem
+}
+```
+
+See the "Reverse Proxy Setup" section below for complete examples.
+
+### 3. Enable HTTPS Mode in RIN
 
 Edit your `.env` file:
 
@@ -44,7 +122,9 @@ Set `ENABLE_HTTPS` to `true`:
 ENABLE_HTTPS=true
 ```
 
-### 3. Restart RIN
+This configures RIN's internal tools to generate HTTPS URLs when communicating with the reverse proxy.
+
+### 4. Restart RIN
 
 ```bash
 ./rin restart
@@ -52,16 +132,12 @@ ENABLE_HTTPS=true
 ./start.sh
 ```
 
-### 4. Access Services with HTTPS
+### 5. Access Services via Reverse Proxy
 
-All services will now be accessible via `https://` instead of `http://`:
+With your reverse proxy configured, access services through HTTPS:
 
-- **Open WebUI (Cortex)**: https://localhost:3000
-- **n8n (Reflex)**: https://localhost:5678
-- **LiteLLM API**: https://localhost:4000
-- **SearXNG (Search)**: https://localhost:8080
-- **FireCrawl API**: https://localhost:3002
-- **Qdrant (Vector DB)**: https://localhost:6333
+- **Open WebUI (Cortex)**: https://localhost (via reverse proxy)
+- **Direct service access**: http://localhost:3000 (still HTTP, behind proxy)
 - **MCP Bridge**: https://localhost:9000
 - **YouTube MCP**: https://localhost:9001
 

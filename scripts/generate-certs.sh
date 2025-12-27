@@ -22,7 +22,7 @@ mkdir -p "$SSL_DIR"
 # Check if certificates already exist
 if [ -f "$SSL_DIR/cert.pem" ] && [ -f "$SSL_DIR/key.pem" ]; then
     echo -e "${YELLOW}⚠️  SSL certificates already exist in $SSL_DIR${NC}"
-    read -p "Do you want to regenerate them? This will overwrite existing certificates [y/N]: " REGENERATE
+    read -r -p "Do you want to regenerate them? This will overwrite existing certificates [y/N]: " REGENERATE
     REGENERATE=${REGENERATE:-N}
     
     if [[ ! "$REGENERATE" =~ ^[Yy]$ ]]; then
