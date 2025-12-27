@@ -3,9 +3,10 @@ Shared utility functions for RIN tools
 """
 
 import os
+from typing import Optional
 
 
-def get_service_url(service_name: str, default_port: int, check_env_var: str = None) -> str:
+def get_service_url(service_name: str, default_port: int, check_env_var: Optional[str] = None) -> str:
     """
     Get service URL, auto-detecting HTTP or HTTPS based on configuration.
     
