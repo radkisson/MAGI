@@ -77,7 +77,7 @@ class Tools:
                 if self._cache_order:
                     oldest = self._cache_order.pop(0)
                     del self._cache[oldest]
-            
+
             # Add new entry
             if key in self._cache:
                 self._cache_order.remove(key)
@@ -89,7 +89,7 @@ class Tools:
         limit = self.valves.MAX_CONTENT_LENGTH
         if len(content) <= limit:
             return content
-        
+
         return (
             f"{content[:limit]}\n\n"
             f"> ⚠️ **System Note**: Content from {source} was truncated because it exceeded "
@@ -195,7 +195,7 @@ class Tools:
                     f"Response: {response.text[:500]}\n\n"
                     f"This may indicate a FireCrawl service error. Check the logs."
                 )
-            
+
             # Check if response is empty or malformed
             if not result or result == {}:
                 if __event_emitter__:
@@ -239,7 +239,7 @@ class Tools:
                 if markdown_content:
                     # Apply Truncation
                     markdown_content = self._truncate_content(markdown_content, url)
-                    
+
                     formatted_output = (
                         f"# Scraped Content from: {url}\n\n"
                         f"**Title**: {metadata.get('title', 'N/A')}\n"
@@ -247,10 +247,10 @@ class Tools:
                         f"---\n\n"
                         f"{markdown_content}"
                     )
-                    
+
                     # Save to Cache
                     self._add_to_cache(url, formatted_output)
-                    
+
                     return formatted_output
                 else:
                     return f"No content could be extracted from {url}"
@@ -324,7 +324,7 @@ class Tools:
             status_msg = f"🔥 Starting website crawl (max {max_pages} pages)"
             if include_paths:
                 status_msg += f" focusing on {include_paths}"
-            
+
             __event_emitter__(
                 {
                     "type": "status",
@@ -379,7 +379,7 @@ class Tools:
                     f"Response: {response.text[:500]}\n\n"
                     f"This may indicate a FireCrawl service error. Check the logs."
                 )
-            
+
             # Check if response is empty or malformed
             if not result or result == {}:
                 if __event_emitter__:
