@@ -60,9 +60,8 @@ validate_password() {
 }
 
 # Generate bcrypt hash for password
+# Reads password from stdin to avoid command injection
 generate_bcrypt_hash() {
-    local password="$1"
-    
     # Use Python with stdin to avoid command injection
     python3 << 'PYSCRIPT'
 import bcrypt

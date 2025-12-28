@@ -136,10 +136,37 @@ create_openwebui_account() {
         return 0
     fi
     
-    # Create account via API
-    local response=$(curl -s -X POST "http://localhost:${PORT_WEBUI:-3000}/api/v1/auths/signup" \
-        -H "Content-Type: application/json" \
-        -d "{\"email\":\"$email\",\"password\":\"$password\",\"name\":\"Admin\"}" 2>/dev/null)
+    # Create account via API using Python for proper JSON escaping
+    print_info "Creating account via API..."
+    local response=$(EMAIL="$email" PASSWORD="$password" python3 << 'PYSCRIPT'
+import json
+import os
+import sys
+import urllib.request
+import urllib.error
+
+email = os.environ.get('EMAIL')
+password = os.environ.get('PASSWORD')
+
+data = {
+    "email": email,
+    "password": password,
+    "name": "Admin"
+}
+
+try:
+    req = urllib.request.Request(
+        "http://localhost:${PORT_WEBUI:-3000}/api/v1/auths/signup",
+        data=json.dumps(data).encode('utf-8'),
+        headers={'Content-Type': 'application/json'}
+    )
+    with urllib.request.urlopen(req, timeout=10) as response:
+        print(response.read().decode('utf-8'))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+    sys.exit(1)
+PYSCRIPT
+)
     
     if echo "$response" | grep -q "email"; then
         print_success "OpenWebUI admin account created successfully"
@@ -185,10 +212,41 @@ create_n8n_account() {
         return 0
     fi
     
-    # Create owner account via API
-    response=$(curl -s -X POST "http://localhost:${PORT_N8N:-5678}/rest/owner" \
-        -H "Content-Type: application/json" \
-        -d "{\"email\":\"$email\",\"password\":\"$password\",\"firstName\":\"$first_name\",\"lastName\":\"$last_name\"}" 2>/dev/null)
+    # Create owner account via API using Python for proper JSON escaping
+    print_info "Creating account via API..."
+    response=$(EMAIL="$email" PASSWORD="$password" FIRST_NAME="$first_name" LAST_NAME="$last_name" PORT_N8N="${PORT_N8N:-5678}" python3 << 'PYSCRIPT'
+import json
+import os
+import sys
+import urllib.request
+import urllib.error
+
+email = os.environ.get('EMAIL')
+password = os.environ.get('PASSWORD')
+first_name = os.environ.get('FIRST_NAME')
+last_name = os.environ.get('LAST_NAME')
+port = os.environ.get('PORT_N8N', '5678')
+
+data = {
+    "email": email,
+    "password": password,
+    "firstName": first_name,
+    "lastName": last_name
+}
+
+try:
+    req = urllib.request.Request(
+        f"http://localhost:{port}/rest/owner",
+        data=json.dumps(data).encode('utf-8'),
+        headers={'Content-Type': 'application/json'}
+    )
+    with urllib.request.urlopen(req, timeout=10) as response:
+        print(response.read().decode('utf-8'))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+    sys.exit(1)
+PYSCRIPT
+)
     
     if echo "$response" | grep -q "email"; then
         print_success "n8n owner account created successfully"
