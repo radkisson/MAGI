@@ -151,7 +151,7 @@ if [ -t 0 ]; then
     echo "   Self-hosted service for extracting content from websites"
     echo "   Alternative: Use Tavily API or other scraping tools via OpenWebUI"
     echo ""
-    read -p "   Enable FireCrawl? [Y/n]: " ENABLE_FIRECRAWL
+    read -r -p "   Enable FireCrawl? [Y/n]: " ENABLE_FIRECRAWL
     ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL:-Y}
     
     # Convert to uppercase for comparison
@@ -166,7 +166,7 @@ if [ -t 0 ]; then
     echo "   Note: Requires nginx/Traefik/Caddy for SSL termination"
     echo "   Use HTTP for local development, HTTPS for production"
     echo ""
-    read -p "   Enable HTTPS mode? [y/N]: " ENABLE_HTTPS_INPUT
+    read -r -p "   Enable HTTPS mode? [y/N]: " ENABLE_HTTPS_INPUT
     ENABLE_HTTPS_INPUT=${ENABLE_HTTPS_INPUT:-N}
     
     # Convert to lowercase for true/false
@@ -212,11 +212,13 @@ if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
     fi
 else
     # Add new values
-    echo "" >> "$BASE_DIR/.env"
-    echo "# --- SERVICE SELECTION ---" >> "$BASE_DIR/.env"
-    echo "# Services can be disabled to reduce resource usage" >> "$BASE_DIR/.env"
-    echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}" >> "$BASE_DIR/.env"
-    echo "ENABLE_HTTPS=${ENABLE_HTTPS}" >> "$BASE_DIR/.env"
+    {
+        echo ""
+        echo "# --- SERVICE SELECTION ---"
+        echo "# Services can be disabled to reduce resource usage"
+        echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}"
+        echo "ENABLE_HTTPS=${ENABLE_HTTPS}"
+    } >> "$BASE_DIR/.env"
 fi
 
 # Export for docker-compose profiles
