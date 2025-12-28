@@ -3,6 +3,7 @@ requests>=2.31.0
 pyyaml>=6.0.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
+bcrypt>=4.0.0
 
 # Optional dependencies for full functionality
 # Uncomment as needed
