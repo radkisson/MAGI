@@ -710,6 +710,36 @@ EOF
     esac
 }
 
+cmd_reset_password() {
+    print_header "Reset Password"
+    
+    validate_base_dir
+    
+    # Check if reset script exists
+    if [ ! -f "$BASE_DIR/scripts/reset_password.sh" ]; then
+        print_error "Password reset script not found"
+        exit 1
+    fi
+    
+    # Run reset script with all arguments
+    bash "$BASE_DIR/scripts/reset_password.sh" "$@"
+}
+
+cmd_setup_accounts() {
+    print_header "Setup Initial Accounts"
+    
+    validate_base_dir
+    
+    # Check if setup script exists
+    if [ ! -f "$BASE_DIR/scripts/setup_initial_accounts.sh" ]; then
+        print_error "Account setup script not found"
+        exit 1
+    fi
+    
+    # Run setup script
+    bash "$BASE_DIR/scripts/setup_initial_accounts.sh" "$@"
+}
+
 cmd_help() {
     cat <<EOF
 Rhyzomic Intelligence Node (RIN) - CLI Management Tool
@@ -731,6 +761,8 @@ COMMANDS:
     exec <service> [cmd] Execute command in service container
     clean               Remove all containers and images
     models              Model management (sync, search, list, filter, etc.)
+    reset-password <service> [email]  Reset admin password for a service
+    setup-accounts      Setup initial admin accounts (interactive)
     version             Show version information
     help                Show this help message
 
@@ -752,6 +784,9 @@ EXAMPLES:
     ./rin status                    # Check system status
     ./rin logs                      # View all logs
     ./rin logs open-webui -f        # Follow Open WebUI logs
+    ./rin reset-password openwebui  # Reset OpenWebUI admin password
+    ./rin reset-password n8n        # Reset n8n owner password
+    ./rin setup-accounts            # Setup initial accounts
 
 SERVICES:
     open-webui      - Open WebUI (Cortex)
@@ -828,6 +863,12 @@ main() {
             ;;
         models)
             cmd_models "$@"
+            ;;
+        reset-password)
+            cmd_reset_password "$@"
+            ;;
+        setup-accounts)
+            cmd_setup_accounts "$@"
             ;;
         version)
             cmd_version "$@"

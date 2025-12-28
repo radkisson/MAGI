@@ -424,6 +424,25 @@ fi
 echo ""
 echo -e "${GREEN}✅ RIN IS ALIVE.${NC}"
 echo ""
+
+# --- 10. INITIAL ACCOUNT SETUP ---
+# Setup initial admin accounts for OpenWebUI and n8n
+if [ -f "$BASE_DIR/scripts/setup_initial_accounts.sh" ]; then
+    echo -e "${BLUE}🔐 Setting up initial admin accounts...${NC}"
+    echo ""
+    if bash "$BASE_DIR/scripts/setup_initial_accounts.sh"; then
+        echo ""
+    else
+        echo ""
+        echo -e "${YELLOW}⚠️  Initial account setup was not completed.${NC}"
+        echo "   You can run it later with: ./rin setup-accounts"
+        echo "   Or create accounts manually:"
+        echo "     OpenWebUI: http://localhost:${PORT_WEBUI:-3000}"
+        echo "     n8n:       http://localhost:${PORT_N8N:-5678}"
+        echo ""
+    fi
+fi
+
 echo "=== Post-Deployment Verification ==="
 echo "Verify the biological subsystems are active (direct HTTP access to containers):"
 echo ""

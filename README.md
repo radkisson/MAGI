@@ -91,8 +91,24 @@ This automatically:
 - Fixes permissions for Redis/Qdrant (critical on Linux/Azure)
 - Configures Docker DNS for cloud environments
 - Starts all containers
+- Prompts for initial admin account setup (email and password)
 
-**3. Connect (Optional)**
+**3. Initial Account Setup**
+
+On first startup, RIN will prompt you to create initial admin accounts for:
+- **OpenWebUI** (main interface)
+- **n8n** (workflow automation)
+
+You'll be asked to provide:
+- Email address (must be valid format)
+- Password (minimum 8 characters)
+
+These credentials can be:
+- Pre-configured in `.env` file as `RIN_ADMIN_EMAIL` and `RIN_ADMIN_PASSWORD`
+- Entered interactively during startup
+- Reset later using `./rin reset-password <service>`
+
+**4. Connect (Optional)**
 
 If you have an OpenAI/Anthropic API key:
 - Open `.env` and add your keys
@@ -119,14 +135,44 @@ View and configure tools: **Workspace → Tools** in the UI.
 RIN includes a comprehensive CLI tool (`./rin`) for managing the entire system:
 
 ```bash
-./rin start      # Start all services
-./rin stop       # Stop all services
-./rin status     # Check system health
-./rin logs       # View logs
-./rin update     # Pull latest images
-./rin upgrade    # Upgrade RIN
-./rin backup     # Backup your data
-./rin help       # Show all commands
+./rin start              # Start all services
+./rin stop               # Stop all services
+./rin status             # Check system health
+./rin logs               # View logs
+./rin update             # Pull latest images
+./rin upgrade            # Upgrade RIN
+./rin backup             # Backup your data
+./rin reset-password     # Reset admin passwords
+./rin setup-accounts     # Setup initial accounts
+./rin help               # Show all commands
+```
+
+### Password Management
+
+RIN provides built-in password management for OpenWebUI and n8n:
+
+**Reset Admin Password:**
+```bash
+# Reset OpenWebUI password
+./rin reset-password openwebui
+
+# Reset n8n password
+./rin reset-password n8n
+
+# Reset both services
+./rin reset-password all
+```
+
+**Setup Initial Accounts:**
+```bash
+# Run the interactive account setup
+./rin setup-accounts
+```
+
+You can also pre-configure credentials in `.env`:
+```bash
+RIN_ADMIN_EMAIL=admin@example.com
+RIN_ADMIN_PASSWORD=YourSecurePassword123
 ```
 
 ### Troubleshooting
