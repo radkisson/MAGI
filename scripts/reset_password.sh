@@ -63,8 +63,15 @@ validate_password() {
 generate_bcrypt_hash() {
     local password="$1"
     
-    # Use Python to generate bcrypt hash
-    python3 -c "import bcrypt; print(bcrypt.hashpw('$password'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'))"
+    # Use Python with stdin to avoid command injection
+    python3 << 'PYSCRIPT'
+import bcrypt
+import sys
+
+password = sys.stdin.read().strip()
+hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+print(hashed.decode('utf-8'))
+PYSCRIPT
 }
 
 # Reset OpenWebUI password
@@ -83,17 +90,21 @@ reset_openwebui_password() {
     
     # Generate password hash
     print_info "Generating password hash..."
-    local password_hash=$(generate_bcrypt_hash "$password")
+    local password_hash=$(echo -n "$password" | generate_bcrypt_hash)
     
     if [ -z "$password_hash" ]; then
         print_error "Failed to generate password hash"
         return 1
     fi
     
+    # Escape single quotes in email and hash for SQL safety
+    local safe_email=$(echo "$email" | sed "s/'/''/g")
+    local safe_hash=$(echo "$password_hash" | sed "s/'/''/g")
+    
     # Update password in database
     print_info "Updating password in database..."
     docker exec rin-cortex sqlite3 /app/backend/data/webui.db \
-        "UPDATE user SET password='$password_hash' WHERE email='$email';" 2>/dev/null
+        "UPDATE user SET password='$safe_hash' WHERE email='$safe_email';" 2>/dev/null
     
     local affected_rows=$(docker exec rin-cortex sqlite3 /app/backend/data/webui.db \
         "SELECT changes();" 2>/dev/null)
@@ -126,17 +137,21 @@ reset_n8n_password() {
     
     # Generate password hash
     print_info "Generating password hash..."
-    local password_hash=$(generate_bcrypt_hash "$password")
+    local password_hash=$(echo -n "$password" | generate_bcrypt_hash)
     
     if [ -z "$password_hash" ]; then
         print_error "Failed to generate password hash"
         return 1
     fi
     
+    # Escape single quotes in email and hash for SQL safety
+    local safe_email=$(echo "$email" | sed "s/'/''/g")
+    local safe_hash=$(echo "$password_hash" | sed "s/'/''/g")
+    
     # Update password in database
     print_info "Updating password in database..."
     docker exec rin-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
-        "UPDATE user SET password='$password_hash' WHERE email='$email';" 2>/dev/null
+        "UPDATE user SET password='$safe_hash' WHERE email='$safe_email';" 2>/dev/null
     
     local affected_rows=$(docker exec rin-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
         "SELECT changes();" 2>/dev/null)
