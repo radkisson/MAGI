@@ -948,6 +948,7 @@ See [LICENSE](LICENSE) for details.
 ## Support
 
 - **Documentation**: [docs/](docs/)
+- **Wiki**: [GitHub Wiki](https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-/wiki)
 - **Issues**: [GitHub Issues](https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-/discussions)
 

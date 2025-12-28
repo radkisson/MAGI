@@ -123,10 +123,27 @@ pylint src/rin
   - Adherence to project philosophy
   - Security considerations
 
+## Documentation
+
+### Wiki
+
+RIN maintains a [GitHub Wiki](https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-/wiki) for:
+- Community-contributed guides
+- Advanced configuration examples
+- Troubleshooting solutions
+- Use case documentation
+
+You can contribute to the wiki directly through the GitHub web interface or by cloning the wiki repository:
+
+```bash
+git clone https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-.wiki.git
+```
+
 ## Questions?
 
 - Open a GitHub Discussion for questions
 - Check existing issues and discussions first
+- Check the [Wiki](https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-/wiki) for additional documentation
 - Be respectful and constructive
 
 ## License
