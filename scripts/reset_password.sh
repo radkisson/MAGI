@@ -4,74 +4,12 @@ set -e
 # Rhyzomic Intelligence Node (RIN) - Password Reset Tool
 # Resets admin password for OpenWebUI or n8n
 
-# --- Color Definitions ---
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
 # --- Base Directory ---
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-print_header() {
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BLUE}🔐 RIN - $1${NC}"
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-# Validate email format
-validate_email() {
-    local email="$1"
-    if [[ "$email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-# Validate password strength
-validate_password() {
-    local password="$1"
-    local length=${#password}
-    
-    if [ "$length" -lt 8 ]; then
-        echo "Password must be at least 8 characters long"
-        return 1
-    fi
-    
-    return 0
-}
-
-# Generate bcrypt hash for password
-# Reads password from stdin to avoid command injection
-generate_bcrypt_hash() {
-    # Use Python with stdin to avoid command injection
-    python3 << 'PYSCRIPT'
-import bcrypt
-import sys
-
-password = sys.stdin.read().strip()
-hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-print(hashed.decode('utf-8'))
-PYSCRIPT
-}
+# Load shared utilities
+# shellcheck source=/dev/null
+. "$BASE_DIR/scripts/common.sh"
 
 # Reset OpenWebUI password
 reset_openwebui_password() {
@@ -282,23 +220,11 @@ main() {
     # Update .env if needed
     if grep -q "^RIN_ADMIN_EMAIL=" "$BASE_DIR/.env" 2>/dev/null; then
         print_info "Updating credentials in .env..."
-        python3 << PYSCRIPT
-import sys
-import re
-
-email = "$email"
-password = "$password"
-env_file = "$BASE_DIR/.env"
-
-with open(env_file, 'r') as f:
-    content = f.read()
-
-content = re.sub(r'^RIN_ADMIN_EMAIL=.*$', f'RIN_ADMIN_EMAIL={email}', content, flags=re.MULTILINE)
-content = re.sub(r'^RIN_ADMIN_PASSWORD=.*$', f'RIN_ADMIN_PASSWORD={password}', content, flags=re.MULTILINE)
-
-with open(env_file, 'w') as f:
-    f.write(content)
-PYSCRIPT
+        if update_env_credentials "$email" "$password" "$BASE_DIR/.env"; then
+            print_success "Credentials updated in .env"
+        else
+            print_warning "Failed to update credentials in .env"
+        fi
     fi
     
     echo ""

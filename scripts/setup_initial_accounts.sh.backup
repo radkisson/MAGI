@@ -4,12 +4,61 @@ set -e
 # Rhyzomic Intelligence Node (RIN) - Initial Account Setup
 # Creates initial admin accounts for OpenWebUI and n8n
 
+# --- Color Definitions ---
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 # --- Base Directory ---
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Load shared utilities
-# shellcheck source=/dev/null
-. "$BASE_DIR/scripts/common.sh"
+print_header() {
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}🔐 RIN - $1${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}✗ $1${NC}"
+}
+
+# Validate email format
+validate_email() {
+    local email="$1"
+    if [[ "$email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Validate password strength
+# Requirements: minimum 8 characters
+validate_password() {
+    local password="$1"
+    local length=${#password}
+    
+    if [ "$length" -lt 8 ]; then
+        echo "Password must be at least 8 characters long"
+        return 1
+    fi
+    
+    return 0
+}
 
 # Prompt for credentials with validation
 prompt_credentials() {
@@ -38,7 +87,8 @@ prompt_credentials() {
         read -s -p "Enter password (min 8 characters): " password_var
         echo ""
         
-        if validate_password "$password_var"; then
+        validation_error=$(validate_password "$password_var")
+        if [ $? -eq 0 ]; then
             read -s -p "Confirm password: " password_confirm
             echo ""
             
@@ -48,7 +98,7 @@ prompt_credentials() {
                 print_error "Passwords do not match. Please try again."
             fi
         else
-            print_error "$(validate_password "$password_var" 2>&1 || true)"
+            print_error "$validation_error"
         fi
     done
     
@@ -83,14 +133,12 @@ create_openwebui_account() {
     
     if [ "$user_count" != "0" ]; then
         print_warning "OpenWebUI already has users. Skipping account creation."
-        # Return 2 to indicate account already exists (idempotent success)
-        return 2
+        return 0
     fi
     
     # Create account via API using Python for proper JSON escaping
     print_info "Creating account via API..."
-    local response
-    response=$(EMAIL="$email" PASSWORD="$password" PORT_WEBUI="${PORT_WEBUI:-3000}" python3 << 'PYSCRIPT'
+    local response=$(EMAIL="$email" PASSWORD="$password" PORT_WEBUI="${PORT_WEBUI:-3000}" python3 << 'PYSCRIPT'
 import json
 import os
 import sys
@@ -115,25 +163,22 @@ try:
     )
     with urllib.request.urlopen(req, timeout=10) as response:
         print(response.read().decode('utf-8'))
-        sys.exit(0)
 except Exception as e:
     print(json.dumps({"error": str(e)}))
     sys.exit(1)
 PYSCRIPT
 )
-    local python_exit_code=$?
     
-    if [ "$python_exit_code" -ne 0 ]; then
-        print_error "Failed to create OpenWebUI account: API call failed"
-        print_info "Response: $response"
-        print_info "You can create it manually at: http://localhost:${PORT_WEBUI:-3000}"
-        return 1
-    elif echo "$response" | grep -q '"email"'; then
+    if echo "$response" | grep -q '"email"'; then
         print_success "OpenWebUI admin account created successfully"
         print_info "Email: $email"
         return 0
+    elif echo "$response" | grep -q "error"; then
+        print_error "Failed to create OpenWebUI account: $(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin).get('error', 'Unknown error'))" 2>/dev/null || echo "Unknown error")"
+        print_info "You can create it manually at: http://localhost:${PORT_WEBUI:-3000}"
+        return 1
     else
-        print_error "Failed to create OpenWebUI account: Unexpected response"
+        print_error "Failed to create OpenWebUI account"
         print_info "You can create it manually at: http://localhost:${PORT_WEBUI:-3000}"
         return 1
     fi
@@ -169,8 +214,7 @@ create_n8n_account() {
     
     if echo "$response" | grep -q "email"; then
         print_warning "n8n already has an owner account. Skipping account creation."
-        # Return 2 to indicate account already exists (idempotent success)
-        return 2
+        return 0
     fi
     
     # Create owner account via API using Python for proper JSON escaping
@@ -203,25 +247,22 @@ try:
     )
     with urllib.request.urlopen(req, timeout=10) as response:
         print(response.read().decode('utf-8'))
-        sys.exit(0)
 except Exception as e:
     print(json.dumps({"error": str(e)}))
     sys.exit(1)
 PYSCRIPT
 )
-    local python_exit_code=$?
     
-    if [ "$python_exit_code" -ne 0 ]; then
-        print_error "Failed to create n8n account: API call failed"
-        print_info "Response: $response"
-        print_info "You can create it manually at: http://localhost:${PORT_N8N:-5678}"
-        return 1
-    elif echo "$response" | grep -q '"email"'; then
+    if echo "$response" | grep -q '"email"'; then
         print_success "n8n owner account created successfully"
         print_info "Email: $email"
         return 0
+    elif echo "$response" | grep -q "error"; then
+        print_error "Failed to create n8n account: $(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin).get('error', 'Unknown error'))" 2>/dev/null || echo "Unknown error")"
+        print_info "You can create it manually at: http://localhost:${PORT_N8N:-5678}"
+        return 1
     else
-        print_error "Failed to create n8n account: Unexpected response"
+        print_error "Failed to create n8n account"
         print_info "You can create it manually at: http://localhost:${PORT_N8N:-5678}"
         return 1
     fi
@@ -249,44 +290,45 @@ store_credentials() {
 RIN_ADMIN_EMAIL=PLACEHOLDER_EMAIL
 RIN_ADMIN_PASSWORD=PLACEHOLDER_PASSWORD
 EOF
-        # Now replace placeholders safely using Python
-        EMAIL="$email" PASSWORD="$password" ENV_FILE="$BASE_DIR/.env" python3 << 'PYSCRIPT'
+        # Now replace placeholders safely
+        python3 << PYSCRIPT
 import sys
-import os
+import re
 
-email = os.environ.get('EMAIL')
-password = os.environ.get('PASSWORD')
-env_file = os.environ.get('ENV_FILE')
+email = "$email"
+password = "$password"
+env_file = "$BASE_DIR/.env"
 
-try:
-    with open(env_file, 'r') as f:
-        content = f.read()
-    
-    content = content.replace('PLACEHOLDER_EMAIL', email)
-    content = content.replace('PLACEHOLDER_PASSWORD', password)
-    
-    with open(env_file, 'w') as f:
-        f.write(content)
-    
-    sys.exit(0)
-except Exception as e:
-    print(f"Error: {e}", file=sys.stderr)
-    sys.exit(1)
+with open(env_file, 'r') as f:
+    content = f.read()
+
+content = content.replace('PLACEHOLDER_EMAIL', email)
+content = content.replace('PLACEHOLDER_PASSWORD', password)
+
+with open(env_file, 'w') as f:
+    f.write(content)
 PYSCRIPT
-        if [ $? -eq 0 ]; then
-            print_success "Credentials stored in .env"
-        else
-            print_error "Failed to store credentials in .env"
-            return 1
-        fi
+        print_success "Credentials stored in .env"
     else
-        # Update existing credentials using shared function
-        if update_env_credentials "$email" "$password" "$BASE_DIR/.env"; then
-            print_success "Credentials updated in .env"
-        else
-            print_error "Failed to update credentials in .env"
-            return 1
-        fi
+        # Update existing credentials using Python for safe replacement
+        python3 << PYSCRIPT
+import sys
+import re
+
+email = "$email"
+password = "$password"
+env_file = "$BASE_DIR/.env"
+
+with open(env_file, 'r') as f:
+    content = f.read()
+
+content = re.sub(r'^RIN_ADMIN_EMAIL=.*$', f'RIN_ADMIN_EMAIL={email}', content, flags=re.MULTILINE)
+content = re.sub(r'^RIN_ADMIN_PASSWORD=.*$', f'RIN_ADMIN_PASSWORD={password}', content, flags=re.MULTILINE)
+
+with open(env_file, 'w') as f:
+    f.write(content)
+PYSCRIPT
+        print_success "Credentials updated in .env"
     fi
 }
 
@@ -325,32 +367,17 @@ main() {
             use_existing=${use_existing:-y}
             
             if [[ "$use_existing" =~ ^[Yy]$ ]]; then
-                email="$existing_email"
-                password="$existing_password"
-                
-                # Try to create accounts with existing credentials
-                local openwebui_result=0
-                local n8n_result=0
-                
-                create_openwebui_account "$email" "$password"
-                openwebui_result=$?
-                
-                create_n8n_account "$email" "$password"
-                n8n_result=$?
+                create_openwebui_account "$existing_email" "$existing_password"
+                create_n8n_account "$existing_email" "$existing_password"
                 
                 echo ""
-                if [ $openwebui_result -eq 0 ] || [ $openwebui_result -eq 2 ]; then
-                    if [ $n8n_result -eq 0 ] || [ $n8n_result -eq 2 ]; then
-                        print_success "Account setup complete!"
-                    fi
-                fi
-                
+                print_success "Initial account setup complete!"
                 echo ""
                 echo "Access your services:"
                 echo "  🧠 OpenWebUI: http://localhost:${PORT_WEBUI}"
                 echo "  🔄 n8n:       http://localhost:${PORT_N8N}"
                 echo ""
-                echo "Email:    $email"
+                echo "Email:    $existing_email"
                 echo "Password: (stored in .env)"
                 return 0
             fi
@@ -366,26 +393,15 @@ main() {
     print_info "Setting up accounts with provided credentials..."
     echo ""
     
-    # Store credentials first (only if accounts need to be created)
+    # Store credentials
     store_credentials "$email" "$password"
     
     # Create accounts
-    local openwebui_result=0
-    local n8n_result=0
-    
     create_openwebui_account "$email" "$password"
-    openwebui_result=$?
-    
     create_n8n_account "$email" "$password"
-    n8n_result=$?
     
     echo ""
-    if [ $openwebui_result -eq 0 ] || [ $openwebui_result -eq 2 ]; then
-        if [ $n8n_result -eq 0 ] || [ $n8n_result -eq 2 ]; then
-            print_success "Account setup complete!"
-        fi
-    fi
-    
+    print_success "Initial account setup complete!"
     echo ""
     echo "Access your services:"
     echo "  🧠 OpenWebUI: http://localhost:${PORT_WEBUI}"

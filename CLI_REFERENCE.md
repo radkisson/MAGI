@@ -315,7 +315,7 @@ echo "RIN_ADMIN_PASSWORD=SecurePassword123" >> .env
 # Reset OpenWebUI password
 ./rin reset-password openwebui
 
-# Reset n8n password  
+# Reset n8n password
 ./rin reset-password n8n admin@example.com
 
 # Reset both
