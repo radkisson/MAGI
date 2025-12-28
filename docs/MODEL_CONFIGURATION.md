@@ -255,7 +255,7 @@ RIN implements intelligent fallback chains for reliability. If a primary model f
 router_settings:
   routing_strategy: usage-based-routing-v2
   num_retries: 2
-  timeout: 60
+  timeout: 300
   allowed_fails: 3
   cooldown_time: 60
   

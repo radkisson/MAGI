@@ -378,10 +378,10 @@ class Tools:
 
         Returns documentation on available workflows and how to use them
         with either trigger_reflex() or query_workflow().
-        
+
         Also includes connection diagnostics to help troubleshoot issues.
         """
-        
+
         # Test connection to n8n
         connection_status = "✅ Connected"
         try:
@@ -392,7 +392,7 @@ class Tools:
             else:
                 # If URL doesn't contain /webhook, assume it's a base URL
                 health_url = base_url.rstrip('/') + '/healthz'
-            
+
             response = requests.get(health_url, timeout=5)
             if response.status_code != 200:
                 connection_status = f"⚠️  Connection issue (status: {response.status_code})"
@@ -461,9 +461,6 @@ If you see connection errors:
 ## Configuration
 
 Timeouts can be adjusted in the tool's Valves settings:
-- Cognitive Timeout: {cognitive_timeout}s (default: 300s)
-- Reflex Timeout: {reflex_timeout}s (default: 10s)
-""".format(
-            cognitive_timeout=self.valves.COGNITIVE_TIMEOUT,
-            reflex_timeout=self.valves.REFLEX_TIMEOUT
-        )
+- Cognitive Timeout: {self.valves.COGNITIVE_TIMEOUT}s (default: 300s)
+- Reflex Timeout: {self.valves.REFLEX_TIMEOUT}s (default: 10s)
+"""

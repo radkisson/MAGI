@@ -7,7 +7,7 @@ allowing RIN to store and retrieve information with RAG capabilities.
 
 import os
 import requests
-from typing import Callable, Any, List
+from typing import Callable, Any
 import json
 import uuid
 import time
@@ -49,7 +49,7 @@ class Tools:
 
         This tool allows RIN to remember facts, conversations, and documents
         for future recall using RAG (Retrieval Augmented Generation).
-        
+
         Security: Requires valid user authentication. Each memory is tagged
         with the user's ID to ensure proper isolation.
 
@@ -100,11 +100,11 @@ class Tools:
 
             # Prepare metadata (create a new dict to avoid modifying the input)
             prepared_metadata = dict(metadata) if metadata else {}
-            
+
             # Add user context to metadata
             prepared_metadata["user_id"] = user_id
             prepared_metadata["user_name"] = __user__.get("name", "unknown")
-            
+
             # Add timestamp
             prepared_metadata["timestamp"] = time.time()
 
@@ -177,7 +177,7 @@ class Tools:
         This tool performs RAG (Retrieval Augmented Generation) by searching
         the vector database for semantically similar content to the query.
         This prevents hallucination by providing factual context.
-        
+
         Memory isolation: Each user can only access their own memories.
         Results are automatically filtered by user_id to ensure privacy.
 
@@ -213,7 +213,7 @@ class Tools:
                 "limit": limit,
                 "with_payload": True
             }
-            
+
             # Add user-specific filter to ensure memory isolation
             # Only return memories that belong to the current user
             user_id = __user__.get("id") if __user__ else None
@@ -265,7 +265,7 @@ class Tools:
                 raise Exception(
                     f"Qdrant returned invalid JSON response: {response.text[:200]}"
                 )
-            
+
             # Check if response is empty or malformed
             if not response_json or response_json == {}:
                 if __event_emitter__:
@@ -289,7 +289,7 @@ class Tools:
                     f"- Check Qdrant logs: `docker logs rin-qdrant`\n"
                     f"- Store some memories first using `store_memory()`"
                 )
-            
+
             results = response_json.get("result", [])
 
             if __event_emitter__:
@@ -314,19 +314,19 @@ class Tools:
             # Build response with results
             response_text = f"# Memory Recall: '{query}'\n\n"
             response_text += f"Found {len(results)} relevant memories:\n\n"
-            
+
             for idx, result in enumerate(results, 1):
                 score = result.get("score", 0)
                 payload = result.get("payload", {})
                 content = payload.get("content", "")
                 metadata = payload.get("metadata", {})
-                
+
                 response_text += f"## Memory {idx} (Similarity: {score:.3f})\n"
                 response_text += f"{content}\n"
-                
+
                 if metadata:
                     response_text += f"\n*Metadata: {json.dumps(metadata, indent=2)}*\n"
-                
+
                 response_text += "\n---\n\n"
 
             return response_text

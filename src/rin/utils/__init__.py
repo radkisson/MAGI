@@ -7,7 +7,7 @@ from typing import Dict, Any
 def setup_logging(level: str = "INFO") -> None:
     """
     Setup logging configuration for RIN
-    
+
     Args:
         level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     """
@@ -21,22 +21,22 @@ def setup_logging(level: str = "INFO") -> None:
 def load_config(config_path: str) -> Dict[str, Any]:
     """
     Load configuration from file
-    
+
     Args:
         config_path: Path to configuration file
-        
+
     Returns:
         Configuration dictionary
     """
     import yaml
     import json
     from pathlib import Path
-    
+
     path = Path(config_path)
-    
+
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {config_path}")
-    
+
     if path.suffix == '.yaml' or path.suffix == '.yml':
         with open(path, 'r') as f:
             return yaml.safe_load(f)
@@ -50,7 +50,7 @@ def load_config(config_path: str) -> Dict[str, Any]:
 def save_config(config: Dict[str, Any], config_path: str) -> None:
     """
     Save configuration to file
-    
+
     Args:
         config: Configuration dictionary
         config_path: Path to save configuration
@@ -58,9 +58,9 @@ def save_config(config: Dict[str, Any], config_path: str) -> None:
     import yaml
     import json
     from pathlib import Path
-    
+
     path = Path(config_path)
-    
+
     if path.suffix == '.yaml' or path.suffix == '.yml':
         with open(path, 'w') as f:
             yaml.safe_dump(config, f, default_flow_style=False)
