@@ -138,7 +138,7 @@ create_openwebui_account() {
     
     # Create account via API using Python for proper JSON escaping
     print_info "Creating account via API..."
-    local response=$(EMAIL="$email" PASSWORD="$password" python3 << 'PYSCRIPT'
+    local response=$(EMAIL="$email" PASSWORD="$password" PORT_WEBUI="${PORT_WEBUI:-3000}" python3 << 'PYSCRIPT'
 import json
 import os
 import sys
@@ -147,6 +147,7 @@ import urllib.error
 
 email = os.environ.get('EMAIL')
 password = os.environ.get('PASSWORD')
+port = os.environ.get('PORT_WEBUI', '3000')
 
 data = {
     "email": email,
@@ -156,7 +157,7 @@ data = {
 
 try:
     req = urllib.request.Request(
-        "http://localhost:${PORT_WEBUI:-3000}/api/v1/auths/signup",
+        f"http://localhost:{port}/api/v1/auths/signup",
         data=json.dumps(data).encode('utf-8'),
         headers={'Content-Type': 'application/json'}
     )
