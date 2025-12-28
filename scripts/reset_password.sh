@@ -282,13 +282,23 @@ main() {
     # Update .env if needed
     if grep -q "^RIN_ADMIN_EMAIL=" "$BASE_DIR/.env" 2>/dev/null; then
         print_info "Updating credentials in .env..."
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|^RIN_ADMIN_EMAIL=.*|RIN_ADMIN_EMAIL=${email}|" "$BASE_DIR/.env"
-            sed -i '' "s|^RIN_ADMIN_PASSWORD=.*|RIN_ADMIN_PASSWORD=${password}|" "$BASE_DIR/.env"
-        else
-            sed -i "s|^RIN_ADMIN_EMAIL=.*|RIN_ADMIN_EMAIL=${email}|" "$BASE_DIR/.env"
-            sed -i "s|^RIN_ADMIN_PASSWORD=.*|RIN_ADMIN_PASSWORD=${password}|" "$BASE_DIR/.env"
-        fi
+        python3 << PYSCRIPT
+import sys
+import re
+
+email = "$email"
+password = "$password"
+env_file = "$BASE_DIR/.env"
+
+with open(env_file, 'r') as f:
+    content = f.read()
+
+content = re.sub(r'^RIN_ADMIN_EMAIL=.*$', f'RIN_ADMIN_EMAIL={email}', content, flags=re.MULTILINE)
+content = re.sub(r'^RIN_ADMIN_PASSWORD=.*$', f'RIN_ADMIN_PASSWORD={password}', content, flags=re.MULTILINE)
+
+with open(env_file, 'w') as f:
+    f.write(content)
+PYSCRIPT
     fi
     
     echo ""

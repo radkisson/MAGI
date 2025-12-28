@@ -169,10 +169,14 @@ except Exception as e:
 PYSCRIPT
 )
     
-    if echo "$response" | grep -q "email"; then
+    if echo "$response" | grep -q '"email"'; then
         print_success "OpenWebUI admin account created successfully"
         print_info "Email: $email"
         return 0
+    elif echo "$response" | grep -q "error"; then
+        print_error "Failed to create OpenWebUI account: $(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin).get('error', 'Unknown error'))" 2>/dev/null || echo "Unknown error")"
+        print_info "You can create it manually at: http://localhost:${PORT_WEBUI:-3000}"
+        return 1
     else
         print_error "Failed to create OpenWebUI account"
         print_info "You can create it manually at: http://localhost:${PORT_WEBUI:-3000}"
@@ -249,10 +253,14 @@ except Exception as e:
 PYSCRIPT
 )
     
-    if echo "$response" | grep -q "email"; then
+    if echo "$response" | grep -q '"email"'; then
         print_success "n8n owner account created successfully"
         print_info "Email: $email"
         return 0
+    elif echo "$response" | grep -q "error"; then
+        print_error "Failed to create n8n account: $(echo "$response" | python3 -c "import sys, json; print(json.load(sys.stdin).get('error', 'Unknown error'))" 2>/dev/null || echo "Unknown error")"
+        print_info "You can create it manually at: http://localhost:${PORT_N8N:-5678}"
+        return 1
     else
         print_error "Failed to create n8n account"
         print_info "You can create it manually at: http://localhost:${PORT_N8N:-5678}"
@@ -273,24 +281,53 @@ store_credentials() {
     
     # Add or update credentials section
     if ! grep -q "# --- INITIAL ADMIN CREDENTIALS ---" "$BASE_DIR/.env"; then
-        cat <<EOF >> "$BASE_DIR/.env"
+        cat <<'EOF' >> "$BASE_DIR/.env"
 
 # --- INITIAL ADMIN CREDENTIALS ---
 # These are used for initial account setup
 # Change these if you want to reset passwords
-RIN_ADMIN_EMAIL=${email}
-RIN_ADMIN_PASSWORD=${password}
+# WARNING: These are stored in plaintext. Change passwords after first login!
+RIN_ADMIN_EMAIL=PLACEHOLDER_EMAIL
+RIN_ADMIN_PASSWORD=PLACEHOLDER_PASSWORD
 EOF
+        # Now replace placeholders safely
+        python3 << PYSCRIPT
+import sys
+import re
+
+email = "$email"
+password = "$password"
+env_file = "$BASE_DIR/.env"
+
+with open(env_file, 'r') as f:
+    content = f.read()
+
+content = content.replace('PLACEHOLDER_EMAIL', email)
+content = content.replace('PLACEHOLDER_PASSWORD', password)
+
+with open(env_file, 'w') as f:
+    f.write(content)
+PYSCRIPT
         print_success "Credentials stored in .env"
     else
-        # Update existing credentials
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|^RIN_ADMIN_EMAIL=.*|RIN_ADMIN_EMAIL=${email}|" "$BASE_DIR/.env"
-            sed -i '' "s|^RIN_ADMIN_PASSWORD=.*|RIN_ADMIN_PASSWORD=${password}|" "$BASE_DIR/.env"
-        else
-            sed -i "s|^RIN_ADMIN_EMAIL=.*|RIN_ADMIN_EMAIL=${email}|" "$BASE_DIR/.env"
-            sed -i "s|^RIN_ADMIN_PASSWORD=.*|RIN_ADMIN_PASSWORD=${password}|" "$BASE_DIR/.env"
-        fi
+        # Update existing credentials using Python for safe replacement
+        python3 << PYSCRIPT
+import sys
+import re
+
+email = "$email"
+password = "$password"
+env_file = "$BASE_DIR/.env"
+
+with open(env_file, 'r') as f:
+    content = f.read()
+
+content = re.sub(r'^RIN_ADMIN_EMAIL=.*$', f'RIN_ADMIN_EMAIL={email}', content, flags=re.MULTILINE)
+content = re.sub(r'^RIN_ADMIN_PASSWORD=.*$', f'RIN_ADMIN_PASSWORD={password}', content, flags=re.MULTILINE)
+
+with open(env_file, 'w') as f:
+    f.write(content)
+PYSCRIPT
         print_success "Credentials updated in .env"
     fi
 }
