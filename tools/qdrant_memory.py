@@ -5,19 +5,21 @@ This tool connects the Cortex (Open WebUI) to the Memory (Qdrant),
 allowing RIN to store and retrieve information with RAG capabilities.
 """
 
+import os
 import requests
 from typing import Callable, Any
 import json
 import uuid
 import time
 from sentence_transformers import SentenceTransformer
+from .utils import get_service_url
 
 
 class Tools:
     """Open WebUI Tool: Long-Term Memory via Qdrant Vector Database"""
 
     def __init__(self):
-        self.qdrant_url = "http://qdrant:6333"
+        self.qdrant_url = get_service_url("qdrant", 6333)
         self.collection_name = "rin_memory"
         self.embedding_model = None
         self.embedding_dim = 768  # Standard dimension for many models

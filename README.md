@@ -164,14 +164,49 @@ The start script will display the actual ports being used.
 
 If you see a warning about n8n's secure cookie configuration when accessing http://localhost:5678, this is expected for local development over HTTP.
 
-**Already Fixed**: The `docker-compose.yml` is configured with `N8N_SECURE_COOKIE=false` to disable this security feature for local HTTP development.
+**Already Fixed**: RIN automatically configures secure cookies based on HTTP/HTTPS mode.
 
-**Note**: If deploying to production with HTTPS/TLS, you should remove this setting to enable secure cookies for better security.
+**For Production**: See the [HTTPS Configuration Guide](docs/HTTPS_CONFIGURATION.md) to enable HTTPS/TLS for secure communication.
+
+### HTTPS/TLS Configuration
+
+RIN provides infrastructure for HTTPS/TLS encryption via reverse proxy for production deployments. This provides:
+
+- Encrypted communication between client and services
+- Secure cookie handling for authentication
+- Protection against man-in-the-middle attacks
+
+**Architecture:** HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination. RIN services run HTTP internally behind the proxy.
+
+**Quick Start:**
+
+```bash
+# 1. Generate certificates for development
+./scripts/generate-certs.sh
+
+# 2. Set up reverse proxy (see docs for nginx/Traefik/Caddy examples)
+# Configure nginx, Traefik, or Caddy with SSL certificates
+
+# 3. Enable HTTPS mode in RIN
+nano .env
+# Set: ENABLE_HTTPS=true
+
+# 4. Restart services
+./rin restart
+```
+
+**Full Documentation:** See [docs/HTTPS_CONFIGURATION.md](docs/HTTPS_CONFIGURATION.md) for:
+- Reverse proxy configuration (nginx, Traefik, Caddy)
+- Production setup with Let's Encrypt
+- Custom certificate configuration
+- Troubleshooting
+- Security best practices
 
 ### Service Access Points
 
 Once deployed, access the various subsystems:
 
+**Default (HTTP):**
 - **Open WebUI (Cortex)**: http://localhost:3000
 - **n8n (Reflex/Automation)**: http://localhost:5678
 - **LiteLLM API**: http://localhost:4000
@@ -181,6 +216,9 @@ Once deployed, access the various subsystems:
 - **MCP Bridge (Sequential Thinking)**: http://localhost:9000
 - **YouTube MCP (YouTube Transcript)**: http://localhost:9001
 - **Redis**: localhost:6379
+
+**With HTTPS (via reverse proxy):**
+Access services through your configured reverse proxy (e.g., https://yourdomain.com). Services themselves remain HTTP internally.
 
 ### Synaptic Wiring (Tool Definitions)
 
