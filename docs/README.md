@@ -13,6 +13,7 @@
 - **[MODEL_CONFIGURATION.md](MODEL_CONFIGURATION.md)** - LLM provider setup
 - **[DYNAMIC_MODELS.md](DYNAMIC_MODELS.md)** - OpenRouter model sync
 - **[HTTPS_CONFIGURATION.md](HTTPS_CONFIGURATION.md)** - Production TLS setup
+- **[JUPYTER_SECURITY.md](JUPYTER_SECURITY.md)** - Jupyter Lab security hardening
 
 ## Reference
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design
