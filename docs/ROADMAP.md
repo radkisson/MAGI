@@ -1,4 +1,4 @@
-# RIN Architectural Vision: Evolution to v3.0
+# MAGI Architectural Vision: Evolution to v3.0
 
 **Document Version**: 2.0  
 **Date**: December 26, 2025  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document outlines the architectural vision for the Rhyzomic Intelligence Node (RIN) from its current state (v1.3.0) through version 3.0. RIN has successfully established itself as a sovereign, self-hosted AI agent system with a unique biological architecture. The next phase of evolution focuses on gradual, incremental improvements across three core pillars:
+This document outlines the architectural vision for the Multi-Agent General Intelligence (MAGI) from its current state (v1.3.0) through version 3.0. MAGI has successfully established itself as a sovereign, self-hosted AI agent system with a unique biological architecture. The next phase of evolution focuses on gradual, incremental improvements across three core pillars:
 
 1. **Operational Excellence** - Production-grade observability, monitoring, and reliability
 2. **Data Safety** - Comprehensive backup, recovery, and resilience features
@@ -44,7 +44,7 @@ This document outlines the architectural vision for the Rhyzomic Intelligence No
 
 ### Vision Statement
 
-> "RIN will evolve from a sovereign AI organism into a **production-ready, enterprise-grade system** through gradual, incremental improvements—while maintaining complete user sovereignty, privacy, and the zero-friction operational philosophy."
+> "MAGI will evolve from a sovereign AI organism into a **production-ready, enterprise-grade system** through gradual, incremental improvements—while maintaining complete user sovereignty, privacy, and the zero-friction operational philosophy."
 
 ### Core Principles
 
@@ -71,7 +71,7 @@ This document outlines the architectural vision for the Rhyzomic Intelligence No
   - Service health status checks (up/down indicators)
   - Basic resource monitoring (CPU, memory, disk per container)
   - Container restart tracking
-  - Simple status dashboard (HTML page served by RIN CLI)
+  - Simple status dashboard (HTML page served by MAGI CLI)
   - Health check API endpoint for external monitoring
 
 #### Enhanced Logging
@@ -217,7 +217,7 @@ New CLI Commands:
 
 ### v1.7 "Multi-User Foundation" - Q4 2026
 
-**Theme**: "Share your RIN safely"
+**Theme**: "Share your MAGI safely"
 
 **Focus**: Basic multi-user support without complex enterprise features
 
@@ -429,7 +429,7 @@ New CLI Commands:
 
 ## Beyond v3.0: Future Considerations
 
-Once RIN reaches production readiness at v3.0, future versions could explore:
+Once MAGI reaches production readiness at v3.0, future versions could explore:
 
 ### Potential Future Directions (v3.5+)
 
@@ -489,7 +489,7 @@ These features are documented for future consideration but are beyond the scope 
 └───────────────────┬──────────────────────┘
                     │
 ┌───────────────────▼──────────────────────┐
-│            Core RIN Services             │
+│            Core MAGI Services             │
 │  • Cortex (Open WebUI + LiteLLM)         │
 │  • Sensorium (SearXNG + FireCrawl)       │
 │  • Memory (Qdrant)                       │
@@ -658,7 +658,7 @@ We welcome contributions in these areas:
 
 ## Conclusion
 
-This architectural vision transforms RIN from a powerful single-user AI system into a **production-ready, multi-user platform** through careful, incremental improvements over 7 quarterly releases.
+This architectural vision transforms MAGI from a powerful single-user AI system into a **production-ready, multi-user platform** through careful, incremental improvements over 7 quarterly releases.
 
 ### Key Takeaways
 
@@ -670,7 +670,7 @@ This architectural vision transforms RIN from a powerful single-user AI system i
 
 ### What Success Looks Like
 
-By v3.0, RIN will be:
+By v3.0, MAGI will be:
 - **Reliable**: 99.9% uptime with automatic recovery
 - **Safe**: Comprehensive backup and disaster recovery
 - **Observable**: Complete visibility into system health
