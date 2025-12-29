@@ -162,33 +162,66 @@ if [ -t 0 ]; then
     # HTTPS Selection
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "🔒 HTTPS/TLS Configuration"
-    echo "   Enable HTTPS mode to prepare RIN for reverse proxy deployment"
-    echo "   Note: Requires nginx/Traefik/Caddy for SSL termination"
-    echo "   Use HTTP for local development, HTTPS for production"
     echo ""
-    read -r -p "   Enable HTTPS mode? [y/N]: " ENABLE_HTTPS_INPUT
-    ENABLE_HTTPS_INPUT=${ENABLE_HTTPS_INPUT:-N}
+    echo "   Choose your HTTPS setup:"
+    echo "   1. Automatic HTTPS with Let's Encrypt (RECOMMENDED for production)"
+    echo "      ↳ Fully automated certificate management via Caddy"
+    echo "   2. Manual HTTPS setup (for custom reverse proxy)"
+    echo "      ↳ Use your own nginx/Traefik/Caddy configuration"
+    echo "   3. HTTP only (for local development)"
+    echo ""
+    read -r -p "   Select option [1/2/3]: " HTTPS_OPTION
+    HTTPS_OPTION=${HTTPS_OPTION:-3}
     
-    # Convert to lowercase for true/false
-    if [[ "$ENABLE_HTTPS_INPUT" =~ ^[Yy]$ ]]; then
-        ENABLE_HTTPS="true"
-        
-        # Check if SSL certificates exist
-        if [ ! -f "$BASE_DIR/config/ssl/cert.pem" ] || [ ! -f "$BASE_DIR/config/ssl/key.pem" ]; then
+    case "$HTTPS_OPTION" in
+        1)
+            # Automatic HTTPS with Let's Encrypt
             echo ""
-            echo "⚠️  SSL certificates not found in config/ssl/"
-            echo "   Generating self-signed certificates for development..."
+            echo "   🚀 Setting up automatic HTTPS with Let's Encrypt..."
             echo ""
-            bash "$BASE_DIR/scripts/generate-certs.sh"
-        else
-            echo "   ✅ Using existing SSL certificates in config/ssl/"
-        fi
-        echo ""
-        echo "   📝 Next: Configure reverse proxy (nginx/Traefik/Caddy)"
-        echo "   See: docs/HTTPS_CONFIGURATION.md for setup instructions"
-    else
-        ENABLE_HTTPS="false"
-    fi
+            
+            # Check if already configured
+            if [ -f "$BASE_DIR/.env" ] && grep -q "^ENABLE_AUTO_HTTPS=true" "$BASE_DIR/.env" 2>/dev/null; then
+                echo "   ✅ Automatic HTTPS is already configured"
+                ENABLE_AUTO_HTTPS="true"
+            else
+                # Run automatic HTTPS setup script
+                if [ -f "$BASE_DIR/scripts/setup-auto-https.sh" ]; then
+                    bash "$BASE_DIR/scripts/setup-auto-https.sh"
+                    ENABLE_AUTO_HTTPS="true"
+                else
+                    echo "   ❌ Error: Auto-HTTPS setup script not found"
+                    echo "   Falling back to manual HTTPS..."
+                    ENABLE_AUTO_HTTPS="false"
+                    ENABLE_HTTPS="true"
+                fi
+            fi
+            ;;
+        2)
+            # Manual HTTPS
+            ENABLE_AUTO_HTTPS="false"
+            ENABLE_HTTPS="true"
+            
+            # Check if SSL certificates exist
+            if [ ! -f "$BASE_DIR/config/ssl/cert.pem" ] || [ ! -f "$BASE_DIR/config/ssl/key.pem" ]; then
+                echo ""
+                echo "   ⚠️  SSL certificates not found in config/ssl/"
+                echo "   Generating self-signed certificates for development..."
+                echo ""
+                bash "$BASE_DIR/scripts/generate-certs.sh"
+            else
+                echo "   ✅ Using existing SSL certificates in config/ssl/"
+            fi
+            echo ""
+            echo "   📝 Next: Configure reverse proxy (nginx/Traefik/Caddy)"
+            echo "   See: docs/HTTPS_CONFIGURATION.md for setup instructions"
+            ;;
+        *)
+            # HTTP only
+            ENABLE_AUTO_HTTPS="false"
+            ENABLE_HTTPS="false"
+            ;;
+    esac
     
     echo ""
 else
@@ -196,6 +229,7 @@ else
     echo "⚙️  Non-interactive mode detected. Enabling all services by default."
     ENABLE_FIRECRAWL="Y"      # Uses Y/N for docker-compose profiles
     ENABLE_HTTPS="false"      # Uses true/false for boolean logic
+    ENABLE_AUTO_HTTPS="false" # Disable auto-HTTPS in non-interactive mode
 fi
 
 # Store selections in .env for persistence
@@ -205,10 +239,22 @@ if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
         # macOS requires -i with extension
         sed -i '' "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
         sed -i '' "s/^ENABLE_HTTPS=.*/ENABLE_HTTPS=${ENABLE_HTTPS}/" "$BASE_DIR/.env"
+        # Add ENABLE_AUTO_HTTPS if not exists
+        if ! grep -q "^ENABLE_AUTO_HTTPS=" "$BASE_DIR/.env"; then
+            echo "ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}" >> "$BASE_DIR/.env"
+        else
+            sed -i '' "s/^ENABLE_AUTO_HTTPS=.*/ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}/" "$BASE_DIR/.env"
+        fi
     else
         # Linux doesn't need extension
         sed -i "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
         sed -i "s/^ENABLE_HTTPS=.*/ENABLE_HTTPS=${ENABLE_HTTPS}/" "$BASE_DIR/.env"
+        # Add ENABLE_AUTO_HTTPS if not exists
+        if ! grep -q "^ENABLE_AUTO_HTTPS=" "$BASE_DIR/.env"; then
+            echo "ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}" >> "$BASE_DIR/.env"
+        else
+            sed -i "s/^ENABLE_AUTO_HTTPS=.*/ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}/" "$BASE_DIR/.env"
+        fi
     fi
 else
     # Add new values
@@ -218,12 +264,14 @@ else
         echo "# Services can be disabled to reduce resource usage"
         echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}"
         echo "ENABLE_HTTPS=${ENABLE_HTTPS}"
+        echo "ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}"
     } >> "$BASE_DIR/.env"
 fi
 
 # Export for docker-compose profiles
 export ENABLE_FIRECRAWL
 export ENABLE_HTTPS
+export ENABLE_AUTO_HTTPS
 
 # --- 5. CONFIGURATION INJECTION ---
 
@@ -317,6 +365,12 @@ COMPOSE_PROFILES=""
 if [ "$ENABLE_FIRECRAWL" = "Y" ]; then
     COMPOSE_PROFILES="--profile firecrawl"
     echo "✓ Enabling FireCrawl services"
+fi
+
+# Add auto-https profile if enabled
+if [ "${ENABLE_AUTO_HTTPS:-false}" = "true" ]; then
+    COMPOSE_PROFILES="$COMPOSE_PROFILES --profile auto-https"
+    echo "✓ Enabling automatic HTTPS with Caddy"
 fi
 
 # Launch services with selected profiles
