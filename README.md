@@ -15,6 +15,7 @@ MAGI combines Open WebUI, LiteLLM, SearXNG, Qdrant, and n8n into a unified syste
 | 💾 **Qdrant** | Vector memory (RAG) |
 | ⚡ **Redis** | Message bus |
 | 🔄 **n8n** | Workflow automation |
+| 📓 **Jupyter Lab** | Code execution and data analysis |
 
 ## Quick Start
 
@@ -25,6 +26,8 @@ cd Rhyzomic-Intelligence-Node-RIN-
 ```
 
 Open http://localhost:3000
+
+For Jupyter Lab, open http://localhost:8888
 
 Add API keys to `.env` and restart:
 ```bash
@@ -53,6 +56,7 @@ OPENROUTER_API_KEY=your_key
 | ⚡ n8n | Workflow triggers |
 | 🧠 Sequential Thinking | Chain-of-thought reasoning |
 | 📺 YouTube Transcript | Video analysis |
+| 📓 Jupyter Lab | Code execution with OpenRouter/pydiode integration |
 
 ## Documentation
 
