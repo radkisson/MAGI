@@ -540,11 +540,24 @@ def main():
 
     # Allow command line override
     if len(sys.argv) > 1:
+        limit_arg = sys.argv[1]
         try:
-            limit = int(sys.argv[1])
-            print_info(f"Model limit overridden from command line: {limit}")
-        except (ValueError, IndexError):
-            pass
+            limit = int(limit_arg)
+            if limit > 0:
+                print_info(f"Model limit overridden from command line: {limit}")
+            else:
+                print_info("No model limit (syncing all available models) [overridden from command line]")
+                limit = None
+        except ValueError:
+            print_warning(
+                f"Invalid command line argument for model limit: {limit_arg}, "
+                f"keeping previous value ({'no limit' if limit is None else limit})"
+            )
+        except IndexError:
+            print_warning(
+                "Unexpected missing command line argument for model limit; "
+                f"keeping previous value ({'no limit' if limit is None else limit})"
+            )
 
     # Get OpenRouter API key (optional)
     api_key = os.environ.get('OPENROUTER_API_KEY')

@@ -62,7 +62,7 @@ docker-compose restart litellm
      OPENROUTER_MODEL_LIMIT=50  # Default: 50
      ```
    - Recommended values: 10, 25, 50, 75
-   - Set to 0 or leave empty to sync all available models
+   - Set to 0 for unlimited models. If not set, defaults to 50.
 
 3. **Python Requirements** (Installed automatically):
    - `requests` - For API calls
@@ -202,7 +202,7 @@ Add to crontab for daily model updates:
 
 ```bash
 # Sync models daily at 3 AM (limit to top 50)
-0 3 * * * cd /path/to/MAGI && ./rin models sync 50 && ./rin restart litellm
+0 3 * * * cd /path/to/RIN && ./rin models sync 50 && ./rin restart litellm
 ```
 
 ## Troubleshooting

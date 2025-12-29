@@ -556,7 +556,11 @@ cmd_models_sync() {
     # Run sync script with optional limit
     if [ -n "$limit" ]; then
         if python3 "$BASE_DIR/scripts/sync_openrouter_models.py" "$limit"; then
-            print_success "Models synced successfully (limited to top $limit)"
+            if [ "$limit" = "0" ]; then
+                print_success "Models synced successfully (unlimited)"
+            else
+                print_success "Models synced successfully (limited to top $limit)"
+            fi
             print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
         else
             print_error "Model sync failed"
@@ -731,7 +735,7 @@ EXAMPLES:
 ENVIRONMENT VARIABLES:
     OPENROUTER_MODEL_LIMIT    Set default model limit (default: 50)
                               Recommended values: 10, 25, 50, 75
-                              Set to 0 or empty for all models
+                              Set to 0 for all models. Defaults to 50 if not set.
 
 FILTERS:
     all            - All models
