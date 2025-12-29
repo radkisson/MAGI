@@ -14,6 +14,7 @@ from typing import Dict, List, Any, Optional
 
 # Configuration constants
 YAML_LINE_WIDTH = 1000  # Width for YAML output formatting
+DEFAULT_MODEL_LIMIT = 50  # Default number of models to sync if not specified
 
 # ANSI color codes for terminal output
 GREEN = '\033[0;32m'
@@ -524,7 +525,7 @@ def main():
 
     # Get model limit from environment variable
     limit = None
-    limit_env = os.environ.get('OPENROUTER_MODEL_LIMIT', '50')
+    limit_env = os.environ.get('OPENROUTER_MODEL_LIMIT', str(DEFAULT_MODEL_LIMIT))
     if limit_env and limit_env.strip():
         try:
             limit = int(limit_env)
@@ -534,8 +535,8 @@ def main():
                 print_info("No model limit (syncing all available models)")
                 limit = None
         except ValueError:
-            print_warning(f"Invalid OPENROUTER_MODEL_LIMIT value: {limit_env}, using default (50)")
-            limit = 50
+            print_warning(f"Invalid OPENROUTER_MODEL_LIMIT value: {limit_env}, using default ({DEFAULT_MODEL_LIMIT})")
+            limit = DEFAULT_MODEL_LIMIT
 
     # Allow command line override
     if len(sys.argv) > 1:

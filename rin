@@ -84,13 +84,26 @@ validate_base_dir() {
 
 load_env() {
     if [ -f "$BASE_DIR/.env" ]; then
-        # Safely load PORT_ and OPENROUTER_ variables from .env
+        # Define prefixes for environment variables to load
+        local ALLOWED_PREFIXES=("PORT_" "OPENROUTER_")
+        
+        # Safely load specified environment variables from .env
         while IFS='=' read -r key value; do
             # Skip comments and empty lines (including whitespace before comments)
             [[ "$key" =~ ^[[:space:]]*# ]] && continue
             [[ "$key" =~ ^[[:space:]]*$ ]] && continue
-            # Only load PORT_ and OPENROUTER_ variables
-            if [[ "$key" =~ ^PORT_ ]] || [[ "$key" =~ ^OPENROUTER_ ]]; then
+            
+            # Check if key matches any allowed prefix
+            local should_load=false
+            for prefix in "${ALLOWED_PREFIXES[@]}"; do
+                if [[ "$key" =~ ^$prefix ]]; then
+                    should_load=true
+                    break
+                fi
+            done
+            
+            # Load variable if it matches an allowed prefix
+            if [ "$should_load" = true ]; then
                 # Remove any quotes and export
                 value=$(echo "$value" | sed 's/^["'\'']\|["'\'']$//g')
                 export "$key=$value"

@@ -5,6 +5,8 @@ Test script for dynamic OpenRouter model synchronization
 
 import sys
 import traceback
+import tempfile
+import yaml
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -433,9 +435,6 @@ def test_model_limit():
         ]
         
         # Create a temporary config file
-        import tempfile
-        import yaml
-        
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
             temp_config = Path(f.name)
             initial_config = {
@@ -462,7 +461,11 @@ def test_model_limit():
                 updated_config = yaml.safe_load(f)
             
             models = updated_config.get('model_list', [])
-            openrouter_models = [m for m in models if m.get('litellm_params', {}).get('model', '').startswith('openrouter/test/')]
+            # Filter to OpenRouter models with test prefix
+            openrouter_models = [
+                m for m in models 
+                if m.get('litellm_params', {}).get('model', '').startswith('openrouter/test/')
+            ]
             
             checks = [
                 (len(openrouter_models) == 10, f"Limited to 10 models (got {len(openrouter_models)})"),
