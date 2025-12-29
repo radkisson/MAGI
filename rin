@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
 
-# Rhyzomic Intelligence Node (RIN) - CLI Management Tool
-# Version: 1.2.1
-# Description: Comprehensive CLI for managing RIN lifecycle
+# MAGI (Multi-Agent General Intelligence) - CLI Management Tool
+# Version: 1.3.0
+# Description: Comprehensive CLI for managing MAGI lifecycle
+# Note: Command remains './rin' for backward compatibility
 
 # --- Color Definitions ---
 GREEN='\033[0;32m'
@@ -19,7 +20,7 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 print_header() {
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BLUE}🧠 RIN - $1${NC}"
+    echo -e "${BLUE}🧠 MAGI - $1${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
 

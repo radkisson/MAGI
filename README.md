@@ -1,14 +1,18 @@
-# Rhyzomic Intelligence Node (RIN)
+# MAGI
+## Multi-Agent General Intelligence
+### (formerly Rhyzomic Intelligence Node)
 
 **Version**: 1.3.0 (Stable)  
 **Status**: Active Development  
 **Classification**: Sovereign AI Infrastructure
 
+> *Like the MAGI system from Neon Genesis Evangelion, this is a distributed supercomputer made of independent subsystems (Melchior, Balthasar, Casper) working in harmony to provide autonomous intelligence.*
+
 ## Overview
 
-Commercial AI models (ChatGPT, Claude) are "Brains in a Jar"—intelligent but disconnected, censored, and reliant on their creators for input. RIN is a sovereign, self-hosted entity. It treats commercial APIs merely as "compute," while retaining its own memory, eyes, and agency on your infrastructure.
+Commercial AI models (ChatGPT, Claude) are "Brains in a Jar"—intelligent but disconnected, censored, and reliant on their creators for input. MAGI is a sovereign, self-hosted entity. It treats commercial APIs merely as "compute," while retaining its own memory, eyes, and agency on your infrastructure.
 
-Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a **sovereign organism** composed of biological subsystems:
+MAGI (Multi-Agent General Intelligence) is an autonomous, self-hosted AI agent system designed to operate independently of centralized commercial control. It is not merely a chatbot, but a **sovereign organism** composed of biological subsystems:
 
 - 🧠 **The Cortex** (cognition) - Open WebUI + LiteLLM
 - 👁️ **The Sensorium** (perception) - SearXNG + FireCrawl
@@ -18,7 +22,7 @@ Rhyzomic Intelligence Node (RIN) is an autonomous, self-hosted AI agent system d
 
 ## System Architecture
 
-RIN functions as a single organism via Docker orchestration, with each subsystem playing a vital role:
+MAGI functions as a single organism via Docker orchestration, with each subsystem playing a vital role:
 
 ### The Cortex (Cognition)
 - **Open WebUI**: Unified interface for human-agent interaction
@@ -69,8 +73,10 @@ RIN functions as a single organism via Docker orchestration, with each subsystem
 
 **1. Clone the Organism**
 ```bash
+# Note: Repository URL will be updated after GitHub rename
 git clone https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-.git
 cd Rhyzomic-Intelligence-Node-RIN-
+# (GitHub automatically redirects old URLs after repo rename)
 ```
 
 **2. Ignite**
@@ -95,7 +101,7 @@ This automatically:
 
 **3. Initial Account Setup**
 
-On first startup, RIN will prompt you to create initial admin accounts for:
+On first startup, MAGI will prompt you to create initial admin accounts for:
 - **OpenWebUI** (main interface)
 - **n8n** (workflow automation)
 
@@ -104,7 +110,7 @@ You'll be asked to provide:
 - Password (minimum 8 characters)
 
 These credentials can be:
-- Pre-configured in `.env` file as `RIN_ADMIN_EMAIL` and `RIN_ADMIN_PASSWORD`
+- Pre-configured in `.env` file as `MAGI_ADMIN_EMAIL` and `MAGI_ADMIN_PASSWORD`
 - Entered interactively during startup
 - Reset later using `./rin reset-password <service>`
 
@@ -149,7 +155,7 @@ RIN includes a comprehensive CLI tool (`./rin`) for managing the entire system:
 
 ### Password Management
 
-RIN provides built-in password management for OpenWebUI and n8n:
+MAGI provides built-in password management for OpenWebUI and n8n:
 
 **Reset Admin Password:**
 ```bash
@@ -171,8 +177,8 @@ RIN provides built-in password management for OpenWebUI and n8n:
 
 You can also pre-configure credentials in `.env`:
 ```bash
-RIN_ADMIN_EMAIL=admin@example.com
-RIN_ADMIN_PASSWORD=YourSecurePassword123
+MAGI_ADMIN_EMAIL=admin@example.com
+MAGI_ADMIN_PASSWORD=YourSecurePassword123
 ```
 
 ### Troubleshooting
@@ -210,19 +216,19 @@ The start script will display the actual ports being used.
 
 If you see a warning about n8n's secure cookie configuration when accessing http://localhost:5678, this is expected for local development over HTTP.
 
-**Already Fixed**: RIN automatically configures secure cookies based on HTTP/HTTPS mode.
+**Already Fixed**: MAGI automatically configures secure cookies based on HTTP/HTTPS mode.
 
 **For Production**: See the [HTTPS Configuration Guide](docs/HTTPS_CONFIGURATION.md) to enable HTTPS/TLS for secure communication.
 
 ### HTTPS/TLS Configuration
 
-RIN provides infrastructure for HTTPS/TLS encryption via reverse proxy for production deployments. This provides:
+MAGI provides infrastructure for HTTPS/TLS encryption via reverse proxy for production deployments. This provides:
 
 - Encrypted communication between client and services
 - Secure cookie handling for authentication
 - Protection against man-in-the-middle attacks
 
-**Architecture:** HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination. RIN services run HTTP internally behind the proxy.
+**Architecture:** HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination. MAGI services run HTTP internally behind the proxy.
 
 **Quick Start:**
 
@@ -362,7 +368,7 @@ RIN: [Searches transcript for keyword]
 
 ### Autonomous Workflows (n8n)
 
-RIN includes **8 pre-configured workflow templates** that enable autonomous operations and external integrations. These workflows give RIN the ability to send emails, post to Slack/Telegram, monitor RSS feeds, conduct research, and generate daily reports.
+MAGI includes **8 pre-configured workflow templates** that enable autonomous operations and external integrations. These workflows give MAGI the ability to send emails, post to Slack/Telegram, monitor RSS feeds, conduct research, and generate daily reports.
 
 #### Available Workflow Templates
 
@@ -398,7 +404,7 @@ You: "Post a message to Slack saying 'Deployment complete'"
 You: "Research quantum computing and send me a comprehensive report"
 ```
 
-RIN will automatically use the n8n_reflex tool to trigger the appropriate workflows.
+MAGI will automatically use the n8n_reflex tool to trigger the appropriate workflows.
 
 #### Documentation
 
@@ -412,18 +418,18 @@ For detailed setup instructions, see:
 You can create your own workflows in the n8n visual editor:
 
 1. Use **Webhook** triggers to allow Open WebUI to trigger workflows
-2. Use **HTTP Request** nodes to connect to RIN services:
-   - `http://rin-cortex:8080` - Open WebUI API
-   - `http://rin-router:4000` - LiteLLM for AI processing
-   - `http://rin-vision:8080` - SearXNG for web search
-   - `http://rin-memory:6333` - Qdrant for vector storage
+2. Use **HTTP Request** nodes to connect to MAGI services:
+   - `http://magi-cortex:8080` - Open WebUI API
+   - `http://magi-router:4000` - LiteLLM for AI processing
+   - `http://magi-vision:8080` - SearXNG for web search
+   - `http://magi-memory:6333` - Qdrant for vector storage
 3. Export your workflows as JSON to the `workflows/` directory
 
 See [`workflows/README.md`](workflows/README.md) for detailed architecture and examples.
 
 #### Python Support in n8n
 
-RIN's n8n instance includes **full Python 3.12 support** via the `hank033/n8n-python` Docker image. This enables you to write Python code directly in Code nodes alongside JavaScript.
+MAGI's n8n instance includes **full Python 3.12 support** via the `hank033/n8n-python` Docker image. This enables you to write Python code directly in Code nodes alongside JavaScript.
 
 **⚠️ Security Note**: This feature uses a community-maintained Docker image (`hank033/n8n-python:latest`) rather than the official n8n image. Consider the following:
 - The community image may not receive security updates as quickly as the official image
@@ -483,10 +489,10 @@ Both languages are fully supported and can be mixed within the same workflow!
 
 ### Managing the Organism
 
-RIN now includes a comprehensive CLI management tool for easier lifecycle management:
+MAGI now includes a comprehensive CLI management tool for easier lifecycle management:
 
 ```bash
-# Start RIN (same as ./start.sh)
+# Start MAGI (same as ./start.sh)
 ./rin start
 
 # Stop all services
@@ -507,7 +513,7 @@ RIN now includes a comprehensive CLI management tool for easier lifecycle manage
 # Update Docker images
 ./rin update
 
-# Upgrade RIN to latest version
+# Upgrade MAGI to latest version
 ./rin upgrade
 
 # Backup all data
@@ -532,6 +538,8 @@ RIN now includes a comprehensive CLI management tool for easier lifecycle manage
 ./rin help
 ```
 
+**Note on the `./rin` Command**: The CLI command remains `./rin` for backward compatibility, even though the project is now called MAGI. Think of it as: **MAGI** = project name, **rin** = command name (similar to how `docker` is the command for Docker Desktop).
+
 **Backward Compatibility**: The original `./start.sh` script still works as before. The new `./rin` CLI is a comprehensive wrapper that provides additional management commands.
 
 **Advanced Docker Management** (if you prefer direct docker-compose):
@@ -555,7 +563,7 @@ docker-compose ps
 
 ## Architecture
 
-RIN functions as a biological organism with specialized subsystems:
+MAGI functions as a biological organism with specialized subsystems:
 
 ### The Cortex (Cognition)
 - **Open WebUI**: Human-agent interaction interface
@@ -581,16 +589,11 @@ See [DESIGN.md](DESIGN.md) for detailed architecture documentation.
 ## Project Structure
 
 ```
-rin/
+magi/
 ├── docker-compose.yml          # Orchestration of all subsystems
 ├── .env.example                # Environment configuration template
 ├── DESIGN.md                   # Detailed architecture documentation
-├── src/rin/                    # Python integration code (legacy framework)
-│   ├── core/                   # Agent orchestration
-│   ├── sensors/                # Sensor framework
-│   ├── memory/                 # Memory framework
-│   ├── reflexes/               # Reflex framework
-│   └── utils/                  # Shared utilities
+├── tools/                      # Open WebUI tool integrations
 ├── tests/                      # Test suite
 ├── docs/                       # Documentation
 └── examples/                   # Usage examples
@@ -600,7 +603,7 @@ rin/
 
 ### Zero-Config Philosophy
 
-RIN follows the **"Sovereign Appliance"** philosophy: configure once in `.env`, and everything auto-wires on boot. No manual UI configuration needed.
+MAGI follows the **"Sovereign Appliance"** philosophy: configure once in `.env`, and everything auto-wires on boot. No manual UI configuration needed.
 
 #### The Pre-Wired Pipeline
 
@@ -608,7 +611,7 @@ RIN follows the **"Sovereign Appliance"** philosophy: configure once in `.env`, 
 Host (.env) → start.sh → Docker Compose → Containers → Tools (Auto-Authenticated)
 ```
 
-RIN is configured via environment variables in `.env`:
+MAGI is configured via environment variables in `.env`:
 
 ```bash
 # LLM Provider API Keys
@@ -617,8 +620,8 @@ ANTHROPIC_API_KEY=your_anthropic_key
 OPENROUTER_API_KEY=your_openrouter_key
 
 # OpenRouter Configuration (Optional but recommended)
-OPENROUTER_SITE_URL=http://localhost:3000           # Your WebUI public URL
-OPENROUTER_APP_NAME=RIN - Rhyzomic Intelligence Node  # Your app name for attribution
+OPENROUTER_SITE_URL=http://localhost:3000              # Your WebUI public URL
+OPENROUTER_APP_NAME=MAGI - Multi-Agent General Intelligence  # Your app name for attribution
 
 # Optional: Local Ollama
 OLLAMA_API_BASE=http://host.docker.internal:11434
@@ -651,7 +654,7 @@ WEBUI_AUTH=false
 
 ### Firecrawl Configuration Options
 
-RIN supports two modes for Firecrawl:
+MAGI supports two modes for Firecrawl:
 
 **1. Cloud API (Recommended)**
 - Use Firecrawl's managed cloud service
@@ -701,7 +704,7 @@ Tavily provides AI-optimized search as a premium alternative or complement to th
 
 ### Service Selection
 
-RIN allows you to selectively enable or disable optional services to reduce resource usage or when using alternatives.
+MAGI allows you to selectively enable or disable optional services to reduce resource usage or when using alternatives.
 
 **Interactive Mode (First Run)**
 
@@ -741,11 +744,11 @@ After changing service selection, restart RIN:
 
 ## Usage Examples
 
-### Interacting with RIN
+### Interacting with MAGI
 
 1. **Access Open WebUI** at http://localhost:3000
 2. **Start a conversation** with the Cortex
-3. **Ask questions** - RIN will use SearXNG to search privately
+3. **Ask questions** - MAGI will use SearXNG to search privately
 4. **Request detailed information** - FireCrawl will scrape and extract content
 5. **Build context** - Qdrant stores all interactions for future recall
 6. **Switch models** - LiteLLM routes to the best model for your task
@@ -755,68 +758,31 @@ After changing service selection, restart RIN:
 **Privacy-Preserving Research:**
 ```
 You: "Search for recent developments in quantum computing"
-RIN: [Uses SearXNG to search anonymously]
-     [Scrapes relevant pages with FireCrawl]
-     [Stores findings in Qdrant]
-     [Synthesizes comprehensive answer]
+MAGI: [Uses SearXNG to search anonymously]
+      [Scrapes relevant pages with FireCrawl]
+      [Stores findings in Qdrant]
+      [Synthesizes comprehensive answer]
 ```
 
 **Multi-Model Reasoning:**
 ```
 You: "Write a Python script to analyze this data, then explain the logic"
-RIN: [Routes coding to Claude 3.5]
-     [Routes explanation to GPT-4o]
-     [Stores script in Qdrant for future reference]
+MAGI: [Routes coding to Claude 3.5]
+      [Routes explanation to GPT-4o]
+      [Stores script in Qdrant for future reference]
 ```
 
 **Long-Term Memory:**
 ```
 You: "Remember we discussed quantum computing last week"
-RIN: [Queries Qdrant vector database]
-     [Retrieves semantic context via RAG]
-     [Responds with relevant past context]
+MAGI: [Queries Qdrant vector database]
+      [Retrieves semantic context via RAG]
+      [Responds with relevant past context]
 ```
 
 ## Development
 
-### Python Framework (Legacy)
-
-The `src/rin/` directory contains a Python framework that can be used for custom integrations:
-
-```python
-from rin import Agent
-
-# Initialize the agent (uses local framework)
-agent = Agent()
-
-# Send a query
-response = agent.query("What are the latest developments in AI?")
-print(response)
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test suite
-pytest tests/test_sensors.py
-
-# Run with coverage
-pytest --cov=rin tests/
-```
-
-### Code Style
-
-```bash
-# Format code
-black src/rin
-
-# Lint code
-flake8 src/rin
-pylint src/rin
-```
+MAGI is a Docker-based system. All development happens through the Docker services and Open WebUI tools.
 
 ## Contributing
 
@@ -871,7 +837,7 @@ Areas of focus:
   - [x] Dynamic OpenRouter model loading (100+ models)
   - [x] Automatic model sync on startup
   - [x] Model intelligence features (popularity rankings, cost metadata)
-  - [x] RIN CLI model management commands
+  - [x] MAGI CLI model management commands
   - [x] Model search and filtering capabilities
   - [x] Automatic model recommendations
   - [x] MCP Bridge for Model Context Protocol tools
@@ -929,7 +895,7 @@ For detailed feature descriptions and technical specifications, see [ARCHITECTUR
 
 ## Philosophy
 
-RIN embodies digital sovereignty as a **biological organism**. It's not about replacing commercial AI—it's about reclaiming agency. By hosting your own intelligence node, you maintain:
+MAGI embodies digital sovereignty as a **biological organism**. Like the MAGI supercomputers in Neon Genesis Evangelion (Melchior, Balthasar, Casper), it's a distributed intelligence system where independent components work in consensus. It's not about replacing commercial AI—it's about reclaiming agency. By hosting your own intelligence node, you maintain:
 
 - **Control**: Over the entire organism and its data
 - **Privacy**: Anonymous perception via SearXNG, no external tracking
@@ -939,7 +905,7 @@ RIN embodies digital sovereignty as a **biological organism**. It's not about re
 - **Independence**: Not reliant on any single provider
 - **Coordination**: Asynchronous task execution via Redis
 
-RIN is a complete organism, not just a tool. Each subsystem plays a vital role in creating sovereign AI infrastructure.
+MAGI is a complete organism, not just a tool. Each subsystem plays a vital role in creating sovereign AI infrastructure.
 
 ## License
 

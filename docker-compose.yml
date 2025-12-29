@@ -3,7 +3,7 @@ services:
   open-webui:
     # Note: Using 'main' tag for latest features as specified in deployment architecture
     image: ghcr.io/open-webui/open-webui:main
-    container_name: rin-cortex
+    container_name: magi-cortex
     restart: always
     ports:
       - "${PORT_WEBUI:-3000}:8080"
@@ -39,7 +39,7 @@ services:
   litellm:
     # Note: Using 'main-latest' tag for latest features as specified in deployment architecture
     image: ghcr.io/berriai/litellm:main-latest
-    container_name: rin-router
+    container_name: magi-router
     restart: always
     ports:
       - "${PORT_LITELLM:-4000}:4000"
@@ -59,7 +59,7 @@ services:
       # Set defaults for OpenRouter webhook headers to prevent NoneType errors
       # These provide fallback defaults when not set in .env or the host environment
       - OPENROUTER_SITE_URL=${OPENROUTER_SITE_URL:-http://localhost:3000}
-      - OPENROUTER_APP_NAME=${OPENROUTER_APP_NAME:-RIN - Rhyzomic Intelligence Node}
+      - OPENROUTER_APP_NAME=${OPENROUTER_APP_NAME:-MAGI - Multi-Agent General Intelligence}
       # HTTPS Configuration
       - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
       - SSL_CERT_PATH=${SSL_CERT_PATH:-/app/ssl/cert.pem}
@@ -76,7 +76,7 @@ services:
     # Note: Requires config/searxng/settings.yml to be created before starting
     # Run ./start.sh to auto-generate configuration, or manually create from settings.yml.example
     image: searxng/searxng:latest
-    container_name: rin-vision
+    container_name: magi-vision
     restart: always
     ports:
       - "${PORT_SEARXNG:-8080}:8080"
@@ -107,7 +107,7 @@ services:
   # --- THE DIGESTION ---
   firecrawl:
     image: ghcr.io/firecrawl/firecrawl:latest
-    container_name: rin-digestion
+    container_name: magi-digestion
     restart: always
     profiles:
       - firecrawl
@@ -140,7 +140,7 @@ services:
 
   playwright-service:
     image: ghcr.io/firecrawl/playwright-service:latest
-    container_name: rin-browser
+    container_name: magi-browser
     restart: always
     profiles:
       - firecrawl
@@ -150,7 +150,7 @@ services:
   # --- THE REFLEX (Autonomy) ---
   n8n:
     image: hank033/n8n-python:latest
-    container_name: rin-reflex-automation
+    container_name: magi-reflex-automation
     restart: always
     ports:
       - "${PORT_N8N:-5678}:5678"
@@ -182,7 +182,7 @@ services:
   # --- THE MCP BRIDGE (Sequential Thinking) ---
   mcp-bridge:
     image: ghcr.io/open-webui/mcpo:main
-    container_name: rin-mcp-bridge
+    container_name: magi-mcp-bridge
     restart: always
     ports:
       - "${PORT_MCP_BRIDGE:-9000}:${PORT_MCP_BRIDGE:-9000}"
@@ -215,7 +215,7 @@ services:
   # --- YOUTUBE TRANSCRIPT BRIDGE ---
   youtube-mcp:
     image: ghcr.io/open-webui/mcpo:main
-    container_name: rin-youtube-mcp
+    container_name: magi-youtube-mcp
     restart: always
     ports:
       - "${PORT_YOUTUBE_MCP:-9001}:${PORT_YOUTUBE_MCP:-9001}"
@@ -247,7 +247,7 @@ services:
   # --- SUPPORT ---
   redis:
     image: redis:alpine
-    container_name: rin-nervous-system
+    container_name: magi-nervous-system
     restart: always
     volumes:
       - ./data/redis:/data
@@ -260,7 +260,7 @@ services:
 
   qdrant:
     image: qdrant/qdrant
-    container_name: rin-memory
+    container_name: magi-memory
     restart: always
     ports:
       - "${PORT_QDRANT:-6333}:6333"
