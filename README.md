@@ -101,7 +101,7 @@ This automatically:
 
 **3. Initial Account Setup**
 
-On first startup, RIN will prompt you to create initial admin accounts for:
+On first startup, MAGI will prompt you to create initial admin accounts for:
 - **OpenWebUI** (main interface)
 - **n8n** (workflow automation)
 
@@ -110,7 +110,7 @@ You'll be asked to provide:
 - Password (minimum 8 characters)
 
 These credentials can be:
-- Pre-configured in `.env` file as `RIN_ADMIN_EMAIL` and `RIN_ADMIN_PASSWORD`
+- Pre-configured in `.env` file as `MAGI_ADMIN_EMAIL` and `MAGI_ADMIN_PASSWORD`
 - Entered interactively during startup
 - Reset later using `./rin reset-password <service>`
 
@@ -155,7 +155,7 @@ RIN includes a comprehensive CLI tool (`./rin`) for managing the entire system:
 
 ### Password Management
 
-RIN provides built-in password management for OpenWebUI and n8n:
+MAGI provides built-in password management for OpenWebUI and n8n:
 
 **Reset Admin Password:**
 ```bash
@@ -177,8 +177,8 @@ RIN provides built-in password management for OpenWebUI and n8n:
 
 You can also pre-configure credentials in `.env`:
 ```bash
-RIN_ADMIN_EMAIL=admin@example.com
-RIN_ADMIN_PASSWORD=YourSecurePassword123
+MAGI_ADMIN_EMAIL=admin@example.com
+MAGI_ADMIN_PASSWORD=YourSecurePassword123
 ```
 
 ### Troubleshooting
@@ -216,19 +216,19 @@ The start script will display the actual ports being used.
 
 If you see a warning about n8n's secure cookie configuration when accessing http://localhost:5678, this is expected for local development over HTTP.
 
-**Already Fixed**: RIN automatically configures secure cookies based on HTTP/HTTPS mode.
+**Already Fixed**: MAGI automatically configures secure cookies based on HTTP/HTTPS mode.
 
 **For Production**: See the [HTTPS Configuration Guide](docs/HTTPS_CONFIGURATION.md) to enable HTTPS/TLS for secure communication.
 
 ### HTTPS/TLS Configuration
 
-RIN provides infrastructure for HTTPS/TLS encryption via reverse proxy for production deployments. This provides:
+MAGI provides infrastructure for HTTPS/TLS encryption via reverse proxy for production deployments. This provides:
 
 - Encrypted communication between client and services
 - Secure cookie handling for authentication
 - Protection against man-in-the-middle attacks
 
-**Architecture:** HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination. RIN services run HTTP internally behind the proxy.
+**Architecture:** HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination. MAGI services run HTTP internally behind the proxy.
 
 **Quick Start:**
 
@@ -429,7 +429,7 @@ See [`workflows/README.md`](workflows/README.md) for detailed architecture and e
 
 #### Python Support in n8n
 
-RIN's n8n instance includes **full Python 3.12 support** via the `hank033/n8n-python` Docker image. This enables you to write Python code directly in Code nodes alongside JavaScript.
+MAGI's n8n instance includes **full Python 3.12 support** via the `hank033/n8n-python` Docker image. This enables you to write Python code directly in Code nodes alongside JavaScript.
 
 **⚠️ Security Note**: This feature uses a community-maintained Docker image (`hank033/n8n-python:latest`) rather than the official n8n image. Consider the following:
 - The community image may not receive security updates as quickly as the official image
@@ -837,7 +837,7 @@ Areas of focus:
   - [x] Dynamic OpenRouter model loading (100+ models)
   - [x] Automatic model sync on startup
   - [x] Model intelligence features (popularity rankings, cost metadata)
-  - [x] RIN CLI model management commands
+  - [x] MAGI CLI model management commands
   - [x] Model search and filtering capabilities
   - [x] Automatic model recommendations
   - [x] MCP Bridge for Model Context Protocol tools

@@ -94,8 +94,8 @@ try:
     with open(env_file, 'r') as f:
         content = f.read()
     
-    content = re.sub(r'^RIN_ADMIN_EMAIL=.*$', f'RIN_ADMIN_EMAIL={email}', content, flags=re.MULTILINE)
-    content = re.sub(r'^RIN_ADMIN_PASSWORD=.*$', f'RIN_ADMIN_PASSWORD={password}', content, flags=re.MULTILINE)
+    content = re.sub(r'^MAGI_ADMIN_EMAIL=.*$', f'MAGI_ADMIN_EMAIL={email}', content, flags=re.MULTILINE)
+    content = re.sub(r'^MAGI_ADMIN_PASSWORD=.*$', f'MAGI_ADMIN_PASSWORD={password}', content, flags=re.MULTILINE)
     
     with open(env_file, 'w') as f:
         f.write(content)

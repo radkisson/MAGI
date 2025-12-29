@@ -246,8 +246,8 @@ store_credentials() {
 # These are used for initial account setup
 # Change these if you want to reset passwords
 # WARNING: These are stored in plaintext. Change passwords after first login!
-RIN_ADMIN_EMAIL=PLACEHOLDER_EMAIL
-RIN_ADMIN_PASSWORD=PLACEHOLDER_PASSWORD
+MAGI_ADMIN_EMAIL=PLACEHOLDER_EMAIL
+MAGI_ADMIN_PASSWORD=PLACEHOLDER_PASSWORD
 EOF
         # Now replace placeholders safely using Python
         EMAIL="$email" PASSWORD="$password" ENV_FILE="$BASE_DIR/.env" python3 << 'PYSCRIPT'
@@ -315,9 +315,9 @@ main() {
     fi
     
     # Check if credentials are already in .env
-    if grep -q "^RIN_ADMIN_EMAIL=" "$BASE_DIR/.env" 2>/dev/null; then
-        local existing_email=$(grep "^RIN_ADMIN_EMAIL=" "$BASE_DIR/.env" | cut -d '=' -f2)
-        local existing_password=$(grep "^RIN_ADMIN_PASSWORD=" "$BASE_DIR/.env" | cut -d '=' -f2)
+    if grep -q "^MAGI_ADMIN_EMAIL=" "$BASE_DIR/.env" 2>/dev/null; then
+        local existing_email=$(grep "^MAGI_ADMIN_EMAIL=" "$BASE_DIR/.env" | cut -d '=' -f2)
+        local existing_password=$(grep "^MAGI_ADMIN_PASSWORD=" "$BASE_DIR/.env" | cut -d '=' -f2)
         
         if [ -n "$existing_email" ] && [ -n "$existing_password" ]; then
             print_info "Found existing admin credentials in .env"

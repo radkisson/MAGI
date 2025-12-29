@@ -163,8 +163,8 @@ main() {
     
     # Get email
     if [ -z "$email" ]; then
-        if [ -n "$RIN_ADMIN_EMAIL" ]; then
-            email="$RIN_ADMIN_EMAIL"
+        if [ -n "$MAGI_ADMIN_EMAIL" ]; then
+            email="$MAGI_ADMIN_EMAIL"
             print_info "Using email from .env: $email"
         else
             read -p "Enter email address: " email
@@ -218,7 +218,7 @@ main() {
     esac
     
     # Update .env if needed
-    if grep -q "^RIN_ADMIN_EMAIL=" "$BASE_DIR/.env" 2>/dev/null; then
+    if grep -q "^MAGI_ADMIN_EMAIL=" "$BASE_DIR/.env" 2>/dev/null; then
         print_info "Updating credentials in .env..."
         if update_env_credentials "$email" "$password" "$BASE_DIR/.env"; then
             print_success "Credentials updated in .env"
