@@ -12,7 +12,7 @@ echo -e "${BLUE}🧠 MAGI (Multi-Agent General Intelligence) - Boot Sequence Ini
 if ! command -v docker &> /dev/null; then
     echo "Docker not found. Installing..."
     curl -fsSL https://get.docker.com | sh
-    sudo usermod -aG docker $USER
+    sudo usermod -aG docker "$USER"
     echo "Docker installed. Please re-login to apply user groups."
     exit 1
 fi
@@ -106,12 +106,28 @@ PORT_SEARXNG=8080      # SearXNG (Vision) - Search engine
 PORT_FIRECRAWL=3002    # FireCrawl (Digestion) - Web scraping
 PORT_N8N=5678          # n8n (Reflex) - Workflow automation
 PORT_QDRANT=6333       # Qdrant (Memory) - Vector database
+PORT_MCP_BRIDGE=9000   # MCP Bridge (Sequential Thinking) - Model Context Protocol bridge
+PORT_YOUTUBE_MCP=9001  # YouTube MCP (YouTube Transcript) - Video subtitle extraction
 
 # --- SERVICE SELECTION ---
 # Services can be disabled to reduce resource usage or if using alternatives
 # Set to Y to enable, N to disable
 # Note: start.sh will prompt you interactively on first run
 ENABLE_FIRECRAWL=Y     # Set to N if using Tavily or other scraping APIs
+
+# --- HTTPS/TLS CONFIGURATION (OPTIONAL) ---
+# Enable HTTPS for services that support it
+# Set to 'true' to enable HTTPS, 'false' to use HTTP (default)
+# Note: HTTPS requires a reverse proxy (nginx, Traefik, Caddy) for SSL termination
+# See docs/HTTPS_CONFIGURATION.md for setup instructions
+ENABLE_HTTPS=false
+
+# SSL Certificate paths (required if ENABLE_HTTPS=true)
+# You can use self-signed certificates for development or proper CA-signed certificates for production
+# Generate self-signed certificates with: ./scripts/generate-certs.sh
+SSL_CERT_PATH=./config/ssl/cert.pem
+SSL_KEY_PATH=./config/ssl/key.pem
+SSL_CA_PATH=./config/ssl/ca.pem
 EOF
     echo "✅ .env created with secure internal keys."
 else
@@ -135,39 +151,79 @@ if [ -t 0 ]; then
     echo "   Self-hosted service for extracting content from websites"
     echo "   Alternative: Use Tavily API or other scraping tools via OpenWebUI"
     echo ""
-    read -p "   Enable FireCrawl? [Y/n]: " ENABLE_FIRECRAWL
+    read -r -p "   Enable FireCrawl? [Y/n]: " ENABLE_FIRECRAWL
     ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL:-Y}
-    
+
     # Convert to uppercase for comparison
     ENABLE_FIRECRAWL=$(echo "$ENABLE_FIRECRAWL" | tr '[:lower:]' '[:upper:]')
+
+    echo ""
+    
+    # HTTPS Selection
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔒 HTTPS/TLS Configuration"
+    echo "   Enable HTTPS mode to prepare RIN for reverse proxy deployment"
+    echo "   Note: Requires nginx/Traefik/Caddy for SSL termination"
+    echo "   Use HTTP for local development, HTTPS for production"
+    echo ""
+    read -r -p "   Enable HTTPS mode? [y/N]: " ENABLE_HTTPS_INPUT
+    ENABLE_HTTPS_INPUT=${ENABLE_HTTPS_INPUT:-N}
+    
+    # Convert to lowercase for true/false
+    if [[ "$ENABLE_HTTPS_INPUT" =~ ^[Yy]$ ]]; then
+        ENABLE_HTTPS="true"
+        
+        # Check if SSL certificates exist
+        if [ ! -f "$BASE_DIR/config/ssl/cert.pem" ] || [ ! -f "$BASE_DIR/config/ssl/key.pem" ]; then
+            echo ""
+            echo "⚠️  SSL certificates not found in config/ssl/"
+            echo "   Generating self-signed certificates for development..."
+            echo ""
+            bash "$BASE_DIR/scripts/generate-certs.sh"
+        else
+            echo "   ✅ Using existing SSL certificates in config/ssl/"
+        fi
+        echo ""
+        echo "   📝 Next: Configure reverse proxy (nginx/Traefik/Caddy)"
+        echo "   See: docs/HTTPS_CONFIGURATION.md for setup instructions"
+    else
+        ENABLE_HTTPS="false"
+    fi
     
     echo ""
 else
-    # Non-interactive mode - enable all services by default
+    # Non-interactive mode - enable all services by default, disable HTTPS
     echo "⚙️  Non-interactive mode detected. Enabling all services by default."
-    ENABLE_FIRECRAWL="Y"
+    ENABLE_FIRECRAWL="Y"      # Uses Y/N for docker-compose profiles
+    ENABLE_HTTPS="false"      # Uses true/false for boolean logic
 fi
 
 # Store selections in .env for persistence
 if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
-    # Update existing value (use different sed syntax based on OS)
+    # Update existing values (use different sed syntax based on OS)
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS requires -i with extension
         sed -i '' "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+        sed -i '' "s/^ENABLE_HTTPS=.*/ENABLE_HTTPS=${ENABLE_HTTPS}/" "$BASE_DIR/.env"
     else
         # Linux doesn't need extension
         sed -i "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
+        sed -i "s/^ENABLE_HTTPS=.*/ENABLE_HTTPS=${ENABLE_HTTPS}/" "$BASE_DIR/.env"
     fi
 else
-    # Add new value
-    echo "" >> "$BASE_DIR/.env"
-    echo "# --- SERVICE SELECTION ---" >> "$BASE_DIR/.env"
-    echo "# Services can be disabled to reduce resource usage" >> "$BASE_DIR/.env"
-    echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}" >> "$BASE_DIR/.env"
+    # Add new values
+    {
+        echo ""
+        echo "# --- SERVICE SELECTION ---"
+        echo "# Services can be disabled to reduce resource usage"
+        echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}"
+        echo "ENABLE_HTTPS=${ENABLE_HTTPS}"
+    } >> "$BASE_DIR/.env"
 fi
 
 # Export for docker-compose profiles
 export ENABLE_FIRECRAWL
+export ENABLE_HTTPS
 
 # --- 5. CONFIGURATION INJECTION ---
 
@@ -265,6 +321,7 @@ fi
 
 # Launch services with selected profiles
 if [ -n "$COMPOSE_PROFILES" ]; then
+    # shellcheck disable=SC2086
     docker compose $COMPOSE_PROFILES up -d --remove-orphans
 else
     docker compose up -d --remove-orphans
@@ -352,11 +409,42 @@ PORT_SEARXNG=${PORT_SEARXNG:-8080}
 PORT_FIRECRAWL=${PORT_FIRECRAWL:-3002}
 PORT_LITELLM=${PORT_LITELLM:-4000}
 
+# Determine protocol based on HTTPS setting
+if [ "${ENABLE_HTTPS}" = "true" ]; then
+    PROTOCOL="https"
+    echo ""
+    echo -e "${GREEN}🔒 HTTPS MODE ENABLED${NC}"
+    echo "   Tools will generate HTTPS URLs"
+    echo "   Services run HTTP internally - configure reverse proxy for SSL termination"
+    echo "   See: docs/HTTPS_CONFIGURATION.md"
+else
+    PROTOCOL="http"
+fi
+
 echo ""
 echo -e "${GREEN}✅ MAGI IS ALIVE.${NC}"
 echo ""
+
+# --- 10. INITIAL ACCOUNT SETUP ---
+# Setup initial admin accounts for OpenWebUI and n8n
+if [ -f "$BASE_DIR/scripts/setup_initial_accounts.sh" ]; then
+    echo -e "${BLUE}🔐 Setting up initial admin accounts...${NC}"
+    echo ""
+    if bash "$BASE_DIR/scripts/setup_initial_accounts.sh"; then
+        echo ""
+    else
+        echo ""
+        echo -e "${YELLOW}⚠️  Initial account setup was not completed.${NC}"
+        echo "   You can run it later with: ./rin setup-accounts"
+        echo "   Or create accounts manually:"
+        echo "     OpenWebUI: http://localhost:${PORT_WEBUI:-3000}"
+        echo "     n8n:       http://localhost:${PORT_N8N:-5678}"
+        echo ""
+    fi
+fi
+
 echo "=== Post-Deployment Verification ==="
-echo "Verify the biological subsystems are active:"
+echo "Verify the biological subsystems are active (direct HTTP access to containers):"
 echo ""
 echo "🧠 Cortex (UI):        http://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
 echo "🔄 Reflex (n8n):       http://localhost:${PORT_N8N}      (n8n workflow editor)"
@@ -368,6 +456,10 @@ else
 fi
 echo "🚦 Router:             http://localhost:${PORT_LITELLM}/health (LiteLLM health status)"
 echo ""
+if [ "${ENABLE_HTTPS}" = "true" ]; then
+    echo "Note: Services above are HTTP. Access via reverse proxy for HTTPS."
+    echo ""
+fi
 echo "=== Tools (Auto-Registered) ==="
 echo "✅ FireCrawl Scraper   - Web scraping with headless browser"
 echo "✅ Tavily Search       - AI-optimized web search"

@@ -219,6 +219,55 @@ Removes all RIN containers, volumes, and images.
 ./rin clean
 ```
 
+### Account Management
+
+#### `./rin setup-accounts`
+Interactively setup initial admin accounts for OpenWebUI and n8n.
+
+**When to use:**
+- First time setup
+- After database reset
+- To create new admin accounts
+
+**Example:**
+```bash
+./rin setup-accounts
+```
+
+**Features:**
+- Email validation (proper email format required)
+- Password validation (minimum 8 characters)
+- Password confirmation
+- Automatic account creation via API
+- Stores credentials in `.env` for future reference
+
+#### `./rin reset-password <service> [email]`
+Reset admin password for OpenWebUI or n8n.
+
+**Services:**
+- `openwebui` - Reset OpenWebUI admin password
+- `n8n` - Reset n8n owner password
+- `all` - Reset password for both services
+
+**Examples:**
+```bash
+# Reset OpenWebUI password (prompts for email if not provided)
+./rin reset-password openwebui
+
+# Reset n8n password for specific user
+./rin reset-password n8n admin@example.com
+
+# Reset password for both services
+./rin reset-password all
+```
+
+**Features:**
+- Uses email from `.env` if available
+- Password validation (minimum 8 characters)
+- Password confirmation
+- Direct database update with bcrypt hashing
+- Updates `.env` with new credentials
+
 ### Information
 
 #### `./rin version`
@@ -248,6 +297,29 @@ git clone https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-.git
 cd Rhyzomic-Intelligence-Node-RIN-
 chmod +x rin
 ./rin start
+# Follow prompts to create initial admin accounts
+```
+
+### Setting Up Accounts
+```bash
+# Pre-configure in .env (optional)
+echo "RIN_ADMIN_EMAIL=admin@example.com" >> .env
+echo "RIN_ADMIN_PASSWORD=SecurePassword123" >> .env
+
+# Or run interactive setup
+./rin setup-accounts
+```
+
+### Resetting Forgotten Passwords
+```bash
+# Reset OpenWebUI password
+./rin reset-password openwebui
+
+# Reset n8n password
+./rin reset-password n8n admin@example.com
+
+# Reset both
+./rin reset-password all
 ```
 
 ### Daily Monitoring

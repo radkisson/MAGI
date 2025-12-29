@@ -3,7 +3,7 @@ services:
   open-webui:
     # Note: Using 'main' tag for latest features as specified in deployment architecture
     image: ghcr.io/open-webui/open-webui:main
-    container_name: magi-cortex
+    container_name: rin-cortex
     restart: always
     ports:
       - "${PORT_WEBUI:-3000}:8080"
@@ -11,6 +11,8 @@ services:
       - ./data/open-webui:/app/backend/data
       # Mount the tools directly so they are available immediately
       - ./tools:/app/backend/data/tools
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/app/ssl:ro
     environment:
       - OPENAI_API_BASE_URL=http://litellm:4000
       - ENABLE_RAG_WEB_SEARCH=True
@@ -18,6 +20,10 @@ services:
       # External Senses: API Keys for Tools (Auto-Configuration)
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/app/ssl/cert.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/app/ssl/key.pem}
     env_file: .env
     depends_on:
       litellm:
@@ -33,13 +39,15 @@ services:
   litellm:
     # Note: Using 'main-latest' tag for latest features as specified in deployment architecture
     image: ghcr.io/berriai/litellm:main-latest
-    container_name: magi-router
+    container_name: rin-router
     restart: always
     ports:
       - "${PORT_LITELLM:-4000}:4000"
     volumes:
       - ./config/litellm/config.yaml:/app/config.yaml
       - ./data/litellm:/app/data
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/app/ssl:ro
     command: [ "--config", "/app/config.yaml", "--port", "4000" ]
     env_file: .env
     depends_on:
@@ -51,7 +59,11 @@ services:
       # Set defaults for OpenRouter webhook headers to prevent NoneType errors
       # These provide fallback defaults when not set in .env or the host environment
       - OPENROUTER_SITE_URL=${OPENROUTER_SITE_URL:-http://localhost:3000}
-      - OPENROUTER_APP_NAME=${OPENROUTER_APP_NAME:-MAGI - Multi-Agent General Intelligence}
+      - OPENROUTER_APP_NAME=${OPENROUTER_APP_NAME:-RIN - Rhyzomic Intelligence Node}
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/app/ssl/cert.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/app/ssl/key.pem}
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/')\" || exit 1"]
       interval: 10s
@@ -64,15 +76,21 @@ services:
     # Note: Requires config/searxng/settings.yml to be created before starting
     # Run ./start.sh to auto-generate configuration, or manually create from settings.yml.example
     image: searxng/searxng:latest
-    container_name: magi-vision
+    container_name: rin-vision
     restart: always
     ports:
       - "${PORT_SEARXNG:-8080}:8080"
     volumes:
       - ./config/searxng:/etc/searxng
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/etc/ssl/rin:ro
     env_file: .env
     environment:
       - SEARXNG_BASE_URL=http://localhost:8080
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/etc/ssl/rin/cert.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/etc/ssl/rin/key.pem}
     cap_drop:
       - ALL
     cap_add:
@@ -89,12 +107,15 @@ services:
   # --- THE DIGESTION ---
   firecrawl:
     image: ghcr.io/firecrawl/firecrawl:latest
-    container_name: magi-digestion
+    container_name: rin-digestion
     restart: always
     profiles:
       - firecrawl
     ports:
       - "${PORT_FIRECRAWL:-3002}:3002"
+    volumes:
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/app/ssl:ro
     environment:
       - REDIS_URL=redis://redis:6379
       - PLAYWRIGHT_MICROSERVICE_URL=http://playwright-service:3000/scrape
@@ -109,13 +130,17 @@ services:
       # Do NOT use these values for actual database connections
       - NUQ_DATABASE_URL=postgresql://disabled:disabled@127.0.0.1:1/disabled
       - NUQ_RABBITMQ_URL=amqp://disabled:disabled@127.0.0.1:1
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/app/ssl/cert.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/app/ssl/key.pem}
     depends_on:
       - redis
       - playwright-service
 
   playwright-service:
     image: ghcr.io/firecrawl/playwright-service:latest
-    container_name: magi-browser
+    container_name: rin-browser
     restart: always
     profiles:
       - firecrawl
@@ -124,22 +149,28 @@ services:
 
   # --- THE REFLEX (Autonomy) ---
   n8n:
-    image: n8nio/n8n:latest
-    container_name: magi-reflex-automation
+    image: hank033/n8n-python:latest
+    container_name: rin-reflex-automation
     restart: always
     ports:
       - "${PORT_N8N:-5678}:5678"
     volumes:
       - ./data/n8n:/home/node/.n8n
       - ./workflows:/workflows:ro
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/ssl:ro
+      # Mount custom entrypoint for HTTPS configuration
+      - ./scripts/docker-entrypoints/n8n-entrypoint.sh:/custom-entrypoint.sh:ro
+    entrypoint: ["/custom-entrypoint.sh"]
+    command: ["n8n"]
     environment:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678
       - GENERIC_TIMEZONE=UTC
-      - N8N_EDITOR_BASE_URL=http://localhost:5678
-      - N8N_SECURE_COOKIE=false  # Disable secure cookie for local HTTP development
+      # HTTPS Configuration for n8n (processed by entrypoint)
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - N8N_SSL_KEY=${SSL_KEY_PATH:-/ssl/key.pem}
+      - N8N_SSL_CERT=${SSL_CERT_PATH:-/ssl/cert.pem}
     env_file: .env
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1"]
@@ -151,12 +182,19 @@ services:
   # --- THE MCP BRIDGE (Sequential Thinking) ---
   mcp-bridge:
     image: ghcr.io/open-webui/mcpo:main
-    container_name: magi-mcp-bridge
+    container_name: rin-mcp-bridge
     restart: always
     ports:
       - "${PORT_MCP_BRIDGE:-9000}:${PORT_MCP_BRIDGE:-9000}"
+    volumes:
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/ssl:ro
     environment:
       - PORT_MCP_BRIDGE=${PORT_MCP_BRIDGE:-9000}
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/ssl/cert.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/ssl/key.pem}
     command:
       - "--port"
       - "${PORT_MCP_BRIDGE:-9000}"
@@ -177,12 +215,19 @@ services:
   # --- YOUTUBE TRANSCRIPT BRIDGE ---
   youtube-mcp:
     image: ghcr.io/open-webui/mcpo:main
-    container_name: magi-youtube-mcp
+    container_name: rin-youtube-mcp
     restart: always
     ports:
       - "${PORT_YOUTUBE_MCP:-9001}:${PORT_YOUTUBE_MCP:-9001}"
+    volumes:
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/ssl:ro
     environment:
       - PORT_YOUTUBE_MCP=${PORT_YOUTUBE_MCP:-9001}
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/ssl/cert.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/ssl/key.pem}
     command:
       - "--port"
       - "${PORT_YOUTUBE_MCP:-9001}"
@@ -202,7 +247,7 @@ services:
   # --- SUPPORT ---
   redis:
     image: redis:alpine
-    container_name: magi-nervous-system
+    container_name: rin-nervous-system
     restart: always
     volumes:
       - ./data/redis:/data
@@ -215,12 +260,19 @@ services:
 
   qdrant:
     image: qdrant/qdrant
-    container_name: magi-memory
+    container_name: rin-memory
     restart: always
     ports:
       - "${PORT_QDRANT:-6333}:6333"
     volumes:
       - ./data/qdrant:/qdrant/storage
+      # Mount SSL certificates if HTTPS is enabled
+      - ./config/ssl:/ssl:ro
+    environment:
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/ssl/cert.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/ssl/key.pem}
     healthcheck:
       test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/6333' || exit 1"]
       interval: 10s
