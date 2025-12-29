@@ -59,6 +59,7 @@ Interactive Python notebooks for code execution, data analysis, and AI model int
 - ⚠️ **Default configuration disables authentication** for ease of local development
 - For production or network-accessible deployments, set `JUPYTER_TOKEN` in `.env` to a secure random string
 - Generate a secure token with: `openssl rand -hex 32`
+- **See [JUPYTER_SECURITY.md](JUPYTER_SECURITY.md) for comprehensive production security guidance**
 - Consider using a reverse proxy (nginx, Traefik) for additional security
 
 **Features:**

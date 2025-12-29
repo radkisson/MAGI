@@ -309,9 +309,17 @@ services:
     # This service provides Jupyter Lab for code execution, data analysis, and AI model interaction.
     # Integrates with OpenRouter via pydiode and can directly access LiteLLM for model inference.
     # Supports HTTPS when enabled via SSL certificates.
-    # SECURITY NOTE: By default, authentication is disabled for ease of local development.
-    # For production or network-accessible deployments, set JUPYTER_TOKEN in .env to a secure random string.
-    # You can also disable GRANT_SUDO and run as non-root user by removing 'user: root'.
+    # 
+    # ⚠️ SECURITY CONSIDERATIONS FOR PRODUCTION:
+    # 1. Authentication: Set JUPYTER_TOKEN in .env to enable token-based authentication
+    # 2. CORS: allow_origin='*' permits requests from any origin - consider restricting in production
+    # 3. Root Access: Container runs as root with sudo for package installation flexibility
+    #    - For production, consider removing 'user: root' and 'GRANT_SUDO=yes'
+    #    - Pre-install all needed packages in a custom Docker image instead
+    # 4. Network: Bind to localhost only in production (not 0.0.0.0) via reverse proxy
+    # 5. Firewall: Restrict port 8888 access to trusted networks only
+    # 
+    # This configuration prioritizes development convenience. Harden before production deployment.
 
   # --- SUPPORT ---
   redis:

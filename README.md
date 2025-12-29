@@ -67,6 +67,7 @@ OPENROUTER_API_KEY=your_key
 - **[Workflows](docs/WORKFLOWS.md)** — n8n automation, Python support
 - **[Model Config](docs/MODEL_CONFIGURATION.md)** — LLM provider setup
 - **[HTTPS Setup](docs/HTTPS_CONFIGURATION.md)** — Production TLS
+- **[Jupyter Security](docs/JUPYTER_SECURITY.md)** — Production security for Jupyter Lab
 - **[Architecture](docs/ARCHITECTURE.md)** — System design
 - **[Roadmap](docs/ROADMAP.md)** — Future plans through v3.0
 
