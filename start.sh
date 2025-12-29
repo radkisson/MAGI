@@ -22,7 +22,7 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "${GREEN}📂 Verifying biological directory structure...${NC}"
 
 # Create all volume paths
-mkdir -p "$BASE_DIR/data"/{open-webui,qdrant,redis,searxng,n8n,litellm}
+mkdir -p "$BASE_DIR/data"/{open-webui,qdrant,redis,searxng,n8n,litellm,jupyter/notebooks}
 mkdir -p "$BASE_DIR/config"/{litellm,searxng}
 mkdir -p "$BASE_DIR/workflows"
 
