@@ -84,13 +84,13 @@ validate_base_dir() {
 
 load_env() {
     if [ -f "$BASE_DIR/.env" ]; then
-        # Safely load PORT_ variables from .env
+        # Safely load PORT_ and OPENROUTER_ variables from .env
         while IFS='=' read -r key value; do
             # Skip comments and empty lines (including whitespace before comments)
             [[ "$key" =~ ^[[:space:]]*# ]] && continue
             [[ "$key" =~ ^[[:space:]]*$ ]] && continue
-            # Only load PORT_ variables
-            if [[ "$key" =~ ^PORT_ ]]; then
+            # Only load PORT_ and OPENROUTER_ variables
+            if [[ "$key" =~ ^PORT_ ]] || [[ "$key" =~ ^OPENROUTER_ ]]; then
                 # Remove any quotes and export
                 value=$(echo "$value" | sed 's/^["'\'']\|["'\'']$//g')
                 export "$key=$value"
@@ -537,13 +537,26 @@ cmd_models_sync() {
         exit 1
     fi
 
-    # Run sync script
-    if python3 "$BASE_DIR/scripts/sync_openrouter_models.py"; then
-        print_success "Models synced successfully"
-        print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
+    # Get limit argument
+    local limit="${1:-}"
+    
+    # Run sync script with optional limit
+    if [ -n "$limit" ]; then
+        if python3 "$BASE_DIR/scripts/sync_openrouter_models.py" "$limit"; then
+            print_success "Models synced successfully (limited to top $limit)"
+            print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
+        else
+            print_error "Model sync failed"
+            exit 1
+        fi
     else
-        print_error "Model sync failed"
-        exit 1
+        if python3 "$BASE_DIR/scripts/sync_openrouter_models.py"; then
+            print_success "Models synced successfully"
+            print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
+        else
+            print_error "Model sync failed"
+            exit 1
+        fi
     fi
 }
 
@@ -564,8 +577,15 @@ cmd_models_list() {
     print_header "Available Models"
     
     validate_base_dir
+    load_env  # Load environment variables including OPENROUTER_MODEL_LIMIT
     
-    local limit="${1:-50}"  # Default limit to 50
+    # Get limit from argument or environment variable
+    local limit="${1:-}"
+    if [ -z "$limit" ]; then
+        # Try to get from environment variable
+        limit="${OPENROUTER_MODEL_LIMIT:-50}"
+    fi
+    
     local filter="${2:-all}" # Default show all
     
     # Check if config exists
@@ -672,22 +692,33 @@ USAGE:
     ./rin models <subcommand> [options]
 
 SUBCOMMANDS:
-    sync                    Sync latest models from OpenRouter API
+    sync [limit]            Sync latest models from OpenRouter API (optional limit)
     search <query>          Search models by criteria
-    list [limit] [filter]   List available models (default: 50)
+    list [limit] [filter]   List available models (default from OPENROUTER_MODEL_LIMIT)
     top [count]             Show top N models by popularity (default: 10)
     filter <type> [limit]   Filter models by type (openrouter, popular, budget, vision, etc.)
     recommend               Show model recommendations
     help                    Show this help message
 
 EXAMPLES:
-    ./rin models sync                      # Sync all models
+    ./rin models sync                      # Sync models (uses OPENROUTER_MODEL_LIMIT)
+    ./rin models sync 25                   # Sync top 25 models
+    ./rin models sync 0                    # Sync all available models
+    ./rin models list                      # List models (uses OPENROUTER_MODEL_LIMIT)
+    ./rin models list 10                   # List top 10 models
     ./rin models list 25                   # List top 25 models
+    ./rin models list 50                   # List top 50 models
+    ./rin models list 75                   # List top 75 models
     ./rin models top 10                    # Show top 10 models
     ./rin models filter vision 20          # Show 20 vision models
     ./rin models filter budget 30          # Show 30 budget models
     ./rin models search --tag vision       # Search for vision models
     ./rin models recommend                 # Show recommendations
+
+ENVIRONMENT VARIABLES:
+    OPENROUTER_MODEL_LIMIT    Set default model limit (default: 50)
+                              Recommended values: 10, 25, 50, 75
+                              Set to 0 or empty for all models
 
 FILTERS:
     all            - All models
@@ -768,8 +799,8 @@ COMMANDS:
     help                Show this help message
 
 MODEL MANAGEMENT:
-    models sync                 Sync latest models from OpenRouter
-    models list [N] [filter]    List models (limit N, default: 50)
+    models sync [limit]         Sync latest models from OpenRouter (optional limit)
+    models list [N] [filter]    List models (limit N, default from OPENROUTER_MODEL_LIMIT)
     models top [N]              Show top N by popularity (default: 10)
     models filter <type> [N]    Filter models by type
     models search <query>       Search models by criteria
@@ -778,7 +809,9 @@ MODEL MANAGEMENT:
 EXAMPLES:
     ./rin start                     # Start RIN
     ./rin stop                      # Stop RIN
-    ./rin models sync               # Sync all models
+    ./rin models sync               # Sync models (uses OPENROUTER_MODEL_LIMIT)
+    ./rin models sync 25            # Sync top 25 models
+    ./rin models list               # List models (uses OPENROUTER_MODEL_LIMIT)
     ./rin models list 25            # List top 25 models
     ./rin models top 10             # Show top 10 models
     ./rin models filter vision 20   # Show 20 vision models
