@@ -1,5 +1,5 @@
 # Project Design Document: MAGI (Multi-Agent General Intelligence)
-### (formerly Rhyzomic Intelligence Node)
+### (formerly Multi-Agent General Intelligence)
 
 **Version**: 1.3.0 (Stable)  
 **Status**: Active Development  
@@ -29,7 +29,7 @@ The brain of MAGI, responsible for reasoning and human interaction.
 
 **Components:**
 
-- **Open WebUI**: The unified interface for human-agent interaction. It manages chat history, user authentication, and tool invocation. This is the primary interface where users interact with RIN.
+- **Open WebUI**: The unified interface for human-agent interaction. It manages chat history, user authentication, and tool invocation. This is the primary interface where users interact with MAGI.
 
 - **LiteLLM (The Router)**: An API Gateway that sits between the Cortex and the Models. It allows MAGI to route "thoughts" to the most appropriate provider (e.g., GPT-4o for logic, Claude 3.5 for coding, local Llama 3 for privacy) without changing the frontend code. This provides flexibility and independence from any single AI provider.
 
@@ -187,7 +187,7 @@ services:
 
 ## Usage Philosophy
 
-RIN is designed as a **biological organism**:
+MAGI is designed as a **biological organism**:
 - **Sovereign**: You control the entire organism and its data
 - **Organic**: Components work together like biological systems
 - **Transparent**: Open architecture with clear data flows

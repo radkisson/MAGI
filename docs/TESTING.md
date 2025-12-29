@@ -1,4 +1,4 @@
-# RIN Smoke Test Protocol
+# MAGI Smoke Test Protocol
 
 This guide provides step-by-step instructions for testing the synaptic connections between the Cortex (Open WebUI) and the organism's subsystems.
 
@@ -182,9 +182,9 @@ You should see these status updates in sequence:
 
 ### What This Validates
 
-- **Vision**: RIN can search the web anonymously
-- **Digestion**: RIN can extract content from complex websites
-- **Memory**: RIN can store information for future recall
+- **Vision**: MAGI can search the web anonymously
+- **Digestion**: MAGI can extract content from complex websites
+- **Memory**: MAGI can store information for future recall
 - **Cognition**: LLM orchestrates multiple tools autonomously
 - **Anti-fragility**: If one service fails, others continue working
 
