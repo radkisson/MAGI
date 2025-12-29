@@ -77,3 +77,7 @@ config/ssl/*.pem
 config/ssl/*.key
 config/ssl/*.crt
 config/ssl/*.csr
+
+# Caddy generated configuration and data
+config/caddy/Caddyfile
+config/caddy/Caddyfile.bak
