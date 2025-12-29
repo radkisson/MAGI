@@ -412,6 +412,84 @@ def test_model_recommendations():
         return False
 
 
+def test_model_limit():
+    """Test model limiting functionality"""
+    print_test("Model Limiting")
+    
+    try:
+        from sync_openrouter_models import update_litellm_config, convert_openrouter_model_to_litellm
+        
+        # Create test models
+        test_models = [
+            {
+                'id': f'test/model-{i}',
+                'name': f'Test Model {i}',
+                'context_length': 4096,
+                'pricing': {'prompt': '0.0000001'},
+                'architecture': {},
+                '_popularity_score': 100 - i  # Decreasing popularity
+            }
+            for i in range(100)  # Create 100 test models
+        ]
+        
+        # Create a temporary config file
+        import tempfile
+        import yaml
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            temp_config = Path(f.name)
+            initial_config = {
+                'model_list': [
+                    {
+                        'model_name': 'existing/model',
+                        'litellm_params': {'model': 'existing/model'},
+                        'model_info': {'mode': 'chat'}
+                    }
+                ]
+            }
+            yaml.dump(initial_config, f)
+        
+        try:
+            # Test with limit of 10
+            success = update_litellm_config(temp_config, test_models, backup=False, limit=10)
+            
+            if not success:
+                print_fail("Failed to update config with limit")
+                return False
+            
+            # Read back the config
+            with open(temp_config, 'r') as f:
+                updated_config = yaml.safe_load(f)
+            
+            models = updated_config.get('model_list', [])
+            openrouter_models = [m for m in models if m.get('litellm_params', {}).get('model', '').startswith('openrouter/test/')]
+            
+            checks = [
+                (len(openrouter_models) == 10, f"Limited to 10 models (got {len(openrouter_models)})"),
+                (len(models) > len(openrouter_models), "Existing models preserved"),
+            ]
+            
+            all_passed = True
+            for check, msg in checks:
+                if check:
+                    print_pass(msg)
+                else:
+                    print_fail(msg)
+                    all_passed = False
+            
+            return all_passed
+            
+        finally:
+            # Clean up temp file
+            if temp_config.exists():
+                temp_config.unlink()
+        
+    except Exception as e:
+        print_fail(f"Model limit test failed: {e}")
+        traceback.print_exc()
+        return False
+
+
 def main():
     """Run all tests"""
     print(f"\n{'='*70}")
@@ -428,6 +506,7 @@ def main():
         ("Cost Metadata", test_cost_metadata),
         ("Capability Tags", test_capability_tags),
         ("Model Recommendations", test_model_recommendations),
+        ("Model Limiting", test_model_limit),
     ]
     
     results = []
