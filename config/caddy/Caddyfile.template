@@ -8,9 +8,7 @@
     # Global options
     email {ADMIN_EMAIL}
     
-    # Enable automatic HTTPS
-    auto_https on
-    
+    # Automatic HTTPS is enabled by default in Caddy
     # Use Let's Encrypt production endpoint (staging for testing)
     acme_ca https://acme-v02.api.letsencrypt.org/directory
     # For testing, uncomment the line below:
@@ -25,8 +23,6 @@
     reverse_proxy open-webui:8080 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
     
     # Enable logging
@@ -40,8 +36,6 @@ n8n.{DOMAIN} {
     reverse_proxy n8n:5678 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
 }
 
@@ -50,8 +44,6 @@ search.{DOMAIN} {
     reverse_proxy searxng:8080 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
 }
 
@@ -60,8 +52,6 @@ api.{DOMAIN} {
     reverse_proxy litellm:4000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
 }
 
@@ -70,7 +60,5 @@ api.{DOMAIN} {
     reverse_proxy open-webui:8080 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
 }
