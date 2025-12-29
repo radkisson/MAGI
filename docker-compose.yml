@@ -265,7 +265,10 @@ services:
       - LITELLM_BASE_URL=http://litellm:4000
       # HTTPS Configuration
       - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
-      # Grant sudo access to install packages
+      # Jupyter authentication token (set to empty for no auth, or provide a token)
+      # For production, set JUPYTER_TOKEN in .env to a secure random string
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
+      # Grant sudo access to install packages (can be disabled for production)
       - GRANT_SUDO=yes
     user: root
     command: >
@@ -274,15 +277,20 @@ services:
         mkdir -p /home/jovyan/.jupyter &&
         echo \"c.ServerApp.ip = '0.0.0.0'\" > /home/jovyan/.jupyter/jupyter_lab_config.py &&
         echo \"c.ServerApp.allow_origin = '*'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
-        echo \"c.ServerApp.token = ''\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
-        echo \"c.ServerApp.password = ''\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
+        if [ -n \"$$JUPYTER_TOKEN\" ]; then
+          echo \"c.ServerApp.token = '$$JUPYTER_TOKEN'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
+        else
+          echo \"c.ServerApp.token = ''\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
+          echo \"c.ServerApp.password = ''\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
+        fi &&
         if [ \"$$ENABLE_HTTPS\" = \"true\" ]; then
           echo \"c.ServerApp.certfile = '/home/jovyan/ssl/cert.pem'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
           echo \"c.ServerApp.keyfile = '/home/jovyan/ssl/key.pem'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
         fi &&
         chown -R jovyan:users /home/jovyan/.jupyter;
       fi &&
-      pip install --quiet pydiode requests openai anthropic litellm 2>/dev/null &&
+      pip install --quiet requests openai anthropic litellm 2>/dev/null &&
+      pip install --quiet pydiode 2>/dev/null || echo 'Warning: pydiode installation failed, skipping' &&
       if [ -f /home/jovyan/requirements.txt ]; then
         pip install --quiet -r /home/jovyan/requirements.txt 2>/dev/null || true;
       fi &&
@@ -301,6 +309,9 @@ services:
     # This service provides Jupyter Lab for code execution, data analysis, and AI model interaction.
     # Integrates with OpenRouter via pydiode and can directly access LiteLLM for model inference.
     # Supports HTTPS when enabled via SSL certificates.
+    # SECURITY NOTE: By default, authentication is disabled for ease of local development.
+    # For production or network-accessible deployments, set JUPYTER_TOKEN in .env to a secure random string.
+    # You can also disable GRANT_SUDO and run as non-root user by removing 'user: root'.
 
   # --- SUPPORT ---
   redis:

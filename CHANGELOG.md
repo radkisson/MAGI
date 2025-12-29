@@ -12,13 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Full scipy stack (NumPy, Pandas, Matplotlib, SciPy) pre-installed
   - OpenRouter API integration via environment variables
   - Direct access to internal LiteLLM router at `http://litellm:4000`
-  - pydiode support for AI-assisted code execution
+  - pydiode support for AI-assisted code execution (optional)
   - HTTPS support when enabled via SSL certificates
   - Access to all other MAGI services from notebooks
   - Pre-installed example notebook: `Welcome_to_MAGI.ipynb`
   - Default access at `http://localhost:8888` (configurable via `PORT_JUPYTER`)
   - Documentation added to TOOLS.md, CONFIGURATION.md, and ARCHITECTURE.md
   - Jupyter added as "The Laboratory" subsystem in architecture
+  - **Security**: Token-based authentication configurable via `JUPYTER_TOKEN` environment variable
+  - Default configuration optimized for local development (no authentication)
+  - Production-ready security options documented in TOOLS.md
 
 ### Fixed
 - **LiteLLM Streaming Timeout**: Increased timeout from 60s to 300s to prevent `httpx.TimeoutException` during long streaming responses

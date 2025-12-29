@@ -51,14 +51,21 @@ Interactive Python notebooks for code execution, data analysis, and AI model int
 
 **Access:**
 - Open `http://localhost:8888` in your browser (or port configured via `PORT_JUPYTER`)
-- No authentication required by default (can be configured)
+- Default: No authentication (for local development)
+- Production: Set `JUPYTER_TOKEN` in `.env` for authentication
 - HTTPS supported when enabled
+
+**Security:**
+- ⚠️ **Default configuration disables authentication** for ease of local development
+- For production or network-accessible deployments, set `JUPYTER_TOKEN` in `.env` to a secure random string
+- Generate a secure token with: `openssl rand -hex 32`
+- Consider using a reverse proxy (nginx, Traefik) for additional security
 
 **Features:**
 - Full scipy stack (NumPy, Pandas, Matplotlib, SciPy)
 - OpenRouter integration via `OPENROUTER_API_KEY` environment variable
 - Direct LiteLLM access at `http://litellm:4000`
-- pydiode for AI-assisted code execution
+- pydiode for AI-assisted code execution (optional)
 - Pre-installed example notebook: `Welcome_to_MAGI.ipynb`
 
 **Usage:**
