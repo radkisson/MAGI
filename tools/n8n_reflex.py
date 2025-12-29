@@ -21,14 +21,20 @@ import threading
 import requests
 from typing import Callable, Any
 from pydantic import BaseModel, Field
+from .utils import get_service_url
+
+
+def _get_n8n_webhook_url() -> str:
+    """Get n8n webhook URL, auto-detecting HTTP or HTTPS based on configuration."""
+    return get_service_url("rin-reflex-automation", 5678, check_env_var="N8N_WEBHOOK_URL") + "/webhook"
 
 
 class Valves(BaseModel):
     """Configuration valves for n8n Reflex integration (tunable via UI)"""
 
     N8N_WEBHOOK_URL: str = Field(
-        default_factory=lambda: os.getenv("N8N_WEBHOOK_URL", "http://rin-reflex-automation:5678/webhook"),
-        description="n8n webhook base URL (default: internal Docker DNS)"
+        default_factory=_get_n8n_webhook_url,
+        description="n8n webhook base URL (default: internal Docker DNS, auto-detects HTTP/HTTPS)"
     )
     COGNITIVE_TIMEOUT: int = Field(
         default=300,
@@ -314,6 +320,16 @@ class Tools:
                 # Return raw JSON for LLM to interpret
                 try:
                     response_data = response.json()
+                    # Check if response is empty or missing expected data
+                    if not response_data or response_data == {}:
+                        return (
+                            f"⚠️ Workflow '{workflow_id}' returned an empty response.\n\n"
+                            f"This may indicate:\n"
+                            f"1. The workflow completed but produced no output\n"
+                            f"2. The workflow needs a 'Respond to Webhook' node to return data\n"
+                            f"3. The workflow configuration may need adjustment\n\n"
+                            f"Check the n8n dashboard for workflow execution details."
+                        )
                     return json.dumps(response_data, indent=2)
                 except json.JSONDecodeError:
                     return response.text
@@ -362,10 +378,10 @@ class Tools:
 
         Returns documentation on available workflows and how to use them
         with either trigger_reflex() or query_workflow().
-        
+
         Also includes connection diagnostics to help troubleshoot issues.
         """
-        
+
         # Test connection to n8n
         connection_status = "✅ Connected"
         try:
@@ -376,7 +392,7 @@ class Tools:
             else:
                 # If URL doesn't contain /webhook, assume it's a base URL
                 health_url = base_url.rstrip('/') + '/healthz'
-            
+
             response = requests.get(health_url, timeout=5)
             if response.status_code != 200:
                 connection_status = f"⚠️  Connection issue (status: {response.status_code})"
@@ -445,9 +461,6 @@ If you see connection errors:
 ## Configuration
 
 Timeouts can be adjusted in the tool's Valves settings:
-- Cognitive Timeout: {cognitive_timeout}s (default: 300s)
-- Reflex Timeout: {reflex_timeout}s (default: 10s)
-""".format(
-            cognitive_timeout=self.valves.COGNITIVE_TIMEOUT,
-            reflex_timeout=self.valves.REFLEX_TIMEOUT
-        )
+- Cognitive Timeout: {self.valves.COGNITIVE_TIMEOUT}s (default: 300s)
+- Reflex Timeout: {self.valves.REFLEX_TIMEOUT}s (default: 10s)
+"""

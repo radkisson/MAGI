@@ -10,6 +10,7 @@ Supports both:
 """
 
 import os
+import json
 import requests
 from typing import Callable, Any, Optional, List
 from pydantic import BaseModel, Field
@@ -26,8 +27,8 @@ class Valves(BaseModel):
         description="FireCrawl API Key (auto-loaded from .env or set manually)"
     )
     FIRECRAWL_API_URL: str = Field(
-        default_factory=lambda: os.getenv("FIRECRAWL_API_URL", "http://firecrawl:3002"),
-        description="FireCrawl API URL (default: self-hosted Docker service)"
+        default_factory=_get_firecrawl_url,
+        description="FireCrawl API URL (default: self-hosted Docker service, auto-detects HTTP/HTTPS)"
     )
     # Improvement 1: Adjustable timeouts and limits
     REQUEST_TIMEOUT: int = Field(
@@ -46,6 +47,12 @@ class Valves(BaseModel):
         default=60,
         description="Additional timeout (in seconds) to add for crawl operations beyond REQUEST_TIMEOUT"
     )
+
+
+def _get_firecrawl_url() -> str:
+    """Get FireCrawl URL, auto-detecting HTTP or HTTPS based on configuration."""
+    from .utils import get_service_url
+    return get_service_url("firecrawl", 3002, check_env_var="FIRECRAWL_API_URL")
 
 
 class Tools:
@@ -76,7 +83,7 @@ class Tools:
                 if self._cache_order:
                     oldest = self._cache_order.pop(0)
                     del self._cache[oldest]
-            
+
             # Add new entry
             if key in self._cache:
                 self._cache_order.remove(key)
@@ -88,7 +95,7 @@ class Tools:
         limit = self.valves.MAX_CONTENT_LENGTH
         if len(content) <= limit:
             return content
-        
+
         return (
             f"{content[:limit]}\n\n"
             f"> ⚠️ **System Note**: Content from {source} was truncated because it exceeded "
@@ -176,7 +183,48 @@ class Tools:
             )
             response.raise_for_status()
 
-            result = response.json()
+            try:
+                result = response.json()
+            except json.JSONDecodeError:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "❌ Invalid JSON response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"❌ FireCrawl returned invalid JSON response for {url}\n\n"
+                    f"Response: {response.text[:500]}\n\n"
+                    f"This may indicate a FireCrawl service error. Check the logs."
+                )
+
+            # Check if response is empty or malformed
+            if not result or result == {}:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ Received empty response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"⚠️ FireCrawl returned an empty response for {url}\n\n"
+                    f"This may indicate:\n"
+                    f"1. The FireCrawl service is not properly configured\n"
+                    f"2. The URL may be inaccessible or blocked\n"
+                    f"3. The FireCrawl API may be experiencing issues\n\n"
+                    f"Try:\n"
+                    f"- Verify FireCrawl is running: `docker ps | grep firecrawl`\n"
+                    f"- Check FireCrawl logs: `docker logs rin-firecrawl`\n"
+                    f"- Test with a simpler URL"
+                )
 
             if __event_emitter__:
                 __event_emitter__(
@@ -197,7 +245,7 @@ class Tools:
                 if markdown_content:
                     # Apply Truncation
                     markdown_content = self._truncate_content(markdown_content, url)
-                    
+
                     formatted_output = (
                         f"# Scraped Content from: {url}\n\n"
                         f"**Title**: {metadata.get('title', 'N/A')}\n"
@@ -205,10 +253,10 @@ class Tools:
                         f"---\n\n"
                         f"{markdown_content}"
                     )
-                    
+
                     # Save to Cache
                     self._add_to_cache(url, formatted_output)
-                    
+
                     return formatted_output
                 else:
                     return f"No content could be extracted from {url}"
@@ -282,7 +330,7 @@ class Tools:
             status_msg = f"🔥 Starting website crawl (max {max_pages} pages)"
             if include_paths:
                 status_msg += f" focusing on {include_paths}"
-            
+
             __event_emitter__(
                 {
                     "type": "status",
@@ -319,7 +367,48 @@ class Tools:
             )
             response.raise_for_status()
 
-            result = response.json()
+            try:
+                result = response.json()
+            except json.JSONDecodeError:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "❌ Invalid JSON response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"❌ FireCrawl returned invalid JSON response for crawl of {url}\n\n"
+                    f"Response: {response.text[:500]}\n\n"
+                    f"This may indicate a FireCrawl service error. Check the logs."
+                )
+
+            # Check if response is empty or malformed
+            if not result or result == {}:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "⚠️ Received empty response from FireCrawl",
+                                "done": True,
+                            },
+                        }
+                    )
+                return (
+                    f"⚠️ FireCrawl returned an empty response for crawl of {url}\n\n"
+                    f"This may indicate:\n"
+                    f"1. The FireCrawl service is not properly configured\n"
+                    f"2. The website may be blocking crawlers\n"
+                    f"3. The FireCrawl API may be experiencing issues\n\n"
+                    f"Try:\n"
+                    f"- Verify FireCrawl is running: `docker ps | grep firecrawl`\n"
+                    f"- Check FireCrawl logs: `docker logs rin-firecrawl`\n"
+                    f"- Try scraping a single page first with `scrape_webpage()`"
+                )
 
             if __event_emitter__:
                 __event_emitter__(

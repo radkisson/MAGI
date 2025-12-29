@@ -294,9 +294,9 @@ cmd_upgrade() {
     git fetch origin
     
     print_info "Current branch: $current_branch"
-    
+
     # Check for updates
-    if git diff --quiet HEAD origin/$current_branch; then
+    if git diff --quiet HEAD "origin/$current_branch"; then
         print_success "Already up to date"
         exit 0
     fi
@@ -410,14 +410,15 @@ cmd_restore() {
     # Stop services before restoring
     print_info "Stopping services..."
     docker compose down 2>/dev/null || true
-    
+
     # Create safety backup of current data
     if [ -d "$BASE_DIR/data" ]; then
-        local safety_backup="$BASE_DIR/data.pre-restore.$(date +%Y%m%d_%H%M%S)"
+        local safety_backup
+        safety_backup="$BASE_DIR/data.pre-restore.$(date +%Y%m%d_%H%M%S)"
         print_info "Creating safety backup of current data: $safety_backup"
         cp -r "$BASE_DIR/data" "$safety_backup"
     fi
-    
+
     # Restore data (with BASE_DIR validation already done)
     if [ -d "$backup_dir/data" ]; then
         print_info "Restoring data directory..."
@@ -535,11 +536,9 @@ cmd_models_sync() {
         print_error "Model sync script not found"
         exit 1
     fi
-    
+
     # Run sync script
-    python3 "$BASE_DIR/scripts/sync_openrouter_models.py"
-    
-    if [ $? -eq 0 ]; then
+    if python3 "$BASE_DIR/scripts/sync_openrouter_models.py"; then
         print_success "Models synced successfully"
         print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
     else
@@ -712,6 +711,36 @@ EOF
     esac
 }
 
+cmd_reset_password() {
+    print_header "Reset Password"
+    
+    validate_base_dir
+    
+    # Check if reset script exists
+    if [ ! -f "$BASE_DIR/scripts/reset_password.sh" ]; then
+        print_error "Password reset script not found"
+        exit 1
+    fi
+    
+    # Run reset script with all arguments
+    bash "$BASE_DIR/scripts/reset_password.sh" "$@"
+}
+
+cmd_setup_accounts() {
+    print_header "Setup Initial Accounts"
+    
+    validate_base_dir
+    
+    # Check if setup script exists
+    if [ ! -f "$BASE_DIR/scripts/setup_initial_accounts.sh" ]; then
+        print_error "Account setup script not found"
+        exit 1
+    fi
+    
+    # Run setup script
+    bash "$BASE_DIR/scripts/setup_initial_accounts.sh" "$@"
+}
+
 cmd_help() {
     cat <<EOF
 Rhyzomic Intelligence Node (RIN) - CLI Management Tool
@@ -733,6 +762,8 @@ COMMANDS:
     exec <service> [cmd] Execute command in service container
     clean               Remove all containers and images
     models              Model management (sync, search, list, filter, etc.)
+    reset-password <service> [email]  Reset admin password for a service
+    setup-accounts      Setup initial admin accounts (interactive)
     version             Show version information
     help                Show this help message
 
@@ -754,6 +785,9 @@ EXAMPLES:
     ./rin status                    # Check system status
     ./rin logs                      # View all logs
     ./rin logs open-webui -f        # Follow Open WebUI logs
+    ./rin reset-password openwebui  # Reset OpenWebUI admin password
+    ./rin reset-password n8n        # Reset n8n owner password
+    ./rin setup-accounts            # Setup initial accounts
 
 SERVICES:
     open-webui      - Open WebUI (Cortex)
@@ -830,6 +864,12 @@ main() {
             ;;
         models)
             cmd_models "$@"
+            ;;
+        reset-password)
+            cmd_reset_password "$@"
+            ;;
+        setup-accounts)
+            cmd_setup_accounts "$@"
             ;;
         version)
             cmd_version "$@"
