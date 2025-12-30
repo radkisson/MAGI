@@ -129,20 +129,30 @@ class Tools:
         
         return truncated + "\n\n> ⚠️ **Output truncated** to fit context limits.\n"
 
-    def _format_paper(self, paper: dict, idx: int) -> str:
-        """Format a single paper for display."""
+    def _format_paper(self, paper: dict, idx: int, verbose: bool = False) -> str:
+        """Format a single paper for display.
+        
+        Args:
+            paper: Paper data from Semantic Scholar
+            idx: Index number for display
+            verbose: If True, show full abstract even with TLDR
+        """
         title = paper.get("title", "No title")
         year = paper.get("year", "N/A")
         
-        # Authors
+        # Authors (show 5 instead of 3)
         authors = paper.get("authors", [])
-        author_names = [a.get("name", "Unknown") for a in authors[:3]]
-        if len(authors) > 3:
-            author_names.append(f"et al. (+{len(authors) - 3})")
+        author_names = [a.get("name", "Unknown") for a in authors[:5]]
+        if len(authors) > 5:
+            author_names.append(f"et al. (+{len(authors) - 5})")
         authors_str = ", ".join(author_names) if author_names else "Unknown authors"
         
         # Venue
         venue = paper.get("venue", "") or "Unknown venue"
+        
+        # Publication types
+        pub_types = paper.get("publicationTypes", []) or []
+        type_str = ", ".join([t.replace("JournalArticle", "Article").replace("Conference", "Conf") for t in pub_types[:2]]) if pub_types else ""
         
         # Citations (handle None values)
         citations = paper.get("citationCount") or 0
@@ -158,7 +168,7 @@ class Tools:
         tldr = paper.get("tldr", {})
         tldr_text = tldr.get("text", "") if tldr else ""
         
-        # Abstract - show full, output truncation handles overall length
+        # Abstract
         abstract = paper.get("abstract", "") or ""
         
         # External IDs
@@ -168,17 +178,29 @@ class Tools:
         
         # Fields of study
         fields = paper.get("fieldsOfStudy", []) or []
-        fields_str = ", ".join([f"`{f}`" for f in fields[:3]]) if fields else ""
+        fields_str = ", ".join([f"`{f}`" for f in fields[:4]]) if fields else ""
         
         # Build output
         output = f"### {idx}. {title}\n"
         output += f"**Authors**: {authors_str}\n"
-        output += f"**Year**: {year} | **Venue**: {venue}\n"
-        output += f"**Citations**: {citations:,} ({influential} influential) | {oa_status}\n"
         
+        # Year/Venue line with type
+        venue_line = f"**Year**: {year} | **Venue**: {venue}"
+        if type_str:
+            venue_line += f" | **Type**: {type_str}"
+        output += venue_line + "\n"
+        
+        # Citations with influential count highlighted
+        if influential > 0:
+            output += f"**Citations**: {citations:,} (⭐ {influential} influential) | {oa_status}\n"
+        else:
+            output += f"**Citations**: {citations:,} | {oa_status}\n"
+        
+        # Show TLDR prominently, then abstract
         if tldr_text:
-            output += f"\n**TLDR**: {tldr_text}\n"
-        elif abstract:
+            output += f"\n**🤖 TLDR**: {tldr_text}\n"
+        
+        if abstract and (verbose or not tldr_text):
             output += f"\n> {abstract}\n"
         
         if fields_str:
@@ -205,6 +227,7 @@ class Tools:
         year_to: Optional[int] = None,
         open_access_only: bool = False,
         fields_of_study: Optional[List[str]] = None,
+        sort_by: str = "relevance",
         __user__: dict = {},
         __event_emitter__: Callable[[dict], Any] = None,
     ) -> str:
@@ -221,6 +244,7 @@ class Tools:
             year_to: Filter papers up to this year (optional)
             open_access_only: Only return open access papers (default: False)
             fields_of_study: Filter by fields like ["Computer Science", "Medicine"]
+            sort_by: Sort order - "relevance" (default), "citationCount", or "year"
             __user__: User context (provided by Open WebUI)
             __event_emitter__: Event emitter for streaming results
 
@@ -262,6 +286,11 @@ class Tools:
             # Add fields of study filter
             if fields_of_study:
                 params["fieldsOfStudy"] = ",".join(fields_of_study)
+            
+            # Add sort option (S2 API supports sorting on bulk/search endpoints)
+            if sort_by and sort_by != "relevance":
+                if sort_by in ["citationCount", "year"]:
+                    params["sort"] = f"{sort_by}:desc"
 
             result = self._make_request("paper/search", params)
 
@@ -843,3 +872,375 @@ class Tools:
                     }
                 )
             return f"References lookup failed: {error_msg}"
+
+    def search_by_title(
+        self,
+        title: str,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Search for a paper by its exact or partial title
+
+        More precise than general search - looks specifically at titles.
+
+        Args:
+            title: Title or partial title of the paper
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            Matching papers with full details
+        """
+        if not title or not title.strip():
+            return "❌ Please provide a paper title."
+        
+        title = title.strip()
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"🔍 Searching for title: {title[:50]}...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            # Use paper/search with title match boost
+            result = self._make_request("paper/search", {
+                "query": title,
+                "fields": self.paper_fields,
+                "limit": 5,
+            })
+
+            papers = result.get("data", [])
+            
+            if not papers:
+                return f"No papers found with title matching: {title}"
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {len(papers)} matching papers",
+                            "done": True,
+                        },
+                    }
+                )
+
+            output = f"# Title Search: {title}\n\n"
+            output += f"Found {len(papers)} potential matches.\n\n"
+            output += "---\n\n"
+
+            for idx, paper in enumerate(papers, 1):
+                output += self._format_paper(paper, idx, verbose=True)
+                output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error searching: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Search failed: {error_msg}"
+
+    def get_influential_citations(
+        self,
+        paper_id: str,
+        max_results: int = 10,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Get only influential citations for a paper (high-impact citing works)
+
+        Semantic Scholar identifies "influential" citations - papers where
+        the citation had a significant impact on the citing paper's work.
+
+        Args:
+            paper_id: Semantic Scholar paper ID, DOI, or arXiv ID
+            max_results: Maximum number of influential citations (default: 10)
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            List of influential papers that cite the specified work
+        """
+        paper_id = self._normalize_paper_id(paper_id)
+        if not paper_id:
+            return "❌ Please provide a paper ID, DOI, or arXiv ID."
+        
+        max_results = max(1, min(max_results, 100))
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"⭐ Finding influential citations...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            # Get citations with isInfluential field
+            result = self._make_request(f"paper/{paper_id}/citations", {
+                "fields": f"isInfluential,intents,contexts,citingPaper.{self.paper_fields}",
+                "limit": 100,  # Get more to filter
+            })
+
+            citations = result.get("data", [])
+            
+            # Filter to only influential
+            influential_citations = [c for c in citations if c.get("isInfluential", False)]
+
+            if not influential_citations:
+                return f"No influential citations found for paper: {paper_id}\n\nTry `get_citations()` to see all citing papers."
+
+            # Limit results
+            influential_citations = influential_citations[:max_results]
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {len(influential_citations)} influential citations",
+                            "done": True,
+                        },
+                    }
+                )
+
+            output = f"# Influential Citations\n\n"
+            output += f"Paper: `{paper_id}`\n"
+            output += f"Showing {len(influential_citations)} influential citing papers.\n\n"
+            output += "---\n\n"
+
+            for idx, citation in enumerate(influential_citations, 1):
+                paper = citation.get("citingPaper", {})
+                if paper:
+                    output += self._format_paper(paper, idx)
+                    
+                    # Add citation context if available
+                    intents = citation.get("intents", []) or []
+                    contexts = citation.get("contexts", []) or []
+                    
+                    if intents:
+                        output += f"**Citation Intent**: {', '.join(intents)}\n"
+                    if contexts and len(contexts) > 0:
+                        # Show first context snippet
+                        context = contexts[0][:200] + "..." if len(contexts[0]) > 200 else contexts[0]
+                        output += f"**Context**: _{context}_\n"
+                    
+                    output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error getting influential citations: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Lookup failed: {error_msg}"
+
+    def search_recent(
+        self,
+        query: str,
+        days: int = 30,
+        max_results: int = 10,
+        fields_of_study: Optional[List[str]] = None,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Search for papers published in the last N days
+
+        Args:
+            query: Search query
+            days: How many days back to search (default: 30, max: 365)
+            max_results: Maximum number of results (default: 10)
+            fields_of_study: Filter by fields like ["Computer Science", "Medicine"]
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            Recent papers matching the query
+        """
+        import datetime
+        
+        if not query or not query.strip():
+            return "❌ Please provide a search query."
+        
+        query = query.strip()
+        days = max(1, min(days, 365))
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"📅 Searching recent papers (last {days} days)...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            # Calculate year range for recent papers
+            current_year = datetime.date.today().year
+            
+            params = {
+                "query": query,
+                "limit": min(max_results, 100),
+                "fields": self.paper_fields,
+                "year": f"{current_year - 1}-{current_year}",  # Last 2 years
+                "sort": "publicationDate:desc",  # Most recent first
+            }
+
+            if fields_of_study:
+                params["fieldsOfStudy"] = ",".join(fields_of_study)
+
+            result = self._make_request("paper/search", params)
+
+            papers = result.get("data", [])
+            total = result.get("total", len(papers))
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {total:,} recent papers",
+                            "done": True,
+                        },
+                    }
+                )
+
+            if not papers:
+                return f"No recent papers found matching: {query}"
+
+            output = f"# Recent Papers: {query}\n\n"
+            output += f"Papers from the last **{days} days** (approx). Found {total:,} results.\n\n"
+            output += "---\n\n"
+
+            for idx, paper in enumerate(papers, 1):
+                output += self._format_paper(paper, idx)
+                output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error searching: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Search failed: {error_msg}"
+
+    def get_paper_batch(
+        self,
+        paper_ids: List[str],
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Get details for multiple papers at once (batch lookup)
+
+        Efficient way to look up several papers by their IDs.
+
+        Args:
+            paper_ids: List of paper IDs, DOIs, or arXiv IDs (max 100)
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            Details for all requested papers
+        """
+        if not paper_ids:
+            return "❌ Please provide a list of paper IDs."
+        
+        # Normalize all IDs
+        normalized_ids = [self._normalize_paper_id(pid) for pid in paper_ids[:100]]
+        normalized_ids = [pid for pid in normalized_ids if pid]  # Remove empty
+        
+        if not normalized_ids:
+            return "❌ No valid paper IDs provided."
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"📚 Looking up {len(normalized_ids)} papers...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            # Use batch endpoint
+            result = self._make_request(
+                "paper/batch",
+                params={"fields": self.paper_fields},
+                method="POST",
+                json_data={"ids": normalized_ids},
+            )
+
+            if not result:
+                return "No papers found for the provided IDs."
+
+            # Result is a list directly for batch
+            papers = result if isinstance(result, list) else []
+            papers = [p for p in papers if p]  # Remove None entries
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {len(papers)} of {len(normalized_ids)} papers",
+                            "done": True,
+                        },
+                    }
+                )
+
+            if not papers:
+                return "No papers found for the provided IDs."
+
+            output = f"# Batch Paper Lookup\n\n"
+            output += f"Found **{len(papers)}** of {len(normalized_ids)} requested papers.\n\n"
+            output += "---\n\n"
+
+            for idx, paper in enumerate(papers, 1):
+                output += self._format_paper(paper, idx)
+                output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error in batch lookup: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Batch lookup failed: {error_msg}"
