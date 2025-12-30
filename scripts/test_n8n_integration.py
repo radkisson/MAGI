@@ -42,7 +42,7 @@ def test_n8n_connectivity():
     print_header("Test 1: n8n Basic Connectivity")
 
     n8n_hosts = [
-        "http://rin-reflex-automation:5678",
+        "http://magi-reflex-automation:5678",
         "http://n8n:5678"
     ]
 
@@ -137,7 +137,7 @@ def test_n8n_tool_configuration():
             print_success("n8n_reflex.py tool found in OpenWebUI")
 
             # Check if environment variables are set
-            n8n_url = os.getenv("N8N_WEBHOOK_URL", "http://rin-reflex-automation:5678/webhook")
+            n8n_url = os.getenv("N8N_WEBHOOK_URL", "http://magi-reflex-automation:5678/webhook")
             print(f"   Configured webhook URL: {n8n_url}")
             return True
         else:
