@@ -8,7 +8,7 @@ This guide walks through setting up automatic HTTPS for MAGI using Let's Encrypt
 ✅ **Zero Manual Management** - Certificates renew automatically before expiration  
 ✅ **Production-Ready Security** - TLS 1.3, HTTP/2, HTTP/3 support  
 ✅ **Multiple Services** - Main domain + subdomains for all services  
-✅ **One Command Setup** - Just run `./rin setup-https` and answer prompts  
+✅ **One Command Setup** - Just run `./magi setup-https` and answer prompts  
 
 ## Before You Begin
 
@@ -64,7 +64,7 @@ sudo firewall-cmd --reload
 
 Run the start script:
 ```bash
-./rin start
+./magi start
 ```
 
 When prompted for HTTPS configuration, select option 1:
@@ -85,7 +85,7 @@ Follow the prompts to enter your domain and email.
 
 If MAGI is already installed, run:
 ```bash
-./rin setup-https
+./magi setup-https
 ```
 
 The script will guide you through:
@@ -98,7 +98,7 @@ The script will guide you through:
 ### 1. Run Setup Script
 
 ```bash
-./rin setup-https
+./magi setup-https
 ```
 
 ### 2. Enter Domain Name
@@ -150,7 +150,7 @@ The script generates:
 ### 7. Start MAGI
 
 ```bash
-./rin start
+./magi start
 ```
 
 Caddy will automatically obtain SSL certificates when you first access your domain!
@@ -174,7 +174,7 @@ Caddy automatically renews certificates 60 days before expiration. No action req
 
 View Caddy logs to see certificate activity:
 ```bash
-./rin logs caddy
+./magi logs caddy
 ```
 
 ### Force Certificate Renewal
@@ -209,7 +209,7 @@ docker exec magi-caddy caddy reload --config /etc/caddy/Caddyfile
 **Symptoms**: "too many certificates already issued"
 
 **Solution**:
-- Use staging environment: `./rin setup-https` and answer 'y' to staging
+- Use staging environment: `./magi setup-https` and answer 'y' to staging
 - Wait for rate limit reset (7 days for most limits)
 - See [Let's Encrypt Rate Limits](https://letsencrypt.org/docs/rate-limits/)
 
@@ -229,7 +229,7 @@ docker exec magi-caddy caddy reload --config /etc/caddy/Caddyfile
 **Solution**:
 1. Verify DNS records for all subdomains
 2. Check Caddyfile includes subdomain configuration
-3. Restart Caddy: `./rin restart`
+3. Restart Caddy: `./magi restart`
 
 ## Switching Between Staging and Production
 
@@ -257,7 +257,7 @@ docker exec magi-caddy caddy reload --config /etc/caddy/Caddyfile
 
 4. Restart:
    ```bash
-   ./rin restart
+   ./magi restart
    ```
 
 ### From Production to Staging
@@ -282,7 +282,7 @@ custom.{DOMAIN} {
 }
 ```
 
-Then regenerate: `./rin setup-https`
+Then regenerate: `./magi setup-https`
 
 ### Custom SSL Settings
 
@@ -305,7 +305,7 @@ Caddy automatically redirects HTTP to HTTPS. No configuration needed!
 ## Security Best Practices
 
 1. **Keep Software Updated**: Regularly update MAGI and Caddy
-2. **Monitor Logs**: Check `./rin logs caddy` for suspicious activity
+2. **Monitor Logs**: Check `./magi logs caddy` for suspicious activity
 3. **Use Strong Passwords**: Secure Open WebUI and n8n accounts
 4. **Backup Certificates**: Include `data/caddy/` in backups
 5. **Email Monitoring**: Watch for Let's Encrypt expiration emails
@@ -344,7 +344,7 @@ To switch back to HTTP:
 
 2. Restart:
    ```bash
-   ./rin restart
+   ./magi restart
    ```
 
 The Caddy container will not start when `ENABLE_AUTO_HTTPS=false`.
@@ -353,13 +353,13 @@ The Caddy container will not start when `ENABLE_AUTO_HTTPS=false`.
 
 ### Check Logs
 ```bash
-./rin logs caddy
-./rin logs caddy -f  # Follow logs
+./magi logs caddy
+./magi logs caddy -f  # Follow logs
 ```
 
 ### View Status
 ```bash
-./rin status
+./magi status
 ```
 
 ### Test Certificate

@@ -67,12 +67,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recommendations saved to `data/model_recommendations.json`
 
 - **RIN CLI Model Management Integration**:
-  - `./rin models sync` - Sync latest models from OpenRouter
-  - `./rin models list [N] [filter]` - List available models with limit and filter
-  - `./rin models top [N]` - Show top N models by popularity
-  - `./rin models filter <type> [N]` - Filter models by type (vision, budget, etc.)
-  - `./rin models search <query>` - Search models with advanced criteria
-  - `./rin models recommend` - Show curated recommendations
+  - `./magi models sync` - Sync latest models from OpenRouter
+  - `./magi models list [N] [filter]` - List available models with limit and filter
+  - `./magi models top [N]` - Show top N models by popularity
+  - `./magi models filter <type> [N]` - Filter models by type (vision, budget, etc.)
+  - `./magi models search <query>` - Search models with advanced criteria
+  - `./magi models recommend` - Show curated recommendations
   - All model commands integrated into main `rin` CLI tool
   - Support for limiting display (default 50, customizable)
   - Multiple filter types: openrouter, popular, budget, vision, function-calling, provider-specific
@@ -111,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.1] - 2025-12-21
 
 ### Added
-- **Comprehensive CLI Management Tool**: New `./rin` command-line interface for complete lifecycle management
+- **Comprehensive CLI Management Tool**: New `./magi` command-line interface for complete lifecycle management
   - `rin start` - Start all RIN services (wraps start.sh)
   - `rin stop` - Gracefully stop all services
   - `rin restart` - Restart all services

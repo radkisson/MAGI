@@ -106,7 +106,7 @@ def test_litellm_configuration():
     
     if not openrouter_models:
         print_info("Using dynamic model loading approach (no static OpenRouter models)")
-        print_info("Models will be loaded via: ./rin sync-models --provider openrouter")
+        print_info("Models will be loaded via: ./magi sync-models --provider openrouter")
         
         # Check that sync script exists and adds webhook headers
         sync_script = base_path / "scripts" / "sync_openrouter_models.py"

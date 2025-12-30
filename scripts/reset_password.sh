@@ -21,7 +21,7 @@ reset_openwebui_password() {
     # Check if OpenWebUI is running
     if ! docker ps | grep -q magi-cortex; then
         print_error "OpenWebUI container is not running"
-        print_info "Start RIN first: ./rin start"
+        print_info "Start RIN first: ./magi start"
         return 1
     fi
     
@@ -68,7 +68,7 @@ reset_n8n_password() {
     # Check if n8n is running
     if ! docker ps | grep -q magi-reflex-automation; then
         print_error "n8n container is not running"
-        print_info "Start RIN first: ./rin start"
+        print_info "Start RIN first: ./magi start"
         return 1
     fi
     
@@ -111,7 +111,7 @@ show_usage() {
 RIN Password Reset Tool
 
 USAGE:
-    ./rin reset-password <service> [email]
+    ./magi reset-password <service> [email]
 
 SERVICES:
     openwebui    - Reset OpenWebUI admin password
@@ -119,9 +119,9 @@ SERVICES:
     all          - Reset password for both services
 
 EXAMPLES:
-    ./rin reset-password openwebui
-    ./rin reset-password n8n admin@example.com
-    ./rin reset-password all
+    ./magi reset-password openwebui
+    ./magi reset-password n8n admin@example.com
+    ./magi reset-password all
 
 If email is not provided, the script will use the email from .env file
 or prompt you to enter it.

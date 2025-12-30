@@ -301,7 +301,7 @@ For production deployment:
 ## Monitoring & Debugging
 
 ```
-View logs:           ./rin logs n8n
+View logs:           ./magi logs n8n
 Check executions:    n8n UI → Workflow → Executions tab
 Test webhook:        curl -X POST http://localhost:5678/webhook/...
 Check connectivity:  docker exec rin-reflex-automation ping rin-router

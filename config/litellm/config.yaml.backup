@@ -1033,37 +1033,6 @@ model_list:
     tags:
     - openai
     - long-context
-- model_name: openrouter/openai-gpt-4o-2024-05-13
-  litellm_params:
-    model: openrouter/openai/gpt-4o-2024-05-13
-    api_key: os.environ/OPENROUTER_API_KEY
-    temperature: 0.7
-    max_tokens: 8192
-    top_p: 1.0
-    extra_headers:
-      HTTP-Referer: os.environ/OPENROUTER_SITE_URL
-      X-Title: os.environ/OPENROUTER_APP_NAME
-  model_info:
-    mode: chat
-    description: 'GPT-4o ("o" for "omni") is OpenAI''s latest AI model, supporting
-      both text and image inputs with text outputs. It maintains the intelligence
-      level of [GPT-4 Turbo](/models/openai/gpt-4-turbo) while being twice as fast
-      and 50% more cost-effective. GPT-4o also offers improved performance in processing
-      non-English languages and enhanced visual capabilities.
-
-
-      For benchmarking against other models, it was briefly called ["im-also-a-good-gpt2-chatbot"](https://twitter.com/LiamFedus/status/1790064963966370209)
-
-
-      #multimodal'
-    popularity_score: 80.0
-    cost:
-      input_per_1m_tokens: 5.0
-      output_per_1m_tokens: 15.0
-      tier: premium
-    tags:
-    - openai
-    - long-context
 - model_name: openrouter/openai-gpt-4o
   litellm_params:
     model: openrouter/openai/gpt-4o
@@ -1092,6 +1061,37 @@ model_list:
       input_per_1m_tokens: 2.5
       output_per_1m_tokens: 10.0
       tier: standard
+    tags:
+    - openai
+    - long-context
+- model_name: openrouter/openai-gpt-4o-2024-05-13
+  litellm_params:
+    model: openrouter/openai/gpt-4o-2024-05-13
+    api_key: os.environ/OPENROUTER_API_KEY
+    temperature: 0.7
+    max_tokens: 8192
+    top_p: 1.0
+    extra_headers:
+      HTTP-Referer: os.environ/OPENROUTER_SITE_URL
+      X-Title: os.environ/OPENROUTER_APP_NAME
+  model_info:
+    mode: chat
+    description: 'GPT-4o ("o" for "omni") is OpenAI''s latest AI model, supporting
+      both text and image inputs with text outputs. It maintains the intelligence
+      level of [GPT-4 Turbo](/models/openai/gpt-4-turbo) while being twice as fast
+      and 50% more cost-effective. GPT-4o also offers improved performance in processing
+      non-English languages and enhanced visual capabilities.
+
+
+      For benchmarking against other models, it was briefly called ["im-also-a-good-gpt2-chatbot"](https://twitter.com/LiamFedus/status/1790064963966370209)
+
+
+      #multimodal'
+    popularity_score: 80.0
+    cost:
+      input_per_1m_tokens: 5.0
+      output_per_1m_tokens: 15.0
+      tier: premium
     tags:
     - openai
     - long-context

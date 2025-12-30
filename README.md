@@ -22,7 +22,7 @@ MAGI combines Open WebUI, LiteLLM, SearXNG, Qdrant, and n8n into a unified syste
 ```bash
 git clone https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-.git
 cd Rhyzomic-Intelligence-Node-RIN-
-./rin start
+./magi start
 ```
 
 Open http://localhost:3000
@@ -32,7 +32,7 @@ For Jupyter Lab, open http://localhost:8888
 Add API keys to `.env` and restart:
 ```bash
 OPENROUTER_API_KEY=your_key
-./rin restart
+./magi restart
 ```
 
 ## Production Setup (HTTPS)
@@ -40,9 +40,9 @@ OPENROUTER_API_KEY=your_key
 **Option 1: Let's Encrypt (Public Domain)**
 
 ```bash
-./rin setup-https
+./magi setup-https
 # Enter your domain and email
-./rin start
+./magi start
 ```
 
 Caddy automatically obtains and renews SSL certificates.
@@ -50,7 +50,7 @@ Caddy automatically obtains and renews SSL certificates.
 **Option 2: Tailscale (Private Network)**
 
 ```bash
-./rin setup-tailscale-https
+./magi setup-tailscale-https
 ```
 
 Access via `https://your-machine.ts.net/` — no public ports required.
@@ -60,13 +60,13 @@ Access via `https://your-machine.ts.net/` — no public ports required.
 ## CLI
 
 ```bash
-./rin start        # Start all services
-./rin stop         # Stop all services
-./rin status       # Health check
-./rin logs         # View logs
-./rin setup-https  # Configure automatic HTTPS
-./rin backup       # Backup data
-./rin help         # All commands
+./magi start        # Start all services
+./magi stop         # Stop all services
+./magi status       # Health check
+./magi logs         # View logs
+./magi setup-https  # Configure automatic HTTPS
+./magi backup       # Backup data
+./magi help         # All commands
 ```
 
 ## Tools (Auto-Registered)

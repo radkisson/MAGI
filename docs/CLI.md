@@ -1,59 +1,59 @@
 # CLI Reference
 
-MAGI includes a comprehensive CLI tool (`./rin`) for system management.
+MAGI includes a comprehensive CLI tool (`./magi`) for system management.
 
 ## Basic Commands
 
 ```bash
-./rin start              # Start all services
-./rin stop               # Stop all services
-./rin restart            # Restart all services
-./rin status             # Check system health
-./rin logs               # View logs (all services)
-./rin logs <service> -f  # Follow specific service logs
-./rin ps                 # List running containers
-./rin help               # Show all commands
+./magi start              # Start all services
+./magi stop               # Stop all services
+./magi restart            # Restart all services
+./magi status             # Check system health
+./magi logs               # View logs (all services)
+./magi logs <service> -f  # Follow specific service logs
+./magi ps                 # List running containers
+./magi help               # Show all commands
 ```
 
 ## Updates & Upgrades
 
 ```bash
-./rin update             # Pull latest Docker images
-./rin upgrade            # Upgrade MAGI to latest version
-./rin version            # Show version information
+./magi update             # Pull latest Docker images
+./magi upgrade            # Upgrade MAGI to latest version
+./magi version            # Show version information
 ```
 
 ## Backup & Restore
 
 ```bash
-./rin backup             # Backup all data
-./rin restore <path>     # Restore from backup
+./magi backup             # Backup all data
+./magi restore <path>     # Restore from backup
 ```
 
 ## Model Management
 
 ```bash
-./rin models sync        # Sync latest models from OpenRouter
-./rin models list [N]    # List available models
-./rin models top [N]     # Show top N models by popularity
-./rin models search <q>  # Search models
-./rin models recommend   # Show curated recommendations
+./magi models sync        # Sync latest models from OpenRouter
+./magi models list [N]    # List available models
+./magi models top [N]     # Show top N models by popularity
+./magi models search <q>  # Search models
+./magi models recommend   # Show curated recommendations
 ```
 
 ## Password Management
 
 ```bash
-./rin reset-password openwebui  # Reset OpenWebUI password
-./rin reset-password n8n        # Reset n8n password
-./rin reset-password all        # Reset all passwords
-./rin setup-accounts            # Run initial account setup
+./magi reset-password openwebui  # Reset OpenWebUI password
+./magi reset-password n8n        # Reset n8n password
+./magi reset-password all        # Reset all passwords
+./magi setup-accounts            # Run initial account setup
 ```
 
 ## Advanced
 
 ```bash
-./rin exec <container> <cmd>  # Execute command in container
-./rin clean                   # Clean up containers and images
+./magi exec <container> <cmd>  # Execute command in container
+./magi clean                   # Clean up containers and images
 ```
 
 ## Direct Docker Access

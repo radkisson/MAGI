@@ -76,7 +76,7 @@ echo -e "${YELLOW}   Your browser will show security warnings. This is expected.
 echo ""
 echo -e "${BLUE}📋 Next steps:${NC}"
 echo "   1. Set ENABLE_HTTPS=true in your .env file"
-echo "   2. Run ./start.sh or ./rin start to restart services with HTTPS"
+echo "   2. Run ./start.sh or ./magi start to restart services with HTTPS"
 echo "   3. Access services using https:// instead of http://"
 echo ""
 echo -e "${BLUE}🔐 For production:${NC}"

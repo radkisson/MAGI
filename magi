@@ -4,7 +4,7 @@ set -e
 # MAGI (Multi-Agent General Intelligence) - CLI Management Tool
 # Version: 1.3.0
 # Description: Comprehensive CLI for managing MAGI lifecycle
-# Note: Command remains './rin' for backward compatibility
+# Note: Command remains './magi' for backward compatibility
 
 # --- Color Definitions ---
 GREEN='\033[0;32m'
@@ -74,9 +74,9 @@ validate_base_dir() {
         exit 1
     fi
     
-    # Ensure BASE_DIR looks like the RIN directory (has docker-compose.yml)
+    # Ensure BASE_DIR looks like the MAGI directory (has docker-compose.yml)
     if [ ! -f "$BASE_DIR/docker-compose.yml" ]; then
-        print_error "BASE_DIR does not appear to be a valid RIN directory."
+        print_error "BASE_DIR does not appear to be a valid MAGI directory."
         print_error "Expected docker-compose.yml in: $BASE_DIR"
         exit 1
     fi
@@ -115,7 +115,7 @@ load_env() {
 # --- Command Implementations ---
 
 cmd_start() {
-    print_header "Starting RIN"
+    print_header "Starting MAGI"
     
     # Execute the original start.sh script
     if [ -f "$BASE_DIR/start.sh" ]; then
@@ -127,24 +127,24 @@ cmd_start() {
 }
 
 cmd_stop() {
-    print_header "Stopping RIN"
+    print_header "Stopping MAGI"
     check_docker
     
     cd "$BASE_DIR"
     
     if ! docker compose ps --quiet | grep -q .; then
-        print_warning "RIN is not running"
+        print_warning "MAGI is not running"
         exit 0
     fi
     
     print_info "Shutting down all subsystems..."
     docker compose down
     
-    print_success "RIN stopped successfully"
+    print_success "MAGI stopped successfully"
 }
 
 cmd_restart() {
-    print_header "Restarting RIN"
+    print_header "Restarting MAGI"
     
     cmd_stop
     echo ""
@@ -152,16 +152,16 @@ cmd_restart() {
 }
 
 cmd_status() {
-    print_header "RIN System Status"
+    print_header "MAGI System Status"
     check_docker
     load_env
     
     cd "$BASE_DIR"
     
     if ! docker compose ps --quiet | grep -q .; then
-        print_warning "RIN is not running"
+        print_warning "MAGI is not running"
         echo ""
-        echo "Start RIN with: ./rin start"
+        echo "Start MAGI with: ./magi start"
         exit 0
     fi
     
@@ -233,7 +233,7 @@ cmd_status() {
             print_warning "  Anthropic: Not configured (add ANTHROPIC_API_KEY to .env)"
         fi
     else
-        print_error "  .env file not found. Run ./rin start to initialize."
+        print_error "  .env file not found. Run ./magi start to initialize."
     fi
     
     echo ""
@@ -246,7 +246,7 @@ cmd_status() {
 }
 
 cmd_logs() {
-    print_header "RIN Logs"
+    print_header "MAGI Logs"
     check_docker
     
     cd "$BASE_DIR"
@@ -272,7 +272,7 @@ cmd_logs() {
 }
 
 cmd_update() {
-    print_header "Updating RIN"
+    print_header "Updating MAGI"
     check_docker
     
     cd "$BASE_DIR"
@@ -281,11 +281,11 @@ cmd_update() {
     docker compose pull
     
     print_success "Images updated successfully"
-    print_info "Run './rin restart' to apply updates"
+    print_info "Run './magi restart' to apply updates"
 }
 
 cmd_upgrade() {
-    print_header "Upgrading RIN"
+    print_header "Upgrading MAGI"
     check_docker
     
     cd "$BASE_DIR"
@@ -294,9 +294,9 @@ cmd_upgrade() {
     if [ ! -d .git ]; then
         print_error "Not a git repository. Cannot upgrade."
         print_info "To upgrade manually:"
-        print_info "  1. Backup your data: ./rin backup"
+        print_info "  1. Backup your data: ./magi backup"
         print_info "  2. Download the latest release"
-        print_info "  3. Restore your data: ./rin restore"
+        print_info "  3. Restore your data: ./magi restore"
         exit 1
     fi
     
@@ -329,7 +329,7 @@ cmd_upgrade() {
     
     print_warning "Updates available. This will pull the latest code."
     
-    if ! confirm_action "⚠ This will update RIN code and Docker images."; then
+    if ! confirm_action "⚠ This will update MAGI code and Docker images."; then
         print_info "Upgrade cancelled"
         exit 0
     fi
@@ -347,11 +347,11 @@ cmd_upgrade() {
     docker compose pull
     
     print_success "Upgrade completed successfully"
-    print_info "Start RIN with: ./rin start"
+    print_info "Start MAGI with: ./magi start"
 }
 
 cmd_backup() {
-    print_header "Backing Up RIN Data"
+    print_header "Backing Up MAGI Data"
     
     local backup_dir="${1:-$BASE_DIR/backups/$(date +%Y%m%d_%H%M%S)}"
     
@@ -385,7 +385,7 @@ cmd_backup() {
     
     # Create backup manifest
     cat <<EOF > "$backup_dir/backup_manifest.txt"
-RIN Backup Manifest
+MAGI Backup Manifest
 Created: $(date)
 Version: 1.2.1
 
@@ -400,7 +400,7 @@ EOF
 }
 
 cmd_restore() {
-    print_header "Restoring RIN Data"
+    print_header "Restoring MAGI Data"
     
     # Validate BASE_DIR first
     validate_base_dir
@@ -409,7 +409,7 @@ cmd_restore() {
     
     if [ -z "$backup_dir" ]; then
         print_error "Please specify backup directory"
-        echo "Usage: ./rin restore <backup_directory>"
+        echo "Usage: ./magi restore <backup_directory>"
         exit 1
     fi
     
@@ -473,11 +473,11 @@ cmd_restore() {
     fi
     
     print_success "Restore completed successfully"
-    print_info "Start RIN with: ./rin start"
+    print_info "Start MAGI with: ./magi start"
 }
 
 cmd_ps() {
-    print_header "RIN Containers"
+    print_header "MAGI Containers"
     check_docker
     
     cd "$BASE_DIR"
@@ -492,7 +492,7 @@ cmd_exec() {
     
     if [ -z "$service" ]; then
         print_error "Please specify a service"
-        echo "Usage: ./rin exec <service> <command>"
+        echo "Usage: ./magi exec <service> <command>"
         echo ""
         echo "Available services:"
         echo "  open-webui    - Open WebUI (Cortex)"
@@ -517,7 +517,7 @@ cmd_exec() {
 }
 
 cmd_clean() {
-    print_header "Cleaning RIN"
+    print_header "Cleaning MAGI"
     
     print_warning "This will remove all containers, volumes, and images."
     print_warning "Your data in the data/ directory will be preserved."
@@ -540,9 +540,9 @@ cmd_clean() {
 }
 
 cmd_version() {
-    print_header "RIN Version"
+    print_header "MAGI Version"
     
-    echo "RIN Version: 1.2.1"
+    echo "MAGI Version: 1.2.1"
     echo "CLI Tool: v1.0.0"
     echo ""
     
@@ -574,7 +574,7 @@ cmd_models_sync() {
             else
                 print_success "Models synced successfully (limited to top $limit)"
             fi
-            print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
+            print_info "Restart LiteLLM to apply changes: ./magi restart litellm"
         else
             print_error "Model sync failed"
             exit 1
@@ -582,7 +582,7 @@ cmd_models_sync() {
     else
         if python3 "$BASE_DIR/scripts/sync_openrouter_models.py"; then
             print_success "Models synced successfully"
-            print_info "Restart LiteLLM to apply changes: ./rin restart litellm"
+            print_info "Restart LiteLLM to apply changes: ./magi restart litellm"
         else
             print_error "Model sync failed"
             exit 1
@@ -637,7 +637,7 @@ cmd_models_recommend() {
     local recommendations_file="$BASE_DIR/data/model_recommendations.json"
     
     if [ ! -f "$recommendations_file" ]; then
-        print_warning "No recommendations found. Run './rin models sync' first."
+        print_warning "No recommendations found. Run './magi models sync' first."
         exit 1
     fi
     
@@ -719,7 +719,7 @@ cmd_models() {
 Model Management Commands
 
 USAGE:
-    ./rin models <subcommand> [options]
+    ./magi models <subcommand> [options]
 
 SUBCOMMANDS:
     sync [limit]            Sync latest models from OpenRouter API (optional limit)
@@ -731,19 +731,19 @@ SUBCOMMANDS:
     help                    Show this help message
 
 EXAMPLES:
-    ./rin models sync                      # Sync models (uses OPENROUTER_MODEL_LIMIT)
-    ./rin models sync 25                   # Sync top 25 models
-    ./rin models sync 0                    # Sync all available models
-    ./rin models list                      # List models (uses OPENROUTER_MODEL_LIMIT)
-    ./rin models list 10                   # List top 10 models
-    ./rin models list 25                   # List top 25 models
-    ./rin models list 50                   # List top 50 models
-    ./rin models list 75                   # List top 75 models
-    ./rin models top 10                    # Show top 10 models
-    ./rin models filter vision 20          # Show 20 vision models
-    ./rin models filter budget 30          # Show 30 budget models
-    ./rin models search --tag vision       # Search for vision models
-    ./rin models recommend                 # Show recommendations
+    ./magi models sync                      # Sync models (uses OPENROUTER_MODEL_LIMIT)
+    ./magi models sync 25                   # Sync top 25 models
+    ./magi models sync 0                    # Sync all available models
+    ./magi models list                      # List models (uses OPENROUTER_MODEL_LIMIT)
+    ./magi models list 10                   # List top 10 models
+    ./magi models list 25                   # List top 25 models
+    ./magi models list 50                   # List top 50 models
+    ./magi models list 75                   # List top 75 models
+    ./magi models top 10                    # Show top 10 models
+    ./magi models filter vision 20          # Show 20 vision models
+    ./magi models filter budget 30          # Show 30 budget models
+    ./magi models search --tag vision       # Search for vision models
+    ./magi models recommend                 # Show recommendations
 
 ENVIRONMENT VARIABLES:
     OPENROUTER_MODEL_LIMIT    Set default model limit (default: 50)
@@ -766,7 +766,7 @@ EOF
         *)
             print_error "Unknown models subcommand: $subcommand"
             echo ""
-            echo "Run './rin models help' for usage information"
+            echo "Run './magi models help' for usage information"
             exit 1
             ;;
     esac
@@ -834,21 +834,21 @@ cmd_setup_tailscale() {
 
 cmd_help() {
     cat <<EOF
-Rhyzomic Intelligence Node (RIN) - CLI Management Tool
+MAGI (Multi-Agent General Intelligence) - CLI Management Tool
 
 USAGE:
-    ./rin <command> [options]
+    ./magi <command> [options]
 
 COMMANDS:
-    start               Start all RIN services
-    stop                Stop all RIN services
-    restart             Restart all RIN services
+    start               Start all MAGI services
+    stop                Stop all MAGI services
+    restart             Restart all MAGI services
     status              Show status of all services
     logs [service] [-f] View logs (optionally follow with -f)
     update              Pull latest Docker images
-    upgrade             Upgrade RIN to latest version
-    backup [dir]        Backup RIN data
-    restore <dir>       Restore RIN data from backup
+    upgrade             Upgrade MAGI to latest version
+    backup [dir]        Backup MAGI data
+    restore <dir>       Restore MAGI data from backup
     ps                  List all running containers
     exec <service> [cmd] Execute command in service container
     clean               Remove all containers and images
@@ -869,22 +869,22 @@ MODEL MANAGEMENT:
     models recommend            Show recommendations
 
 EXAMPLES:
-    ./rin start                     # Start RIN
-    ./rin stop                      # Stop RIN
-    ./rin models sync               # Sync models (uses OPENROUTER_MODEL_LIMIT)
-    ./rin models sync 25            # Sync top 25 models
-    ./rin models list               # List models (uses OPENROUTER_MODEL_LIMIT)
-    ./rin models list 25            # List top 25 models
-    ./rin models top 10             # Show top 10 models
-    ./rin models filter vision 20   # Show 20 vision models
-    ./rin status                    # Check system status
-    ./rin logs                      # View all logs
-    ./rin logs open-webui -f        # Follow Open WebUI logs
-    ./rin reset-password openwebui  # Reset OpenWebUI admin password
-    ./rin reset-password n8n        # Reset n8n owner password
-    ./rin setup-accounts            # Setup initial accounts
-    ./rin setup-https               # Setup automatic HTTPS with Let's Encrypt
-    ./rin setup-tailscale           # Setup Tailscale HTTPS with path-based routing
+    ./magi start                     # Start MAGI
+    ./magi stop                      # Stop MAGI
+    ./magi models sync               # Sync models (uses OPENROUTER_MODEL_LIMIT)
+    ./magi models sync 25            # Sync top 25 models
+    ./magi models list               # List models (uses OPENROUTER_MODEL_LIMIT)
+    ./magi models list 25            # List top 25 models
+    ./magi models top 10             # Show top 10 models
+    ./magi models filter vision 20   # Show 20 vision models
+    ./magi status                    # Check system status
+    ./magi logs                      # View all logs
+    ./magi logs open-webui -f        # Follow Open WebUI logs
+    ./magi reset-password openwebui  # Reset OpenWebUI admin password
+    ./magi reset-password n8n        # Reset n8n owner password
+    ./magi setup-accounts            # Setup initial accounts
+    ./magi setup-https               # Setup automatic HTTPS with Let's Encrypt
+    ./magi setup-tailscale           # Setup Tailscale HTTPS with path-based routing
 
 SERVICES:
     open-webui      - Open WebUI (Cortex)

@@ -21,7 +21,11 @@ import threading
 import requests
 from typing import Callable, Any
 from pydantic import BaseModel, Field
-from .utils import get_service_url
+
+try:
+    from .utils import get_service_url
+except ImportError:
+    from utils import get_service_url
 
 
 def _get_n8n_webhook_url() -> str:

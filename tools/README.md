@@ -4,7 +4,7 @@ This directory contains the **"nerve endings"** that connect the Cortex (Open We
 
 ## ✅ Auto-Registration
 
-**Tools are automatically registered** when you run `./start.sh` or `./rin start`. No manual setup required.
+**Tools are automatically registered** when you run `./start.sh` or `./magi start`. No manual setup required.
 
 ### Included Tools
 

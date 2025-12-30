@@ -293,7 +293,7 @@ This would connect the `daily_report_generator.json` to the `slack_notification.
 
 - **Workflow Documentation**: See `workflows/README.md`
 - **Installation Guide**: See `workflows/INSTALLATION_GUIDE.md`
-- **RIN CLI**: Use `./rin logs n8n` for n8n logs
+- **RIN CLI**: Use `./magi logs n8n` for n8n logs
 - **n8n Documentation**: https://docs.n8n.io/
 
 ---

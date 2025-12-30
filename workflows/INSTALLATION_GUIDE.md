@@ -4,8 +4,8 @@ This guide provides step-by-step instructions for installing and configuring all
 
 ## Prerequisites
 
-1. RIN must be running: `./start.sh` or `./rin start`
-2. All services must be healthy: `./rin status`
+1. RIN must be running: `./start.sh` or `./magi start`
+2. All services must be healthy: `./magi status`
 3. n8n must be accessible at http://localhost:5678
 
 ## Python Support
@@ -354,7 +354,7 @@ Workflows are automatically persisted in `/data/n8n` directory.
 
 To backup manually:
 ```bash
-./rin backup
+./magi backup
 # Or
 tar -czf n8n-backup.tar.gz data/n8n/
 ```
@@ -374,7 +374,7 @@ tar -czf n8n-backup.tar.gz data/n8n/
 ## Support
 
 - **Documentation**: See `workflows/README.md` for workflow descriptions
-- **RIN CLI**: Use `./rin logs n8n` to view n8n logs
+- **RIN CLI**: Use `./magi logs n8n` to view n8n logs
 - **n8n Docs**: https://docs.n8n.io/
 - **Issues**: Report at GitHub Issues
 
