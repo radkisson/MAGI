@@ -20,6 +20,9 @@ services:
       # External Senses: API Keys for Tools (Auto-Configuration)
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      # Base URL Configuration (for Tailscale or reverse proxy with subpaths)
+      - WEBUI_URL=${WEBUI_URL:-}
+      - ENABLE_PERSISTENT_CONFIG=${ENABLE_PERSISTENT_CONFIG:-true}
       # HTTPS Configuration
       - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
       - SSL_CERT_PATH=${SSL_CERT_PATH:-/app/ssl/cert.pem}

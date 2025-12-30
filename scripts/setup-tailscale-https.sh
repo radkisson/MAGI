@@ -160,6 +160,17 @@ elif grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env" 2>/dev/null; then
         else
             echo "JUPYTER_BASE_URL=/jupyter" >> "$BASE_DIR/.env"
         fi
+        # Configure OpenWebUI base URL and disable persistent config
+        if grep -q "^WEBUI_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i '' "s|^WEBUI_URL=.*|WEBUI_URL=https://$FULL_DOMAIN|" "$BASE_DIR/.env"
+        else
+            echo "WEBUI_URL=https://$FULL_DOMAIN" >> "$BASE_DIR/.env"
+        fi
+        if grep -q "^ENABLE_PERSISTENT_CONFIG=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i '' "s|^ENABLE_PERSISTENT_CONFIG=.*|ENABLE_PERSISTENT_CONFIG=false|" "$BASE_DIR/.env"
+        else
+            echo "ENABLE_PERSISTENT_CONFIG=false" >> "$BASE_DIR/.env"
+        fi
     else
         sed -i "s|^ENABLE_TAILSCALE_HTTPS=.*|ENABLE_TAILSCALE_HTTPS=true|" "$BASE_DIR/.env"
         # Update or add TAILSCALE_DOMAIN
@@ -184,6 +195,17 @@ elif grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env" 2>/dev/null; then
         else
             echo "JUPYTER_BASE_URL=/jupyter" >> "$BASE_DIR/.env"
         fi
+        # Configure OpenWebUI base URL and disable persistent config
+        if grep -q "^WEBUI_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i "s|^WEBUI_URL=.*|WEBUI_URL=https://$FULL_DOMAIN|" "$BASE_DIR/.env"
+        else
+            echo "WEBUI_URL=https://$FULL_DOMAIN" >> "$BASE_DIR/.env"
+        fi
+        if grep -q "^ENABLE_PERSISTENT_CONFIG=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i "s|^ENABLE_PERSISTENT_CONFIG=.*|ENABLE_PERSISTENT_CONFIG=false|" "$BASE_DIR/.env"
+        else
+            echo "ENABLE_PERSISTENT_CONFIG=false" >> "$BASE_DIR/.env"
+        fi
     fi
 else
     cat >> "$BASE_DIR/.env" <<EOF
@@ -197,6 +219,10 @@ TAILSCALE_DOMAIN=$FULL_DOMAIN
 N8N_PATH=/n8n
 N8N_EDITOR_BASE_URL=https://$FULL_DOMAIN/n8n/
 JUPYTER_BASE_URL=/jupyter
+
+# OpenWebUI base URL configuration (for frontend-backend communication)
+WEBUI_URL=https://$FULL_DOMAIN
+ENABLE_PERSISTENT_CONFIG=false
 EOF
 fi
 
