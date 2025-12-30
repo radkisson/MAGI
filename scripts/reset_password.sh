@@ -19,7 +19,7 @@ reset_openwebui_password() {
     print_info "Resetting OpenWebUI password for: $email"
     
     # Check if OpenWebUI is running
-    if ! docker ps | grep -q rin-cortex; then
+    if ! docker ps | grep -q magi-cortex; then
         print_error "OpenWebUI container is not running"
         print_info "Start RIN first: ./rin start"
         return 1
@@ -40,16 +40,16 @@ reset_openwebui_password() {
     
     # Update password in database
     print_info "Updating password in database..."
-    docker exec rin-cortex sqlite3 /app/backend/data/webui.db \
+    docker exec magi-cortex sqlite3 /app/backend/data/webui.db \
         "UPDATE user SET password='$safe_hash' WHERE email='$safe_email';" 2>/dev/null
     
-    local affected_rows=$(docker exec rin-cortex sqlite3 /app/backend/data/webui.db \
+    local affected_rows=$(docker exec magi-cortex sqlite3 /app/backend/data/webui.db \
         "SELECT changes();" 2>/dev/null)
     
     if [ "$affected_rows" = "0" ]; then
         print_error "User not found: $email"
         print_info "Available users:"
-        docker exec rin-cortex sqlite3 /app/backend/data/webui.db \
+        docker exec magi-cortex sqlite3 /app/backend/data/webui.db \
             "SELECT email FROM user;" 2>/dev/null | sed 's/^/  /'
         return 1
     fi
@@ -66,7 +66,7 @@ reset_n8n_password() {
     print_info "Resetting n8n password for: $email"
     
     # Check if n8n is running
-    if ! docker ps | grep -q rin-reflex-automation; then
+    if ! docker ps | grep -q magi-reflex-automation; then
         print_error "n8n container is not running"
         print_info "Start RIN first: ./rin start"
         return 1
@@ -87,16 +87,16 @@ reset_n8n_password() {
     
     # Update password in database
     print_info "Updating password in database..."
-    docker exec rin-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
+    docker exec magi-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
         "UPDATE user SET password='$safe_hash' WHERE email='$safe_email';" 2>/dev/null
     
-    local affected_rows=$(docker exec rin-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
+    local affected_rows=$(docker exec magi-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
         "SELECT changes();" 2>/dev/null)
     
     if [ "$affected_rows" = "0" ]; then
         print_error "User not found: $email"
         print_info "Available users:"
-        docker exec rin-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
+        docker exec magi-reflex-automation sqlite3 /home/node/.n8n/database.sqlite \
             "SELECT email FROM user;" 2>/dev/null | sed 's/^/  /'
         return 1
     fi
@@ -168,6 +168,8 @@ main() {
             print_info "Using email from .env: $email"
         else
             read -p "Enter email address: " email
+            # Trim whitespace from input
+            email=$(echo "$email" | xargs)
         fi
     fi
     

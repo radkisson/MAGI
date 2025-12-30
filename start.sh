@@ -432,7 +432,7 @@ echo -e "${BLUE}🔧 Registering tools in Open WebUI...${NC}"
 MAX_WAIT=60
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
-    if docker exec rin-cortex test -f /app/backend/data/webui.db 2>/dev/null; then
+    if docker exec magi-cortex test -f /app/backend/data/webui.db 2>/dev/null; then
         break
     fi
     sleep 2
@@ -444,7 +444,7 @@ if [ $WAITED -ge $MAX_WAIT ]; then
 else
     # Run the tool registration script
     if [ -f "$BASE_DIR/tools/register_tools.py" ]; then
-        docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py 2>/dev/null || echo "⚠️  Tool registration script failed. You may need to register tools manually."
+        docker exec magi-cortex python3 /app/backend/data/tools/register_tools.py 2>/dev/null || echo "⚠️  Tool registration script failed. You may need to register tools manually."
     fi
 fi
 
@@ -455,7 +455,7 @@ echo -e "${BLUE}🔄 Importing n8n workflows...${NC}"
 MAX_WAIT=30
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
-    if docker exec rin-reflex-automation test -f /home/node/.n8n/database.sqlite 2>/dev/null; then
+    if docker exec magi-reflex-automation test -f /home/node/.n8n/database.sqlite 2>/dev/null; then
         break
     fi
     sleep 2
@@ -466,7 +466,7 @@ if [ $WAITED -ge $MAX_WAIT ]; then
     echo "⚠️  Timeout waiting for n8n. Workflows may need manual import."
 else
     # Check if workflows already imported
-    WORKFLOW_LIST=$(docker exec rin-reflex-automation n8n list:workflow 2>/dev/null || echo "")
+    WORKFLOW_LIST=$(docker exec magi-reflex-automation n8n list:workflow 2>/dev/null || echo "")
     # Drop potential header line and count only non-empty lines as actual workflows
     # Extract only numeric characters and use first number found, default to 0
     WORKFLOW_COUNT=$(printf "%s" "$WORKFLOW_LIST" | sed '1d' | grep -c '[^[:space:]]' 2>/dev/null | grep -o '[0-9]*' | head -1)
@@ -476,7 +476,7 @@ else
     else
         # Import workflows from /workflows directory
         echo "  Importing workflows from /workflows..."
-        IMPORT_OUTPUT=$(docker exec rin-reflex-automation n8n import:workflow --separate --input=/workflows/ 2>&1)
+        IMPORT_OUTPUT=$(docker exec magi-reflex-automation n8n import:workflow --separate --input=/workflows/ 2>&1)
         IMPORT_STATUS=$?
         echo "$IMPORT_OUTPUT" | grep -v "Could not find workflow" | grep -v "Could not remove webhooks" || true
         if [ $IMPORT_STATUS -eq 0 ]; then

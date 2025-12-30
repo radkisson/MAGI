@@ -26,7 +26,7 @@ from .utils import get_service_url
 
 def _get_n8n_webhook_url() -> str:
     """Get n8n webhook URL, auto-detecting HTTP or HTTPS based on configuration."""
-    return get_service_url("rin-reflex-automation", 5678, check_env_var="N8N_WEBHOOK_URL") + "/webhook"
+    return get_service_url("magi-reflex-automation", 5678, check_env_var="N8N_WEBHOOK_URL") + "/webhook"
 
 
 class Valves(BaseModel):
@@ -177,8 +177,8 @@ class Tools:
                 f"❌ Nervous System Failure\n\n"
                 f"Cannot reach n8n at `{url}`\n\n"
                 f"**Troubleshooting**:\n"
-                f"1. Check if n8n is running: `docker ps | grep rin-reflex`\n"
-                f"2. Restart n8n: `docker restart rin-reflex-automation`"
+                f"1. Check if n8n is running: `docker ps | grep magi-reflex`\n"
+                f"2. Restart n8n: `docker restart magi-reflex-automation`"
             )
 
         except Exception as e:
@@ -453,10 +453,10 @@ query_workflow("research", "Latest developments in quantum computing")
 ## Troubleshooting
 
 If you see connection errors:
-1. Check that n8n is running: `docker ps | grep rin-reflex`
+1. Check that n8n is running: `docker ps | grep magi-reflex`
 2. Verify workflows are activated in n8n: http://localhost:5678
 3. Ensure webhook URLs match the workflow IDs
-4. Check n8n logs: `docker logs rin-reflex-automation`
+4. Check n8n logs: `docker logs magi-reflex-automation`
 
 ## Configuration
 

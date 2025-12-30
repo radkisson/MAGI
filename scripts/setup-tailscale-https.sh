@@ -144,6 +144,36 @@ elif grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env" 2>/dev/null; then
         else
             echo "TAILSCALE_DOMAIN=$FULL_DOMAIN" >> "$BASE_DIR/.env"
         fi
+        # Configure path-based routing for services
+        if grep -q "^N8N_PATH=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i '' "s|^N8N_PATH=.*|N8N_PATH=/n8n|" "$BASE_DIR/.env"
+        else
+            echo "N8N_PATH=/n8n" >> "$BASE_DIR/.env"
+        fi
+        if grep -q "^N8N_EDITOR_BASE_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i '' "s|^N8N_EDITOR_BASE_URL=.*|N8N_EDITOR_BASE_URL=https://$FULL_DOMAIN/n8n/|" "$BASE_DIR/.env"
+        else
+            echo "N8N_EDITOR_BASE_URL=https://$FULL_DOMAIN/n8n/" >> "$BASE_DIR/.env"
+        fi
+        if grep -q "^JUPYTER_BASE_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i '' "s|^JUPYTER_BASE_URL=.*|JUPYTER_BASE_URL=/jupyter|" "$BASE_DIR/.env"
+        else
+            echo "JUPYTER_BASE_URL=/jupyter" >> "$BASE_DIR/.env"
+        fi
+        # Configure OpenWebUI base URL
+        if grep -q "^WEBUI_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i '' "s|^WEBUI_URL=.*|WEBUI_URL=https://$FULL_DOMAIN|" "$BASE_DIR/.env"
+        else
+            echo "WEBUI_URL=https://$FULL_DOMAIN" >> "$BASE_DIR/.env"
+        fi
+        # Disable persistent config so WEBUI_URL changes take effect immediately
+        # OpenWebUI stores config in database on first launch; setting to false
+        # ensures environment variable changes are always respected
+        if grep -q "^ENABLE_PERSISTENT_CONFIG=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i '' "s|^ENABLE_PERSISTENT_CONFIG=.*|ENABLE_PERSISTENT_CONFIG=false|" "$BASE_DIR/.env"
+        else
+            echo "ENABLE_PERSISTENT_CONFIG=false" >> "$BASE_DIR/.env"
+        fi
     else
         sed -i "s|^ENABLE_TAILSCALE_HTTPS=.*|ENABLE_TAILSCALE_HTTPS=true|" "$BASE_DIR/.env"
         # Update or add TAILSCALE_DOMAIN
@@ -151,6 +181,36 @@ elif grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env" 2>/dev/null; then
             sed -i "s|^TAILSCALE_DOMAIN=.*|TAILSCALE_DOMAIN=$FULL_DOMAIN|" "$BASE_DIR/.env"
         else
             echo "TAILSCALE_DOMAIN=$FULL_DOMAIN" >> "$BASE_DIR/.env"
+        fi
+        # Configure path-based routing for services
+        if grep -q "^N8N_PATH=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i "s|^N8N_PATH=.*|N8N_PATH=/n8n|" "$BASE_DIR/.env"
+        else
+            echo "N8N_PATH=/n8n" >> "$BASE_DIR/.env"
+        fi
+        if grep -q "^N8N_EDITOR_BASE_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i "s|^N8N_EDITOR_BASE_URL=.*|N8N_EDITOR_BASE_URL=https://$FULL_DOMAIN/n8n/|" "$BASE_DIR/.env"
+        else
+            echo "N8N_EDITOR_BASE_URL=https://$FULL_DOMAIN/n8n/" >> "$BASE_DIR/.env"
+        fi
+        if grep -q "^JUPYTER_BASE_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i "s|^JUPYTER_BASE_URL=.*|JUPYTER_BASE_URL=/jupyter|" "$BASE_DIR/.env"
+        else
+            echo "JUPYTER_BASE_URL=/jupyter" >> "$BASE_DIR/.env"
+        fi
+        # Configure OpenWebUI base URL
+        if grep -q "^WEBUI_URL=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i "s|^WEBUI_URL=.*|WEBUI_URL=https://$FULL_DOMAIN|" "$BASE_DIR/.env"
+        else
+            echo "WEBUI_URL=https://$FULL_DOMAIN" >> "$BASE_DIR/.env"
+        fi
+        # Disable persistent config so WEBUI_URL changes take effect immediately
+        # OpenWebUI stores config in database on first launch; setting to false
+        # ensures environment variable changes are always respected
+        if grep -q "^ENABLE_PERSISTENT_CONFIG=" "$BASE_DIR/.env" 2>/dev/null; then
+            sed -i "s|^ENABLE_PERSISTENT_CONFIG=.*|ENABLE_PERSISTENT_CONFIG=false|" "$BASE_DIR/.env"
+        else
+            echo "ENABLE_PERSISTENT_CONFIG=false" >> "$BASE_DIR/.env"
         fi
     fi
 else
@@ -160,6 +220,15 @@ else
 # Tailscale Serve provides automatic HTTPS with path-based routing
 ENABLE_TAILSCALE_HTTPS=true
 TAILSCALE_DOMAIN=$FULL_DOMAIN
+
+# Path-based routing configuration for services
+N8N_PATH=/n8n
+N8N_EDITOR_BASE_URL=https://$FULL_DOMAIN/n8n/
+JUPYTER_BASE_URL=/jupyter
+
+# OpenWebUI base URL configuration (for frontend-backend communication)
+WEBUI_URL=https://$FULL_DOMAIN
+ENABLE_PERSISTENT_CONFIG=false
 EOF
 fi
 
@@ -176,6 +245,9 @@ echo "  🚦 LiteLLM:    https://$FULL_DOMAIN/api"
 echo "  📓 Jupyter:    https://$FULL_DOMAIN/jupyter"
 echo ""
 echo -e "${GREEN}All services use automatic HTTPS via Tailscale!${NC}"
+echo ""
+echo -e "${YELLOW}⚠️  IMPORTANT: Restart MAGI services to apply path-based routing:${NC}"
+echo "   ./rin restart"
 echo ""
 echo "Note: These URLs only work from devices on your Tailscale network."
 echo ""

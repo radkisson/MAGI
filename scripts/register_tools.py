@@ -6,11 +6,11 @@ This script directly inserts tools into Open WebUI's SQLite database,
 bypassing the need for manual UI registration.
 
 Usage:
-    docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py
+    docker exec magi-cortex python3 /app/backend/data/tools/register_tools.py
 
 Or from host:
-    docker cp scripts/register_tools.py rin-cortex:/tmp/
-    docker exec rin-cortex python3 /tmp/register_tools.py
+    docker cp scripts/register_tools.py magi-cortex:/tmp/
+    docker exec magi-cortex python3 /tmp/register_tools.py
 """
 
 import sqlite3
@@ -219,10 +219,10 @@ def main():
     # Check if running inside container
     if not os.path.exists(db_path):
         print("❌ Database not found at", db_path)
-        print("   This script must run inside the rin-cortex container")
+        print("   This script must run inside the magi-cortex container")
         print("")
         print("   Usage:")
-        print("   docker exec rin-cortex python3 /app/backend/data/tools/register_tools.py")
+        print("   docker exec magi-cortex python3 /app/backend/data/tools/register_tools.py")
         sys.exit(1)
 
     if not tools_dir.exists():
@@ -257,7 +257,7 @@ def main():
     print(f"✅ Registered {success_count}/{len(tool_files)} tools")
     print("")
     print("🔄 Restart Open WebUI to apply changes:")
-    print("   docker restart rin-cortex")
+    print("   docker restart magi-cortex")
     print("")
     print("📍 Or refresh the browser and go to Workspace → Tools")
 
