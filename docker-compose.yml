@@ -167,6 +167,10 @@ services:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
       - GENERIC_TIMEZONE=UTC
+      # Path-based routing for Tailscale (set N8N_PATH when using subpaths)
+      - N8N_PATH=${N8N_PATH:-}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-}
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-}
       # HTTPS Configuration for n8n (processed by entrypoint)
       - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
       - N8N_SSL_KEY=${SSL_KEY_PATH:-/ssl/key.pem}
@@ -263,6 +267,8 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - LITELLM_BASE_URL=http://litellm:4000
+      # Path-based routing for Tailscale (set base_url when using subpaths)
+      - JUPYTER_BASE_URL=${JUPYTER_BASE_URL:-/}
       # HTTPS Configuration
       - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
       # Jupyter authentication token (set to empty for no auth, or provide a token)
@@ -277,6 +283,9 @@ services:
         mkdir -p /home/jovyan/.jupyter &&
         echo \"c.ServerApp.ip = '0.0.0.0'\" > /home/jovyan/.jupyter/jupyter_lab_config.py &&
         echo \"c.ServerApp.allow_origin = '*'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
+        if [ -n \"$$JUPYTER_BASE_URL\" ] && [ \"$$JUPYTER_BASE_URL\" != \"/\" ]; then
+          echo \"c.ServerApp.base_url = '$$JUPYTER_BASE_URL'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
+        fi &&
         if [ -n \"$$JUPYTER_TOKEN\" ]; then
           echo \"c.ServerApp.token = '$$JUPYTER_TOKEN'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
         else
