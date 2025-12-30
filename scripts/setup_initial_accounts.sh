@@ -12,43 +12,44 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "$BASE_DIR/scripts/common.sh"
 
 # Prompt for credentials with validation
+# Note: All interactive output goes to stderr so only the result goes to stdout
 prompt_credentials() {
     local service_name="$1"
     local email_var=""
     local password_var=""
     
-    print_header "Initial Account Setup for $service_name"
-    echo ""
-    echo "RIN needs to create an initial admin account for $service_name."
-    echo "This account will have full administrative privileges."
-    echo ""
+    print_header "Initial Account Setup for $service_name" >&2
+    echo "" >&2
+    echo "RIN needs to create an initial admin account for $service_name." >&2
+    echo "This account will have full administrative privileges." >&2
+    echo "" >&2
     
     # Prompt for email
     while true; do
-        read -p "Enter email address: " email_var
+        read -p "Enter email address: " email_var </dev/tty
         if validate_email "$email_var"; then
             break
         else
-            print_error "Invalid email format. Please try again."
+            print_error "Invalid email format. Please try again." >&2
         fi
     done
     
     # Prompt for password
     while true; do
-        read -s -p "Enter password (min 8 characters): " password_var
-        echo ""
+        read -s -p "Enter password (min 8 characters): " password_var </dev/tty
+        echo "" >&2
         
         if validate_password "$password_var"; then
-            read -s -p "Confirm password: " password_confirm
-            echo ""
+            read -s -p "Confirm password: " password_confirm </dev/tty
+            echo "" >&2
             
             if [ "$password_var" = "$password_confirm" ]; then
                 break
             else
-                print_error "Passwords do not match. Please try again."
+                print_error "Passwords do not match. Please try again." >&2
             fi
         else
-            print_error "$(validate_password "$password_var" 2>&1 || true)"
+            print_error "$(validate_password "$password_var" 2>&1 || true)" >&2
         fi
     done
     

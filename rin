@@ -303,6 +303,19 @@ cmd_upgrade() {
     # Save current branch
     current_branch=$(git branch --show-current)
     
+    # Warn if not on main branch
+    if [ "$current_branch" != "main" ]; then
+        print_warning "You are on branch '$current_branch', not 'main'."
+        print_info "Upgrade always pulls from the 'main' branch."
+        if ! confirm_action "⚠ Switch to 'main' branch and continue with upgrade?"; then
+            print_info "Upgrade cancelled. Switch to main manually with: git checkout main"
+            exit 0
+        fi
+        print_info "Switching to main branch..."
+        git checkout main
+        current_branch="main"
+    fi
+    
     print_info "Fetching latest changes from repository..."
     git fetch origin
     
