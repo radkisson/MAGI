@@ -1,0 +1,270 @@
+{
+  "name": "RIN - Telegram AI Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "id": "telegram-trigger",
+      "webhookId": "telegram-chatbot",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract message details from Telegram\nconst message = $input.first().json.message;\n\nconst chatId = message.chat.id;\nconst userId = message.from.id;\nconst username = message.from.username || message.from.first_name || 'User';\nconst text = message.text || '';\n\n// Skip if no text (e.g., stickers, photos)\nif (!text) {\n  return [];\n}\n\n// Skip bot commands except /start\nif (text.startsWith('/') && text !== '/start') {\n  return [];\n}\n\n// Handle /start command\nif (text === '/start') {\n  return [{\n    json: {\n      chatId: chatId.toString(),\n      isStartCommand: true,\n      welcomeMessage: `👋 Hello ${username}! I'm RIN, your AI assistant powered by MAGI.\\n\\nJust send me any message and I'll respond!`\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    chatId: chatId.toString(),\n    userId: userId.toString(),\n    username: username,\n    userMessage: text,\n    isStartCommand: false,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Parse Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "id": "parse-telegram"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isStartCommand }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Is Start Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "id": "check-start"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.welcomeMessage }}",
+        "additionalFields": {}
+      },
+      "name": "Send Welcome",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [800, 200],
+      "id": "send-welcome",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "🤔 Thinking...",
+        "additionalFields": {}
+      },
+      "name": "Send Typing Indicator",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [800, 400],
+      "id": "send-typing",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://litellm:4000/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{ $env.OPENWEBUI_DEFAULT_MODEL || 'openrouter/gpt-4o' }}\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are RIN, a helpful AI assistant. Be concise and friendly. Keep responses under 4000 characters for Telegram.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Parse Telegram Message').item.json.userMessage }}\"\n    }\n  ],\n  \"max_tokens\": 1000\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Call LiteLLM API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 400],
+      "id": "call-litellm",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "LiteLLM API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract AI response\nconst response = $input.first().json;\nconst chatId = $('Parse Telegram Message').first().json.chatId;\nconst typingMessageId = $('Send Typing Indicator').first().json.message_id;\n\nlet aiResponse = 'Sorry, I encountered an error processing your request.';\n\ntry {\n  if (response.choices && response.choices[0] && response.choices[0].message) {\n    aiResponse = response.choices[0].message.content;\n  }\n} catch (e) {\n  aiResponse = 'Error: ' + e.message;\n}\n\n// Truncate if too long for Telegram (4096 char limit)\nif (aiResponse.length > 4000) {\n  aiResponse = aiResponse.substring(0, 3997) + '...';\n}\n\nreturn [{\n  json: {\n    chatId: chatId,\n    typingMessageId: typingMessageId,\n    aiResponse: aiResponse\n  }\n}];"
+      },
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 400],
+      "id": "parse-ai-response"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "deleteMessage",
+        "chatId": "={{ $json.chatId }}",
+        "messageId": "={{ $json.typingMessageId }}"
+      },
+      "name": "Delete Typing Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1400, 400],
+      "id": "delete-typing",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.aiResponse }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "name": "Send AI Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1600, 400],
+      "id": "send-ai-response",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Is Start Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Start Command?": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Typing Indicator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Typing Indicator": {
+      "main": [
+        [
+          {
+            "node": "Call LiteLLM API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LiteLLM API": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Delete Typing Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Typing Message": {
+      "main": [
+        [
+          {
+            "node": "Send AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-telegram-chatbot"
+  }
+}
