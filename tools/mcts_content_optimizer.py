@@ -3,7 +3,7 @@ title: MCTS Content Optimizer
 author: av
 author_url: https://github.com/av
 description: Improves and optimizes any text content using AI-powered tree search with dynamic, goal-specific evaluation metrics.
-version: 3.0.0
+version: 4.0.0
 """
 
 import logging
@@ -325,6 +325,141 @@ class Tools:
 
         return self._format_final_output(best, root, stats)
 
+    async def deep_dive(
+        self,
+        text_to_improve: str,
+        target_score: float = 9.0,
+        max_passes: int = 3,
+        __event_emitter__: Callable[[dict], Awaitable[None]] = None,
+    ) -> str:
+        """
+        Run multiple MCTS passes with progressively stricter grading.
+        
+        Each pass starts from the previous best result and increases strictness.
+        Use this when you want to really push for high quality.
+
+        Args:
+            text_to_improve: The text content to improve
+            target_score: Stop when this score is reached (default: 9.0)
+            max_passes: Maximum number of passes (default: 3)
+
+        Returns:
+            Highly optimized content after multiple passes
+        """
+        self._emitter = __event_emitter__
+        
+        strictness_progression = ["normal", "strict", "brutal"]
+        current_text = text_to_improve
+        
+        await self._emit_message(f"## 🔬 Deep Dive Mode\n\nTarget: {target_score}/10 | Max Passes: {max_passes}\n\n---\n\n")
+        
+        for pass_num in range(max_passes):
+            # Set strictness for this pass
+            strictness = strictness_progression[min(pass_num, len(strictness_progression) - 1)]
+            original_strictness = self.valves.grading_strictness
+            self.valves.grading_strictness = strictness
+            
+            await self._emit_append(f"### 🔄 Pass {pass_num + 1}/{max_passes} (Strictness: {strictness})\n\n")
+            
+            # Run improvement
+            result = await self.improve_content(
+                current_text,
+                improvement_goal="",
+                __event_emitter__=__event_emitter__
+            )
+            
+            # Restore strictness
+            self.valves.grading_strictness = original_strictness
+            
+            # Extract the best score from history
+            if self._best_score_history:
+                best_score = self._best_score_history[-1]["score"]
+                
+                if best_score >= target_score:
+                    await self._emit_append(f"\n\n🎯 **Target reached!** Score: {best_score:.1f}/10\n")
+                    return result
+                
+                # Extract the optimized content for next pass
+                # Look for the content section in the result
+                if "## 📝 Optimized Content" in result:
+                    content_start = result.find("## 📝 Optimized Content") + len("## 📝 Optimized Content")
+                    content_end = result.find("---", content_start)
+                    if content_end > content_start:
+                        current_text = result[content_start:content_end].strip()
+        
+        return result
+
+    async def recalibrate(
+        self,
+        feedback: str,
+        __event_emitter__: Callable[[dict], Awaitable[None]] = None,
+    ) -> str:
+        """
+        Provide feedback on the grading to recalibrate future evaluations.
+        
+        Use this if you think the scores were too lenient or too harsh.
+
+        Args:
+            feedback: Your feedback, e.g., "scores were too high, that content was really only a 5/10"
+
+        Returns:
+            Acknowledgment and adjusted grading for next run
+        """
+        self._emitter = __event_emitter__
+        
+        # Parse feedback to adjust strictness
+        feedback_lower = feedback.lower()
+        
+        if any(word in feedback_lower for word in ["too high", "too lenient", "inflated", "generous"]):
+            # Increase strictness
+            progression = ["relaxed", "normal", "strict", "brutal"]
+            current_idx = progression.index(self.valves.grading_strictness) if self.valves.grading_strictness in progression else 1
+            new_idx = min(current_idx + 1, len(progression) - 1)
+            new_strictness = progression[new_idx]
+            
+            return f"""📊 **Grading Recalibrated**
+
+Your feedback: *"{feedback}"*
+
+**Action:** Increased strictness from `{self.valves.grading_strictness}` → `{new_strictness}`
+
+The next run will use harsher grading. To make this permanent, update the `grading_strictness` valve to `{new_strictness}`.
+
+Current strictness levels:
+- `relaxed`: Encouraging, scores trend high (7-9)
+- `normal`: Balanced evaluation
+- `strict`: Critical, most content scores 4-7
+- `brutal`: Ruthless, 8+ is rare, 10 is almost never given
+"""
+        
+        elif any(word in feedback_lower for word in ["too low", "too harsh", "strict", "unfair"]):
+            # Decrease strictness
+            progression = ["relaxed", "normal", "strict", "brutal"]
+            current_idx = progression.index(self.valves.grading_strictness) if self.valves.grading_strictness in progression else 2
+            new_idx = max(current_idx - 1, 0)
+            new_strictness = progression[new_idx]
+            
+            return f"""📊 **Grading Recalibrated**
+
+Your feedback: *"{feedback}"*
+
+**Action:** Decreased strictness from `{self.valves.grading_strictness}` → `{new_strictness}`
+
+The next run will use more lenient grading. To make this permanent, update the `grading_strictness` valve to `{new_strictness}`.
+"""
+        
+        else:
+            return f"""📊 **Feedback Received**
+
+Your feedback: *"{feedback}"*
+
+I'll incorporate this into the next evaluation. To adjust grading strictness:
+- Set `grading_strictness` valve to: `relaxed`, `normal`, `strict`, or `brutal`
+- Current setting: `{self.valves.grading_strictness}`
+
+Or use `deep_dive` to run multiple passes with progressively stricter grading.
+"""
+
     # ==========================================================================
     # GOAL INFERENCE
     # ==========================================================================
@@ -608,15 +743,6 @@ class Tools:
         if not node["children"]:
             return current_depth
         return max(self._get_max_depth(c, current_depth + 1) for c in node["children"])
-    
-    def _get_node_depth(self, node: dict) -> int:
-        """Get depth of a specific node."""
-        depth = 0
-        current = node
-        while current.get("parent"):
-            depth += 1
-            current = current["parent"]
-        return depth
 
     def _build_stats(self, root: dict, best_score: float, api_calls: int) -> dict:
         return {
