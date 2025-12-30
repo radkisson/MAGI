@@ -15,22 +15,26 @@ Features:
 Complements OpenAlex by providing deeper citation analysis and AI features.
 """
 
+import os
 import time
+import datetime
 import requests
 from typing import Callable, Any, Optional, List
 from pydantic import BaseModel, Field
 
 
 class Valves(BaseModel):
-    """Configuration valves for Semantic Scholar integration"""
+    """Configuration valves for Semantic Scholar integration (auto-loaded from .env)"""
 
+    # Note: default_factory with lambda is required for runtime environment variable loading.
+    # This ensures the Valves check environment variables when instantiated, not at import time.
+    S2_API_KEY: str = Field(
+        default_factory=lambda: os.getenv("S2_API_KEY", ""),
+        description="Semantic Scholar API key (optional, increases rate limits) (auto-loaded from .env or set manually)"
+    )
     S2_API_URL: str = Field(
         default="https://api.semanticscholar.org/graph/v1",
         description="Semantic Scholar API base URL"
-    )
-    S2_API_KEY: str = Field(
-        default="",
-        description="Semantic Scholar API key (optional, increases rate limits)"
     )
     REQUEST_TIMEOUT: int = Field(
         default=15,
@@ -77,13 +81,21 @@ class Tools:
         
         return paper_id
 
-    def _make_request(self, endpoint: str, params: dict = None, method: str = "GET", json_data: dict = None) -> dict:
-        """Make a request to the Semantic Scholar API with retry logic."""
+    def _make_request(self, endpoint: str, params: dict = None, method: str = "GET", json_data: dict = None, full_url: str = None) -> dict:
+        """Make a request to the Semantic Scholar API with retry logic.
+        
+        Args:
+            endpoint: API endpoint path (e.g., "paper/search")
+            params: Query parameters
+            method: HTTP method (GET or POST)
+            json_data: JSON data for POST requests
+            full_url: Optional full URL to use instead of constructing from base URL and endpoint
+        """
         headers = {}
         if self.valves.S2_API_KEY:
             headers["x-api-key"] = self.valves.S2_API_KEY
 
-        url = f"{self.valves.S2_API_URL}/{endpoint}"
+        url = full_url if full_url else f"{self.valves.S2_API_URL}/{endpoint}"
         
         last_error = None
         for attempt in range(self.valves.MAX_RETRIES + 1):
@@ -270,7 +282,7 @@ class Tools:
         try:
             params = {
                 "query": query,
-                "limit": min(max_results, 100),
+                "limit": max(1, min(max_results, 100)),
                 "fields": self.paper_fields,
             }
 
@@ -635,44 +647,13 @@ class Tools:
             # Use recommendations API (different base URL)
             rec_url = "https://api.semanticscholar.org/recommendations/v1/papers"
             
-            headers = {}
-            if self.valves.S2_API_KEY:
-                headers["x-api-key"] = self.valves.S2_API_KEY
-
-            result = None
-            last_error = None
-            for attempt in range(self.valves.MAX_RETRIES + 1):
-                try:
-                    response = requests.post(
-                        rec_url,
-                        json={"positivePaperIds": [paper_id]},
-                        params={"fields": self.paper_fields, "limit": max_results},
-                        headers=headers,
-                        timeout=self.valves.REQUEST_TIMEOUT,
-                    )
-                    
-                    if response.status_code == 429:
-                        if attempt < self.valves.MAX_RETRIES:
-                            time.sleep(2 ** attempt)
-                            continue
-                    
-                    response.raise_for_status()
-                    
-                    try:
-                        result = response.json()
-                    except ValueError as e:
-                        raise requests.exceptions.RequestException(f"Invalid JSON: {e}")
-                    
-                    break
-                except requests.exceptions.RequestException as e:
-                    last_error = e
-                    if attempt < self.valves.MAX_RETRIES:
-                        time.sleep(1)
-                        continue
-                    raise
-            
-            if last_error and not result:
-                raise last_error
+            result = self._make_request(
+                endpoint="",  # Not used when full_url is provided
+                params={"fields": self.paper_fields, "limit": max_results},
+                method="POST",
+                json_data={"positivePaperIds": [paper_id]},
+                full_url=rec_url
+            )
 
             papers = result.get("recommendedPapers", [])
 
@@ -750,7 +731,7 @@ class Tools:
         try:
             result = self._make_request(f"paper/{paper_id}/citations", {
                 "fields": "citingPaper." + self.paper_fields,
-                "limit": min(max_results, 100),
+                "limit": max(1, min(max_results, 100)),
             })
 
             citations = result.get("data", [])
@@ -831,7 +812,7 @@ class Tools:
         try:
             result = self._make_request(f"paper/{paper_id}/references", {
                 "fields": "citedPaper." + self.paper_fields,
-                "limit": min(max_results, 100),
+                "limit": max(1, min(max_results, 100)),
             })
 
             references = result.get("data", [])
@@ -909,7 +890,7 @@ class Tools:
             )
 
         try:
-            # Use paper/search with title match boost
+            # Use paper/search with the title as the main query term
             result = self._make_request("paper/search", {
                 "query": title,
                 "fields": self.paper_fields,
@@ -1080,8 +1061,6 @@ class Tools:
         Returns:
             Recent papers matching the query
         """
-        import datetime
-        
         if not query or not query.strip():
             return "❌ Please provide a search query."
         
@@ -1100,14 +1079,21 @@ class Tools:
             )
 
         try:
-            # Calculate year range for recent papers
-            current_year = datetime.date.today().year
+            # Calculate date range for recent papers
+            today = datetime.date.today()
+            start_date = today - datetime.timedelta(days=days)
+            
+            # Semantic Scholar API uses year filters, so we need to build year range
+            # For searches spanning multiple years, use year range
+            # For same year, use single year
+            start_year = start_date.year
+            end_year = today.year
             
             params = {
                 "query": query,
-                "limit": min(max_results, 100),
+                "limit": max(1, min(max_results, 100)),
                 "fields": self.paper_fields,
-                "year": f"{current_year - 1}-{current_year}",  # Last 2 years
+                "year": f"{start_year}-{end_year}" if start_year != end_year else str(end_year),
                 "sort": "publicationDate:desc",  # Most recent first
             }
 
