@@ -47,6 +47,8 @@ Enable automatic HTTPS with Let's Encrypt:
 
 Caddy automatically obtains and renews SSL certificates. No manual certificate management!
 
+> **Port Note:** HTTPS defaults to ports 8880/8443 to avoid conflicts. Customize via `PORT_HTTP` and `PORT_HTTPS` in `.env`.
+
 ## CLI
 
 ```bash
