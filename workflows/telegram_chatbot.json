@@ -21,7 +21,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract message details from Telegram\nconst message = $input.first().json.message;\n\nconst chatId = message.chat.id;\nconst userId = message.from.id;\nconst username = message.from.username || message.from.first_name || 'User';\nconst text = message.text || '';\n\n// Skip if no text (e.g., stickers, photos)\nif (!text) {\n  return [];\n}\n\n// Skip bot commands except /start\nif (text.startsWith('/') && text !== '/start') {\n  return [];\n}\n\n// Handle /start command\nif (text === '/start') {\n  return [{\n    json: {\n      chatId: chatId.toString(),\n      isStartCommand: true,\n      welcomeMessage: `👋 Hello ${username}! I'm RIN, your AI assistant powered by MAGI.\\n\\nJust send me any message and I'll respond!`\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    chatId: chatId.toString(),\n    userId: userId.toString(),\n    username: username,\n    userMessage: text,\n    isStartCommand: false,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// Extract message details from Telegram\nconst message = $input.first().json.message;\n\nconst chatId = message.chat.id;\nconst userId = message.from.id;\nconst username = message.from.username || message.from.first_name || 'User';\nconst text = message.text || '';\n\n// Simple per-user rate limiting using workflow static data\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.rateLimits) {\n  staticData.rateLimits = {};\n}\n\nconst userKey = userId.toString();\nconst now = Date.now();\nconst WINDOW_MS = 60 * 1000; // 60 seconds\nconst MAX_MESSAGES_PER_WINDOW = 20; // max messages per user per window\nconst CLEANUP_THRESHOLD = 100; // cleanup when we have more than this many users\n\nif (!staticData.rateLimits[userKey]) {\n  staticData.rateLimits[userKey] = [];\n}\n\n// Keep only timestamps within the current window\nstaticData.rateLimits[userKey] = staticData.rateLimits[userKey].filter(ts => (now - ts) <= WINDOW_MS);\n\n// Periodic cleanup: remove inactive users to prevent memory leak\nif (Object.keys(staticData.rateLimits).length > CLEANUP_THRESHOLD) {\n  const activeUserKeys = [];\n  for (const key in staticData.rateLimits) {\n    staticData.rateLimits[key] = staticData.rateLimits[key].filter(ts => (now - ts) <= WINDOW_MS);\n    if (staticData.rateLimits[key].length > 0) {\n      activeUserKeys.push(key);\n    }\n  }\n  // Keep only active users\n  const newRateLimits = {};\n  for (const key of activeUserKeys) {\n    newRateLimits[key] = staticData.rateLimits[key];\n  }\n  staticData.rateLimits = newRateLimits;\n}\n\n// If user has exceeded the allowed number of messages, drop this message\nif (staticData.rateLimits[userKey].length >= MAX_MESSAGES_PER_WINDOW) {\n  return [];\n}\n\n// Record this message timestamp\nstaticData.rateLimits[userKey].push(now);\n\n// Skip if no text (e.g., stickers, photos)\nif (!text) {\n  return [];\n}\n\n// Skip bot commands except /start\nif (text.startsWith('/') && text !== '/start') {\n  return [];\n}\n\n// Handle /start command\nif (text === '/start') {\n  return [{\n    json: {\n      chatId: chatId.toString(),\n      isStartCommand: true,\n      welcomeMessage: `👋 Hello ${username}! I'm RIN, your AI assistant powered by MAGI.\\n\\nJust send me any message and I'll respond!`\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    chatId: chatId.toString(),\n    userId: userId.toString(),\n    username: username,\n    userMessage: text,\n    isStartCommand: false,\n    timestamp: new Date().toISOString()\n  }\n}];"
       },
       "name": "Parse Telegram Message",
       "type": "n8n-nodes-base.code",
@@ -103,9 +103,11 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"{{ $env.OPENWEBUI_DEFAULT_MODEL || 'openrouter/gpt-4o' }}\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are RIN, a helpful AI assistant. Be concise and friendly. Keep responses under 4000 characters for Telegram.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Parse Telegram Message').item.json.userMessage }}\"\n    }\n  ],\n  \"max_tokens\": 1000\n}",
+        "jsonBody": "={\n  \"model\": \"{{ $env.OPENWEBUI_DEFAULT_MODEL || 'openai/gpt-4o' }}\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are RIN, a helpful AI assistant. Be concise and friendly. Keep responses reasonably short for Telegram.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ String($('Parse Telegram Message').item.json.userMessage || '').trim().slice(0, 2000).replace(/[\\u0000-\\u001F\\u007F-\\u009F]/g, '') }}\"\n    }\n  ],\n  \"max_tokens\": 1000\n}",
         "options": {
-          "timeout": 60000
+          "timeout": 60000,
+          "retryOnFail": true,
+          "maxRetries": 2
         }
       },
       "name": "Call LiteLLM API",
@@ -113,6 +115,7 @@
       "typeVersion": 4.1,
       "position": [1000, 400],
       "id": "call-litellm",
+      "continueOnFail": true,
       "credentials": {
         "httpHeaderAuth": {
           "id": "2",
@@ -122,7 +125,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract AI response\nconst response = $input.first().json;\nconst chatId = $('Parse Telegram Message').first().json.chatId;\nconst typingMessageId = $('Send Typing Indicator').first().json.message_id;\n\nlet aiResponse = 'Sorry, I encountered an error processing your request.';\n\ntry {\n  if (response.choices && response.choices[0] && response.choices[0].message) {\n    aiResponse = response.choices[0].message.content;\n  }\n} catch (e) {\n  aiResponse = 'Error: ' + e.message;\n}\n\n// Truncate if too long for Telegram (4096 char limit)\nif (aiResponse.length > 4000) {\n  aiResponse = aiResponse.substring(0, 3997) + '...';\n}\n\nreturn [{\n  json: {\n    chatId: chatId,\n    typingMessageId: typingMessageId,\n    aiResponse: aiResponse\n  }\n}];"
+        "jsCode": "// Extract AI response\nconst response = $input.first().json;\nconst chatId = $('Parse Telegram Message').first().json.chatId;\nconst typingMessageId = $('Send Typing Indicator').first().json.message_id;\n\nlet aiResponse = 'Sorry, I encountered an error processing your request.';\n\ntry {\n  let errorMessage = null;\n\n  // Prefer explicit error information from the LiteLLM API response\n  if (response && response.error) {\n    if (typeof response.error === 'string') {\n      errorMessage = response.error;\n    } else if (response.error.message) {\n      errorMessage = response.error.message;\n    } else if (response.error.detail) {\n      errorMessage = response.error.detail;\n    }\n  }\n\n  // Fallback: look at HTTP-like status fields if present\n  if (!errorMessage && (response && (response.status || response.statusCode))) {\n    const status = response.status || response.statusCode;\n    if (status && status !== 200) {\n      const statusText = response.statusText || '';\n      errorMessage = `HTTP ${status}${statusText ? ' - ' + statusText : ''}`;\n    }\n  }\n\n  if (errorMessage) {\n    aiResponse = 'Error from AI service: ' + errorMessage;\n  } else if (response && response.choices && response.choices[0] && response.choices[0].message) {\n    aiResponse = response.choices[0].message.content;\n  }\n} catch (e) {\n  const message = (e && e.message) ? e.message : String(e);\n  aiResponse = 'Error while parsing AI response: ' + message;\n}\n\nfunction truncateSmart(text, maxLength) {\n  if (typeof text !== 'string') {\n    text = String(text);\n  }\n\n  if (text.length <= maxLength) {\n    return text;\n  }\n\n  const ellipsis = '...';\n  const limit = Math.max(0, maxLength - ellipsis.length);\n  let truncated = text.slice(0, limit);\n\n  // Avoid ending on a dangling high surrogate (part of an emoji)\n  const lastCharCode = truncated.charCodeAt(truncated.length - 1);\n  if (lastCharCode >= 0xD800 && lastCharCode <= 0xDBFF) {\n    truncated = truncated.slice(0, -1);\n  }\n\n  // Prefer sentence boundary, then word boundary\n  let cutIndex = -1;\n\n  const sentenceEndings = ['. ', '! ', '? '];\n  for (const ending of sentenceEndings) {\n    const idx = truncated.lastIndexOf(ending);\n    if (idx > cutIndex) {\n      cutIndex = idx + 1; // keep the punctuation\n    }\n  }\n\n  if (cutIndex === -1) {\n    cutIndex = truncated.lastIndexOf(' ');\n  }\n\n  if (cutIndex > 0) {\n    truncated = truncated.slice(0, cutIndex + 1);\n  }\n\n  return truncated.trimEnd() + ellipsis;\n}\n\n// Truncate if too long for Telegram (4096 char limit)\nif (aiResponse.length > 4000) {\n  aiResponse = truncateSmart(aiResponse, 4000);\n}\n\nreturn [{\n  json: {\n    chatId: chatId,\n    typingMessageId: typingMessageId,\n    aiResponse: aiResponse\n  }\n}];"
       },
       "name": "Parse AI Response",
       "type": "n8n-nodes-base.code",
@@ -156,9 +159,7 @@
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "={{ $json.aiResponse }}",
-        "additionalFields": {
-          "parse_mode": "Markdown"
-        }
+        "additionalFields": {}
       },
       "name": "Send AI Response",
       "type": "n8n-nodes-base.telegram",
