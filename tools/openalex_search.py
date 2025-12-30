@@ -106,6 +106,27 @@ class Tools:
             truncated = truncated[:last_separator + 5]
         
         return truncated + "\n\n> ⚠️ **Output truncated** to fit context limits.\n"
+    
+    def _reconstruct_abstract(self, abstract_inverted_index: dict) -> str:
+        """Reconstruct abstract text from OpenAlex inverted index format.
+        
+        Args:
+            abstract_inverted_index: Dictionary mapping words to position lists
+            
+        Returns:
+            Reconstructed abstract text
+        """
+        if not abstract_inverted_index or not isinstance(abstract_inverted_index, dict):
+            return ""
+        
+        word_positions = []
+        for word, positions in abstract_inverted_index.items():
+            if positions and isinstance(positions, list):
+                for pos in positions:
+                    if isinstance(pos, int):
+                        word_positions.append((pos, word))
+        word_positions.sort()
+        return " ".join([w for _, w in word_positions])
 
     def _format_work(self, work: dict, idx: int, verbose: bool = False) -> str:
         """Format a single work for display.
@@ -167,17 +188,7 @@ class Tools:
         
         # Abstract (full, not truncated - output truncation handles overall length)
         abstract_inverted = work.get("abstract_inverted_index") or {}
-        abstract = ""
-        if abstract_inverted and isinstance(abstract_inverted, dict):
-            # Reconstruct abstract from inverted index
-            word_positions = []
-            for word, positions in abstract_inverted.items():
-                if positions and isinstance(positions, list):
-                    for pos in positions:
-                        if isinstance(pos, int):
-                            word_positions.append((pos, word))
-            word_positions.sort()
-            abstract = " ".join([w for _, w in word_positions])
+        abstract = self._reconstruct_abstract(abstract_inverted)
         
         # Build output
         output = f"### {idx}. {title}\n"
@@ -703,19 +714,10 @@ class Tools:
             oa_url = oa.get("oa_url", "")
 
             abstract_inverted = work.get("abstract_inverted_index") or {}
-            abstract = ""
-            if abstract_inverted and isinstance(abstract_inverted, dict):
-                word_positions = []
-                for word, positions in abstract_inverted.items():
-                    if positions and isinstance(positions, list):
-                        for pos in positions:
-                            if isinstance(pos, int):
-                                word_positions.append((pos, word))
-                word_positions.sort()
-                abstract = " ".join([w for _, w in word_positions])
+            abstract = self._reconstruct_abstract(abstract_inverted)
 
             concepts = work.get("concepts", [])[:5]
-            topics = [f"`{c.get('display_name', '')}`" for c in concepts if c.get("display_name")]
+            topics = [f"`{c.get('display_name', '')}`" for c in concepts if c.get("display_name") and c.get("score", 0) > 0.3]
             referenced_works = work.get("referenced_works", [])
 
             output = f"# {title}\n\n"
@@ -1118,6 +1120,7 @@ class Tools:
             concepts = concept_result.get("results", [])
             if not concepts:
                 # Fall back to regular search
+                # Note: min_citations filter is not applied in fallback since search_papers doesn't support it
                 return self.search_papers(topic, max_results, year_from, __user__=__user__, __event_emitter__=__event_emitter__)
 
             concept = concepts[0]
