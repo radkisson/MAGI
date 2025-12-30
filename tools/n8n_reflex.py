@@ -177,7 +177,7 @@ class Tools:
                 f"❌ Nervous System Failure\n\n"
                 f"Cannot reach n8n at `{url}`\n\n"
                 f"**Troubleshooting**:\n"
-                f"1. Check if n8n is running: `docker ps | grep rin-reflex`\n"
+                f"1. Check if n8n is running: `docker ps | grep magi-reflex`\n"
                 f"2. Restart n8n: `docker restart magi-reflex-automation`"
             )
 
@@ -453,7 +453,7 @@ query_workflow("research", "Latest developments in quantum computing")
 ## Troubleshooting
 
 If you see connection errors:
-1. Check that n8n is running: `docker ps | grep rin-reflex`
+1. Check that n8n is running: `docker ps | grep magi-reflex`
 2. Verify workflows are activated in n8n: http://localhost:5678
 3. Ensure webhook URLs match the workflow IDs
 4. Check n8n logs: `docker logs magi-reflex-automation`
