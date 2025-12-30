@@ -8,7 +8,11 @@ allowing RIN to search the web anonymously without tracking.
 import json
 import requests
 from typing import Callable, Any
-from .utils import get_service_url
+
+try:
+    from .utils import get_service_url
+except ImportError:
+    from utils import get_service_url
 
 
 class Tools:

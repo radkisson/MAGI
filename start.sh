@@ -542,7 +542,7 @@ if [ -f "$BASE_DIR/scripts/setup_initial_accounts.sh" ]; then
     else
         echo ""
         echo -e "${YELLOW}⚠️  Initial account setup was not completed.${NC}"
-        echo "   You can run it later with: ./rin setup-accounts"
+        echo "   You can run it later with: ./magi setup-accounts"
         echo "   Or create accounts manually:"
         echo "     OpenWebUI: http://localhost:${PORT_WEBUI:-3000}"
         echo "     n8n:       http://localhost:${PORT_N8N:-5678}"

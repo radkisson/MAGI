@@ -18,7 +18,7 @@ cd Rhyzomic-Intelligence-Node-RIN-
 
 ```bash
 chmod +x rin start.sh
-./rin start
+./magi start
 ```
 
 This automatically:
@@ -42,7 +42,7 @@ On first startup, MAGI prompts you to create admin accounts for:
 You can:
 - Pre-configure in `.env` as `MAGI_ADMIN_EMAIL` and `MAGI_ADMIN_PASSWORD`
 - Enter interactively during startup
-- Reset later using `./rin reset-password <service>`
+- Reset later using `./magi reset-password <service>`
 
 ## Adding API Keys
 
@@ -54,7 +54,7 @@ ANTHROPIC_API_KEY=your_anthropic_key
 OPENROUTER_API_KEY=your_openrouter_key
 ```
 
-Then restart: `./rin restart`
+Then restart: `./magi restart`
 
 ## Service Access Points
 
@@ -98,7 +98,7 @@ For production deployments with HTTPS:
 ENABLE_HTTPS=true
 
 # Restart
-./rin restart
+./magi restart
 ```
 
 See [HTTPS_CONFIGURATION.md](HTTPS_CONFIGURATION.md) for reverse proxy setup (nginx, Traefik, Caddy).

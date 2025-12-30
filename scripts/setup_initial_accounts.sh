@@ -398,7 +398,7 @@ main() {
     echo "Password: (stored in .env)"
     echo ""
     print_warning "IMPORTANT: Change your passwords after first login!"
-    echo "Use: ./rin reset-password <service>"
+    echo "Use: ./magi reset-password <service>"
 }
 
 # Execute main function

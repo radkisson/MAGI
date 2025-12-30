@@ -79,7 +79,7 @@ This document outlines the architectural vision for the Multi-Agent General Inte
 - **Log Levels**: Proper log level configuration (DEBUG, INFO, WARN, ERROR)
 - **Service Identification**: Clear service names in all log entries
 - **Log Timestamps**: Consistent timestamp format across services
-- **Log Viewing**: `./rin logs` with filtering by service and level
+- **Log Viewing**: `./magi logs` with filtering by service and level
 
 #### Basic Cost Tracking
 - **Token Usage Display**: Show token usage per model in CLI
@@ -94,9 +94,9 @@ New Scripts:
   - scripts/generate_status_report.py - Simple HTML status page
 
 New CLI Commands:
-  - ./rin health - Show system health status
-  - ./rin costs - Display cost summary
-  - ./rin logs --service <name> --level <level> - Enhanced log viewing
+  - ./magi health - Show system health status
+  - ./magi costs - Display cost summary
+  - ./magi logs --service <name> --level <level> - Enhanced log viewing
 ```
 
 **Success Criteria**:
@@ -125,8 +125,8 @@ New CLI Commands:
 - **Backup Retention**: Keep last N backups (configurable)
 
 #### Simple Restore Functionality
-- **Restore Command**: `./rin restore <backup-name>`
-- **Backup Listing**: `./rin backup list` shows available backups
+- **Restore Command**: `./magi restore <backup-name>`
+- **Backup Listing**: `./magi backup list` shows available backups
 - **Restore Validation**: Verify backup before restoring
 - **Rollback Safety**: Automatic backup before restore operation
 
@@ -139,7 +139,7 @@ New CLI Commands:
 #### Data Integrity
 - **Backup Checksums**: Verify backup integrity with checksums
 - **Corruption Detection**: Detect corrupted database files
-- **Backup Testing**: `./rin backup verify` tests restore process
+- **Backup Testing**: `./magi backup verify` tests restore process
 
 **Technical Implementation**:
 ```yaml
@@ -149,11 +149,11 @@ New Scripts:
   - scripts/verify_backup.py - Backup integrity checks
 
 New CLI Commands:
-  - ./rin backup create [--now] - Create backup immediately
-  - ./rin backup list - List available backups
-  - ./rin backup verify <name> - Verify backup integrity
-  - ./rin backup auto --schedule daily|weekly - Configure automatic backups
-  - ./rin restore <backup-name> - Restore from backup
+  - ./magi backup create [--now] - Create backup immediately
+  - ./magi backup list - List available backups
+  - ./magi backup verify <name> - Verify backup integrity
+  - ./magi backup auto --schedule daily|weekly - Configure automatic backups
+  - ./magi restore <backup-name> - Restore from backup
 ```
 
 **Success Criteria**:
@@ -202,9 +202,9 @@ New Components:
   - Rate limiter per model/API
 
 New CLI Commands:
-  - ./rin limits set <model> <requests/min> - Configure rate limits
-  - ./rin limits show - Display current limits and usage
-  - ./rin errors recent - Show recent error summary
+  - ./magi limits set <model> <requests/min> - Configure rate limits
+  - ./magi limits show - Display current limits and usage
+  - ./magi errors recent - Show recent error summary
 ```
 
 **Success Criteria**:
@@ -252,12 +252,12 @@ New Services:
   - Simple auth middleware for Open WebUI
   
 New CLI Commands:
-  - ./rin users add <username> --role admin|user - Add user
-  - ./rin users remove <username> - Remove user
-  - ./rin users list - List all users
-  - ./rin users reset-password <username> - Reset password
-  - ./rin users quota set <username> <tokens/day> - Set quota
-  - ./rin users activity - Show user activity log
+  - ./magi users add <username> --role admin|user - Add user
+  - ./magi users remove <username> - Remove user
+  - ./magi users list - List all users
+  - ./magi users reset-password <username> - Reset password
+  - ./magi users quota set <username> <tokens/day> - Set quota
+  - ./magi users activity - Show user activity log
 ```
 
 **Success Criteria**:
@@ -307,10 +307,10 @@ New Services:
   - metrics-collector: Collect and store metrics
 
 New CLI Commands:
-  - ./rin dashboard start - Start monitoring dashboard
-  - ./rin metrics export --range 7d - Export metrics
-  - ./rin alerts configure - Configure alert rules
-  - ./rin logs search "error" --since 24h - Search logs
+  - ./magi dashboard start - Start monitoring dashboard
+  - ./magi metrics export --range 7d - Export metrics
+  - ./magi alerts configure - Configure alert rules
+  - ./magi logs search "error" --since 24h - Search logs
 ```
 
 **Success Criteria**:
@@ -353,10 +353,10 @@ New Configuration:
   - BACKUP_ENCRYPTION_KEY (auto-generated)
 
 New CLI Commands:
-  - ./rin backup cloud configure - Set up cloud backup
-  - ./rin backup cloud upload <backup> - Upload to cloud
-  - ./rin backup cloud list - List cloud backups
-  - ./rin restore --from-cloud <backup> - Restore from cloud
+  - ./magi backup cloud configure - Set up cloud backup
+  - ./magi backup cloud upload <backup> - Upload to cloud
+  - ./magi backup cloud list - List cloud backups
+  - ./magi restore --from-cloud <backup> - Restore from cloud
 ```
 
 **Success Criteria**:
@@ -411,11 +411,11 @@ New Services:
   - auth-service: Advanced authentication/authorization
 
 New CLI Commands:
-  - ./rin ha enable - Enable high availability mode
-  - ./rin roles create <name> --permissions <list> - Create custom role
-  - ./rin retention set conversations --ttl 90d - Set retention
-  - ./rin restore --timestamp "2027-01-15 14:30:00" - Point-in-time restore
-  - ./rin sla report - Generate SLA report
+  - ./magi ha enable - Enable high availability mode
+  - ./magi roles create <name> --permissions <list> - Create custom role
+  - ./magi retention set conversations --ttl 90d - Set retention
+  - ./magi restore --timestamp "2027-01-15 14:30:00" - Point-in-time restore
+  - ./magi sla report - Generate SLA report
 ```
 
 **Success Criteria**:
@@ -532,10 +532,10 @@ These features are documented for future consideration but are beyond the scope 
 - **Tool Compatibility**: Existing tools continue working
 
 ### Upgrade Strategy
-- **In-Place Upgrades**: `./rin upgrade` handles everything
+- **In-Place Upgrades**: `./magi upgrade` handles everything
 - **Backup Before Upgrade**: Automatic backup before any upgrade
-- **Rollback Support**: `./rin rollback` to previous version if needed
-- **Testing Environment**: `./rin test-upgrade` in sandbox (v2.0+)
+- **Rollback Support**: `./magi rollback` to previous version if needed
+- **Testing Environment**: `./magi test-upgrade` in sandbox (v2.0+)
 
 ### Version Upgrade Path
 ```
@@ -549,7 +549,7 @@ Each upgrade is incremental and tested. Skip versions at your own risk.
 ## Success Metrics
 
 ### v1.4 "Observability Core" Success Criteria
-- Users can see system health via `./rin health`
+- Users can see system health via `./magi health`
 - Basic cost tracking shows token usage
 - Log filtering works correctly
 - Implementation adds <100MB memory overhead
@@ -696,7 +696,7 @@ All while maintaining the core philosophy: **A sovereign AI organism, run by you
 To help prioritize development, please indicate which features are most important to you:
 
 ### v1.4 "Observability Core" Features
-- [ ] Health check system (`./rin health`)
+- [ ] Health check system (`./magi health`)
 - [ ] Basic cost tracking and reports
 - [ ] Enhanced log viewing with filtering
 - [ ] Simple status dashboard (HTML)

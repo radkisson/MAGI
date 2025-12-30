@@ -219,7 +219,7 @@ def test_documentation_updated():
     assert "Caddy" in content, "Missing Caddy mention"
     
     # Check for setup instructions
-    assert "./rin setup-https" in content or "setup-https" in content, "Missing setup command"
+    assert "./magi setup-https" in content or "setup-https" in content, "Missing setup command"
     assert "Zero Configuration" in content or "automatic" in content.lower(), "Missing automation benefits"
     
     # Check for DNS requirements
@@ -245,9 +245,9 @@ if __name__ == '__main__':
         print("\nAutomatic HTTPS with Let's Encrypt is properly configured!")
         print("\nTo use automatic HTTPS:")
         print("  1. Ensure your domain points to this server")
-        print("  2. Run: ./rin setup-https")
+        print("  2. Run: ./magi setup-https")
         print("  3. Follow the prompts to configure your domain")
-        print("  4. Start MAGI: ./rin start")
+        print("  4. Start MAGI: ./magi start")
         print("\nCaddy will automatically obtain SSL certificates from Let's Encrypt!")
         sys.exit(0)
     except AssertionError as e:

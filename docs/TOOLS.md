@@ -93,4 +93,4 @@ TAVILY_API_KEY=tvly-your-key
 FIRECRAWL_API_KEY=fc-your-key  # Auto-generated for self-hosted
 ```
 
-After adding keys, restart: `./rin restart`
+After adding keys, restart: `./magi restart`

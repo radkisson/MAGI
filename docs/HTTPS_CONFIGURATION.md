@@ -41,10 +41,10 @@ Before enabling automatic HTTPS, ensure:
 
 **Option 1: During Initial Setup**
 
-When running `./rin start` for the first time, select option 1 for automatic HTTPS:
+When running `./magi start` for the first time, select option 1 for automatic HTTPS:
 
 ```bash
-./rin start
+./magi start
 
 # When prompted:
 🔒 HTTPS/TLS Configuration
@@ -62,7 +62,7 @@ Select option [1/2/3]: 1
 Run the automatic HTTPS setup script:
 
 ```bash
-./rin setup-https
+./magi setup-https
 ```
 
 You'll be prompted for:
@@ -86,7 +86,7 @@ api.magi.example.com → YOUR_SERVER_IP
 To avoid rate limits while testing (50 certificates per domain per week), use the staging environment:
 
 ```bash
-./rin setup-https
+./magi setup-https
 # When prompted, answer 'y' to "Use Let's Encrypt STAGING for testing?"
 ```
 
@@ -120,7 +120,7 @@ Tailscale Serve provides:
 ### Quick Setup
 
 ```bash
-./rin setup-tailscale-https
+./magi setup-tailscale-https
 ```
 
 Or configure manually:
@@ -259,7 +259,7 @@ This configures RIN's internal tools to generate HTTPS URLs when communicating w
 ### 4. Restart RIN
 
 ```bash
-./rin restart
+./magi restart
 # or
 ./start.sh
 ```
@@ -309,7 +309,7 @@ sudo chown $USER:$USER ./config/ssl/*.pem
 
 ```bash
 # Add to crontab
-0 0 * * 0 certbot renew --quiet && ./rin restart
+0 0 * * 0 certbot renew --quiet && ./magi restart
 ```
 
 ### Using Custom Certificates
@@ -332,7 +332,7 @@ SSL_CA_PATH=./config/ssl/custom-ca.pem
 3. Restart RIN:
 
 ```bash
-./rin restart
+./magi restart
 ```
 
 ## Configuration Options
@@ -526,7 +526,7 @@ ENABLE_HTTPS=false
 2. Restart RIN:
 
 ```bash
-./rin restart
+./magi restart
 ```
 
 All services will return to using HTTP.
@@ -535,7 +535,7 @@ All services will return to using HTTP.
 
 For issues or questions about HTTPS configuration:
 
-- Check logs: `./rin logs [service-name]`
+- Check logs: `./magi logs [service-name]`
 - Review documentation: [README.md](../README.md)
 - Report issues: [GitHub Issues](https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-/issues)
 - Discuss: [GitHub Discussions](https://github.com/radkisson/Rhyzomic-Intelligence-Node-RIN-/discussions)

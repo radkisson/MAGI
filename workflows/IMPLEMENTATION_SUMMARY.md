@@ -35,7 +35,7 @@ All workflows are ready for manual installation in n8n:
 ```bash
 ./start.sh
 # or
-./rin start
+./magi start
 ```
 
 This automatically generates the FireCrawl API key and resolves the configuration issue.
@@ -210,9 +210,9 @@ RIN will:
 
 ### View Logs
 ```bash
-./rin logs n8n          # View n8n logs
-./rin logs firecrawl    # View FireCrawl logs
-./rin status            # Check all services
+./magi logs n8n          # View n8n logs
+./magi logs firecrawl    # View FireCrawl logs
+./magi status            # Check all services
 ```
 
 ### Community

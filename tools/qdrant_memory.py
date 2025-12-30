@@ -12,7 +12,11 @@ import json
 import uuid
 import time
 from sentence_transformers import SentenceTransformer
-from .utils import get_service_url
+
+try:
+    from .utils import get_service_url
+except ImportError:
+    from utils import get_service_url
 
 
 class Tools:

@@ -161,4 +161,4 @@ docker-compose restart n8n
 
 ---
 
-**Quick access**: http://localhost:5678 | **Help**: `./rin logs n8n`
+**Quick access**: http://localhost:5678 | **Help**: `./magi logs n8n`

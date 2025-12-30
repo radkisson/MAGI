@@ -40,7 +40,7 @@ Step 5: Set up auto-renewal
   # Add: 0 0 * * 0 certbot renew --quiet && systemctl reload nginx
   
 Step 6: Start MAGI
-  $ ./rin start
+  $ ./magi start
 
 Total: 6+ manual steps, multiple config files, 10-15 minutes
 
@@ -49,7 +49,7 @@ Total: 6+ manual steps, multiple config files, 10-15 minutes
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 Step 1: Run setup command
-  $ ./rin setup-https
+  $ ./magi setup-https
 
 🔒 MAGI Automatic HTTPS Setup with Let's Encrypt
 
@@ -59,7 +59,7 @@ Email address: admin@example.com
 ✅ Configuration complete!
 
 Step 2: Start MAGI
-  $ ./rin start
+  $ ./magi start
 
 Done! Access at: https://magi.example.com
 
@@ -113,14 +113,14 @@ Total: 2 prompts, 30 seconds
    api.magi.example.com → YOUR_SERVER_IP
 
 3. Run automatic setup
-   $ ./rin setup-https
+   $ ./magi setup-https
    
    Domain name: magi.example.com
    Email address: admin@example.com
    Use staging? [y/N]: n
 
 4. Start MAGI
-   $ ./rin start
+   $ ./magi start
 
 5. Access your services
    Open: https://magi.example.com
@@ -168,17 +168,17 @@ Total: 2 prompts, 30 seconds
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 Setup automatic HTTPS:
-  $ ./rin setup-https
+  $ ./magi setup-https
 
 Check status:
-  $ ./rin status
+  $ ./magi status
 
 View Caddy logs:
-  $ ./rin logs caddy
-  $ ./rin logs caddy -f  # Follow logs
+  $ ./magi logs caddy
+  $ ./magi logs caddy -f  # Follow logs
 
 Restart after config changes:
-  $ ./rin restart
+  $ ./magi restart
 
 Test certificate:
   $ curl -vI https://magi.example.com
@@ -206,7 +206,7 @@ Test certificate:
 Let's Encrypt has rate limits (50 certs/domain/week)
 Test with staging environment first:
 
-  $ ./rin setup-https
+  $ ./magi setup-https
   Use Let's Encrypt STAGING? [y/N]: y
 
 Staging certificates are not trusted by browsers
@@ -215,7 +215,7 @@ Switch to production when ready:
   1. Edit config/caddy/Caddyfile
   2. Uncomment production line
   3. Comment staging line
-  4. ./rin restart
+  4. ./magi restart
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Summary                                                          ┃
@@ -233,6 +233,6 @@ HTTPS is now COMPLETELY AUTOMATIC! 🎉
 From 6+ manual steps to 2 simple prompts!
 
 Get started:
-  $ ./rin setup-https
+  $ ./magi setup-https
 
 EOF

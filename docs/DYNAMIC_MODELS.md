@@ -21,13 +21,13 @@ You can manually sync models at any time:
 
 ```bash
 # Quick sync with default limit (from OPENROUTER_MODEL_LIMIT)
-./rin models sync
+./magi models sync
 
 # Sync with custom limit (top 25 models)
-./rin models sync 25
+./magi models sync 25
 
 # Sync all available models (no limit)
-./rin models sync 0
+./magi models sync 0
 
 # Or run the Python script directly
 python3 scripts/sync_openrouter_models.py
@@ -39,7 +39,7 @@ python3 scripts/sync_openrouter_models.py 50
 After syncing, restart LiteLLM to apply changes:
 
 ```bash
-./rin restart litellm
+./magi restart litellm
 # Or
 docker-compose restart litellm
 ```
@@ -112,41 +112,41 @@ RIN includes a comprehensive CLI for model management:
 
 ```bash
 # View all available commands
-./rin models help
+./magi models help
 
 # Sync models with default limit
-./rin models sync
+./magi models sync
 
 # Sync top 10, 25, 50, or 75 models
-./rin models sync 10
-./rin models sync 25
-./rin models sync 50
-./rin models sync 75
+./magi models sync 10
+./magi models sync 25
+./magi models sync 50
+./magi models sync 75
 
 # List models with default limit (from OPENROUTER_MODEL_LIMIT)
-./rin models list
+./magi models list
 
 # List specific number of models
-./rin models list 10
-./rin models list 25
-./rin models list 50
+./magi models list 10
+./magi models list 25
+./magi models list 50
 
 # Show top N models by popularity
-./rin models top 10
-./rin models top 25
+./magi models top 10
+./magi models top 25
 
 # Filter models by type
-./rin models filter vision 20      # Show 20 vision models
-./rin models filter budget 30      # Show 30 budget models
-./rin models filter openai 15      # Show 15 OpenAI models
+./magi models filter vision 20      # Show 20 vision models
+./magi models filter budget 30      # Show 30 budget models
+./magi models filter openai 15      # Show 15 OpenAI models
 
 # Search models by criteria
-./rin models search --tag vision
-./rin models search --cost budget
-./rin models search --popular 70
+./magi models search --tag vision
+./magi models search --cost budget
+./magi models search --popular 70
 
 # Show model recommendations
-./rin models recommend
+./magi models recommend
 ```
 
 ### Example 1: First Time Setup
@@ -159,7 +159,7 @@ nano .env
 #   OPENROUTER_MODEL_LIMIT=25
 
 # 2. Start RIN (auto-syncs models)
-./rin start
+./magi start
 
 # 3. Models are now available in Open WebUI
 ```
@@ -173,13 +173,13 @@ For faster model listing and better performance, limit the number of models:
 echo "OPENROUTER_MODEL_LIMIT=25" >> .env
 
 # 2. Sync with the limit
-./rin models sync 25
+./magi models sync 25
 
 # 3. Restart LiteLLM
-./rin restart litellm
+./magi restart litellm
 
 # 4. Verify models are limited
-./rin models list
+./magi models list
 ```
 
 ### Example 3: Adding New Models
@@ -188,10 +188,10 @@ OpenRouter frequently adds new models. To get them:
 
 ```bash
 # 1. Sync models
-./rin models sync
+./magi models sync
 
 # 2. Restart LiteLLM
-./rin restart litellm
+./magi restart litellm
 
 # 3. New models appear in Open WebUI immediately
 ```
@@ -202,7 +202,7 @@ Add to crontab for daily model updates:
 
 ```bash
 # Sync models daily at 3 AM (limit to top 50)
-0 3 * * * cd /path/to/RIN && ./rin models sync 50 && ./rin restart litellm
+0 3 * * * cd /path/to/RIN && ./magi models sync 50 && ./magi restart litellm
 ```
 
 ## Troubleshooting
@@ -265,23 +265,23 @@ nano .env
 OPENROUTER_MODEL_LIMIT=25  # Only sync top 25 models
 
 # Re-sync models
-./rin models sync
+./magi models sync
 
 # Restart LiteLLM
-./rin restart litellm
+./magi restart litellm
 ```
 
 **Solution 2**: Use the CLI with a limit argument:
 
 ```bash
 # Sync only top 10 models
-./rin models sync 10
+./magi models sync 10
 
 # List only top 10 models
-./rin models list 10
+./magi models list 10
 
 # Show top 25 models by popularity
-./rin models top 25
+./magi models top 25
 ```
 
 **Solution 3**: Edit the filter criteria in `scripts/sync_openrouter_models.py`:

@@ -24,7 +24,7 @@ MAGI can automatically obtain and renew SSL certificates from Let's Encrypt usin
 
 1. **Run the setup script:**
    ```bash
-   ./rin setup-https
+   ./magi setup-https
    ```
 
 2. **Provide your information:**
@@ -43,7 +43,7 @@ MAGI can automatically obtain and renew SSL certificates from Let's Encrypt usin
 
 4. **Start MAGI:**
    ```bash
-   ./rin start
+   ./magi start
    ```
 
 Caddy will automatically obtain SSL certificates on first access!
@@ -70,7 +70,7 @@ Ensure these ports are open and accessible from the internet:
 Let's Encrypt has rate limits (50 certificates per domain per week). For testing, use the staging environment:
 
 ```bash
-./rin setup-https
+./magi setup-https
 # Answer 'y' to "Use Let's Encrypt STAGING for testing?"
 ```
 
@@ -89,7 +89,7 @@ To switch from staging to production certificates:
    # Staging (comment this)
    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
    ```
-3. Restart: `./rin restart`
+3. Restart: `./magi restart`
 
 ## Certificate Storage
 
@@ -109,7 +109,7 @@ These directories are persistent across restarts.
 1. Verify DNS points to your server: `dig magi.example.com`
 2. Check ports 80 and 443 are open: `netstat -tuln | grep -E ':(80|443)'`
 3. Ensure domain is accessible: `curl -I http://magi.example.com`
-4. Check Caddy logs: `./rin logs caddy`
+4. Check Caddy logs: `./magi logs caddy`
 
 ### Rate Limit Errors
 
@@ -132,7 +132,7 @@ If you need to customize the Caddyfile:
 
 1. Edit `config/caddy/Caddyfile.template` for permanent changes
 2. Or edit `config/caddy/Caddyfile` for one-time changes
-3. Restart: `./rin restart`
+3. Restart: `./magi restart`
 
 ## Security Notes
 

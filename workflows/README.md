@@ -338,7 +338,7 @@ All core workflow templates are now available! These workflows enable:
 
 ### Quick Start Guide
 
-1. **Start RIN**: `./start.sh` or `./rin start`
+1. **Start RIN**: `./start.sh` or `./magi start`
 2. **Access n8n**: Open http://localhost:5678
 3. **Create account**: First-time setup prompts for owner account
 4. **Import workflows**: Menu (⋮) → Import from File → Select workflow JSON

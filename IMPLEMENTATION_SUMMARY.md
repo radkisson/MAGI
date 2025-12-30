@@ -10,9 +10,9 @@ The original issue requested:
 We've implemented a fully automatic HTTPS solution using **Caddy** as a reverse proxy with **Let's Encrypt** for automatic certificate management. The user experience is now:
 
 ```bash
-./rin setup-https
+./magi setup-https
 # Enter domain and email
-./rin start
+./magi start
 # Done! Automatic HTTPS is working
 ```
 
@@ -59,7 +59,7 @@ We've implemented a fully automatic HTTPS solution using **Caddy** as a reverse 
 - Environment variable handling
 
 #### RIN CLI (`rin`)
-- New command: `./rin setup-https`
+- New command: `./magi setup-https`
 - Updated help documentation
 - Added Caddy to services list
 
@@ -127,14 +127,14 @@ We've implemented a fully automatic HTTPS solution using **Caddy** as a reverse 
 
 ### Setup Flow
 
-1. User runs `./rin setup-https`
+1. User runs `./magi setup-https`
 2. Script prompts for:
    - Domain name (validates format)
    - Email address (validates format)
    - Staging vs production
 3. Script generates Caddyfile from template
 4. Script updates .env with configuration
-5. User runs `./rin start`
+5. User runs `./magi start`
 6. Docker compose starts with `--profile auto-https`
 7. Caddy container starts and listens on ports 80/443
 8. On first access, Caddy:
@@ -171,7 +171,7 @@ Caddy Reverse Proxy (Port 443)
 6. Complex documentation to follow
 
 ### After
-1. User runs `./rin setup-https`
+1. User runs `./magi setup-https`
 2. User enters domain and email
 3. Done! Everything else is automatic
 
@@ -284,7 +284,7 @@ This implementation achieves the goal stated in the issue:
 
 **Result**: ✅ Complete
 
-HTTPS is now completely automatic. Users run one command (`./rin setup-https`), answer two prompts (domain and email), and get production-grade HTTPS with zero manual certificate management.
+HTTPS is now completely automatic. Users run one command (`./magi setup-https`), answer two prompts (domain and email), and get production-grade HTTPS with zero manual certificate management.
 
 The implementation is:
 - ✅ Fully automatic

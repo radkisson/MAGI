@@ -364,7 +364,7 @@ def test_openrouter_webhook_headers():
     print_info("Configuration approach:")
     if openrouter_models:
         print_info("    - Static models in config with webhook headers")
-    print_info("    - Dynamic model loading via ./rin sync-models")
+    print_info("    - Dynamic model loading via ./magi sync-models")
     print_info("    - All OpenRouter models automatically get webhook headers")
     
     return True

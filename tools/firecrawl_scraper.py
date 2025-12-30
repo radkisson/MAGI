@@ -16,6 +16,16 @@ from typing import Callable, Any, Optional, List
 from pydantic import BaseModel, Field
 from threading import Lock
 
+try:
+    from .utils import get_service_url
+except ImportError:
+    from utils import get_service_url
+
+
+def _get_firecrawl_url() -> str:
+    """Get FireCrawl URL, auto-detecting HTTP or HTTPS based on configuration."""
+    return get_service_url("firecrawl", 3002, check_env_var="FIRECRAWL_API_URL")
+
 
 class Valves(BaseModel):
     """Configuration valves for FireCrawl integration (auto-loaded from .env)"""
@@ -47,12 +57,6 @@ class Valves(BaseModel):
         default=60,
         description="Additional timeout (in seconds) to add for crawl operations beyond REQUEST_TIMEOUT"
     )
-
-
-def _get_firecrawl_url() -> str:
-    """Get FireCrawl URL, auto-detecting HTTP or HTTPS based on configuration."""
-    from .utils import get_service_url
-    return get_service_url("firecrawl", 3002, check_env_var="FIRECRAWL_API_URL")
 
 
 class Tools:
