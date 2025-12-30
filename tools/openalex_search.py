@@ -107,27 +107,43 @@ class Tools:
         
         return truncated + "\n\n> ⚠️ **Output truncated** to fit context limits.\n"
 
-    def _format_work(self, work: dict, idx: int) -> str:
-        """Format a single work for display."""
+    def _format_work(self, work: dict, idx: int, verbose: bool = False) -> str:
+        """Format a single work for display.
+        
+        Args:
+            work: The work data from OpenAlex
+            idx: Index number for display
+            verbose: If True, show more details (longer abstract, concepts, etc.)
+        """
         title = work.get("title", "No title")
         
         # Get publication year
         year = work.get("publication_year", "N/A")
         
-        # Get authors (first 3)
+        # Get authors with affiliations
         authorships = work.get("authorships", [])
         authors = []
-        for auth in authorships[:3]:
+        for auth in authorships[:4]:
             author_name = auth.get("author", {}).get("display_name", "Unknown")
+            # Add affiliation if available
+            institutions = auth.get("institutions", [])
+            if institutions and verbose:
+                inst_name = institutions[0].get("display_name", "")
+                if inst_name:
+                    author_name += f" ({inst_name})"
             authors.append(author_name)
-        if len(authorships) > 3:
-            authors.append(f"et al. (+{len(authorships) - 3})")
+        if len(authorships) > 4:
+            authors.append(f"et al. (+{len(authorships) - 4})")
         authors_str = ", ".join(authors) if authors else "Unknown authors"
         
         # Get venue/journal
         primary_location = work.get("primary_location", {}) or {}
         source = primary_location.get("source", {}) or {}
         venue = source.get("display_name", "Unknown venue")
+        
+        # Publication type
+        pub_type = work.get("type", "")
+        type_display = pub_type.replace("-", " ").title() if pub_type else ""
         
         # Get DOI and URLs
         doi = work.get("doi", "")
@@ -139,7 +155,15 @@ class Tools:
         oa_url = oa.get("oa_url", "")
         
         # Citation count
-        cited_by = work.get("cited_by_count", 0)
+        cited_by = work.get("cited_by_count", 0) or 0
+        
+        # Referenced works count
+        referenced_works = work.get("referenced_works", []) or []
+        ref_count = len(referenced_works)
+        
+        # Concepts/Topics
+        concepts = work.get("concepts", []) or []
+        top_concepts = [c.get("display_name", "") for c in concepts[:4] if c.get("score", 0) > 0.3]
         
         # Abstract (if available)
         abstract_inverted = work.get("abstract_inverted_index") or {}
@@ -154,15 +178,28 @@ class Tools:
                             word_positions.append((pos, word))
             word_positions.sort()
             abstract = " ".join([w for _, w in word_positions])
-            # Truncate at word boundary
-            if len(abstract) > 300:
-                abstract = abstract[:300].rsplit(" ", 1)[0] + "..."
+            # No truncation - show full abstract. Output truncation handles overall length.
         
         # Build output
         output = f"### {idx}. {title}\n"
         output += f"**Authors**: {authors_str}\n"
-        output += f"**Year**: {year} | **Venue**: {venue}\n"
-        output += f"**Citations**: {cited_by} | {oa_status}\n"
+        
+        # Venue line with type if available
+        venue_line = f"**Year**: {year} | **Venue**: {venue}"
+        if type_display:
+            venue_line += f" | **Type**: {type_display}"
+        output += venue_line + "\n"
+        
+        # Citations line
+        cite_line = f"**Citations**: {cited_by:,}"
+        if ref_count > 0:
+            cite_line += f" | **References**: {ref_count}"
+        cite_line += f" | {oa_status}"
+        output += cite_line + "\n"
+        
+        # Topics/Concepts
+        if top_concepts:
+            output += f"**Topics**: {', '.join([f'`{c}`' for c in top_concepts])}\n"
         
         if abstract:
             output += f"\n> {abstract}\n"
