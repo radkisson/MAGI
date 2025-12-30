@@ -27,6 +27,8 @@ prompt_credentials() {
     # Prompt for email
     while true; do
         read -p "Enter email address: " email_var </dev/tty
+        # Trim whitespace from input
+        email_var=$(echo "$email_var" | xargs)
         if validate_email "$email_var"; then
             break
         else
@@ -67,7 +69,7 @@ create_openwebui_account() {
     local max_wait=60
     local waited=0
     while [ $waited -lt $max_wait ]; do
-        if docker exec rin-cortex test -f /app/backend/data/webui.db 2>/dev/null; then
+        if docker exec magi-cortex test -f /app/backend/data/webui.db 2>/dev/null; then
             break
         fi
         sleep 2
@@ -80,7 +82,7 @@ create_openwebui_account() {
     fi
     
     # Check if any users exist
-    local user_count=$(docker exec rin-cortex sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;" 2>/dev/null || echo "0")
+    local user_count=$(docker exec magi-cortex sqlite3 /app/backend/data/webui.db "SELECT COUNT(*) FROM user;" 2>/dev/null || echo "0")
     
     if [ "$user_count" != "0" ]; then
         print_warning "OpenWebUI already has users. Skipping account creation."

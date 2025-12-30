@@ -39,6 +39,8 @@ print_error() {
 # Note: Basic validation only. International domains and some edge cases not fully supported.
 validate_email() {
     local email="$1"
+    # Trim leading and trailing whitespace
+    email=$(echo "$email" | xargs)
     if [[ "$email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
         return 0
     else

@@ -20,7 +20,7 @@ echo "  2. You must have created your admin account in Open WebUI"
 echo ""
 
 # Check if RIN is running
-if ! docker ps | grep -q rin-cortex; then
+if ! docker ps | grep -q magi-cortex; then
     echo -e "${RED}❌ RIN is not running. Please run ./start.sh first.${NC}"
     exit 1
 fi
