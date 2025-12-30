@@ -553,40 +553,28 @@ cmd_version() {
 }
 
 cmd_models_sync() {
-    print_header "Syncing OpenRouter Models"
+    print_header "Syncing AI Models"
     
     validate_base_dir
     
     # Check if sync script exists
-    if [ ! -f "$BASE_DIR/scripts/sync_openrouter_models.py" ]; then
+    if [ ! -f "$BASE_DIR/scripts/sync_models.sh" ]; then
         print_error "Model sync script not found"
         exit 1
     fi
 
-    # Get limit argument
+    # Get limit argument and export it for the sync script
     local limit="${1:-}"
-    
-    # Run sync script with optional limit
     if [ -n "$limit" ]; then
-        if python3 "$BASE_DIR/scripts/sync_openrouter_models.py" "$limit"; then
-            if [ "$limit" = "0" ]; then
-                print_success "Models synced successfully (unlimited)"
-            else
-                print_success "Models synced successfully (limited to top $limit)"
-            fi
-            print_info "Restart LiteLLM to apply changes: ./magi restart litellm"
-        else
-            print_error "Model sync failed"
-            exit 1
-        fi
+        export OPENROUTER_MODEL_LIMIT="$limit"
+    fi
+    
+    # Run unified sync script (handles OpenRouter + Azure)
+    if "$BASE_DIR/scripts/sync_models.sh"; then
+        print_info "Restart LiteLLM to apply changes: ./magi restart litellm"
     else
-        if python3 "$BASE_DIR/scripts/sync_openrouter_models.py"; then
-            print_success "Models synced successfully"
-            print_info "Restart LiteLLM to apply changes: ./magi restart litellm"
-        else
-            print_error "Model sync failed"
-            exit 1
-        fi
+        print_error "Model sync failed"
+        exit 1
     fi
 }
 
@@ -722,7 +710,7 @@ USAGE:
     ./magi models <subcommand> [options]
 
 SUBCOMMANDS:
-    sync [limit]            Sync latest models from OpenRouter API (optional limit)
+    sync [limit]            Sync models from OpenRouter + Azure OpenAI (optional limit)
     search <query>          Search models by criteria
     list [limit] [filter]   List available models (default from OPENROUTER_MODEL_LIMIT)
     top [count]             Show top N models by popularity (default: 10)
@@ -861,7 +849,7 @@ COMMANDS:
     help                Show this help message
 
 MODEL MANAGEMENT:
-    models sync [limit]         Sync latest models from OpenRouter (optional limit)
+    models sync [limit]         Sync models from OpenRouter + Azure OpenAI
     models list [N] [filter]    List models (limit N, default from OPENROUTER_MODEL_LIMIT)
     models top [N]              Show top N by popularity (default: 10)
     models filter <type> [N]    Filter models by type

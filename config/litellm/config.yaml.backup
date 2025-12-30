@@ -1445,6 +1445,297 @@ model_list:
     tags:
     - openai
     - long-context
+- model_name: azure/Cohere-rerank-v4.0-fast
+  litellm_params:
+    model: azure/Cohere-rerank-v4.0-fast
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+  model_info:
+    mode: rerank
+    supports_function_calling: false
+    supports_vision: false
+    description: Azure OpenAI deployment 'Cohere-rerank-v4.0-fast' running cohere-rerank-v4.0-fast
+    tags:
+    - azure
+    - enterprise
+    - cohere
+    - rerank
+- model_name: azure/Cohere-rerank-v4.0-pro
+  litellm_params:
+    model: azure/Cohere-rerank-v4.0-pro
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+  model_info:
+    mode: rerank
+    supports_function_calling: false
+    supports_vision: false
+    description: Azure OpenAI deployment 'Cohere-rerank-v4.0-pro' running cohere-rerank-v4.0-pro
+    tags:
+    - azure
+    - enterprise
+    - cohere
+    - rerank
+- model_name: azure/DeepSeek-V3.2
+  litellm_params:
+    model: azure/DeepSeek-V3.2
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 8192
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: false
+    description: Azure OpenAI deployment 'DeepSeek-V3.2' running deepseek-v3.2
+    tags:
+    - azure
+    - enterprise
+    - deepseek
+- model_name: azure/gpt-4.1
+  litellm_params:
+    model: azure/gpt-4.1
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 4096
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: true
+    description: Azure OpenAI deployment 'gpt-4.1' running gpt-4.1
+    tags:
+    - azure
+    - enterprise
+    - gpt-4
+- model_name: azure/gpt-4o
+  litellm_params:
+    model: azure/gpt-4o
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 4096
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: true
+    description: Azure OpenAI deployment 'gpt-4o' running gpt-4o
+    tags:
+    - azure
+    - enterprise
+    - gpt-4
+- model_name: azure/gpt-4o-mini
+  litellm_params:
+    model: azure/gpt-4o-mini
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 4096
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: true
+    description: Azure OpenAI deployment 'gpt-4o-mini' running gpt-4o-mini
+    tags:
+    - azure
+    - enterprise
+    - gpt-4
+- model_name: azure/gpt-5-chat
+  litellm_params:
+    model: azure/gpt-5-chat
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 8192
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: true
+    description: Azure OpenAI deployment 'gpt-5-chat' running gpt-5-chat
+    tags:
+    - azure
+    - enterprise
+    - gpt-5
+- model_name: azure/gpt-5.2-chat
+  litellm_params:
+    model: azure/gpt-5.2-chat
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 8192
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: true
+    description: Azure OpenAI deployment 'gpt-5.2-chat' running gpt-5.2-chat
+    tags:
+    - azure
+    - enterprise
+    - gpt-5
+- model_name: azure/grok-4-fast-reasoning
+  litellm_params:
+    model: azure/grok-4-fast-reasoning
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 8192
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: false
+    supports_reasoning: true
+    description: Azure OpenAI deployment 'grok-4-fast-reasoning' running grok-4-fast-reasoning
+    tags:
+    - azure
+    - enterprise
+    - grok
+- model_name: azure/model-router
+  litellm_params:
+    model: azure/model-router
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 4096
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: true
+    description: Azure OpenAI deployment 'model-router' running model-router
+    tags:
+    - azure
+    - enterprise
+    - router
+- model_name: azure/o1
+  litellm_params:
+    model: azure/o1
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 16384
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: false
+    description: Azure OpenAI deployment 'o1' running o1
+    tags:
+    - azure
+    - enterprise
+    - reasoning
+- model_name: azure/o1-mini
+  litellm_params:
+    model: azure/o1-mini
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 16384
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: false
+    description: Azure OpenAI deployment 'o1-mini' running o1-mini
+    tags:
+    - azure
+    - enterprise
+    - reasoning
+- model_name: azure/o4-mini
+  litellm_params:
+    model: azure/o4-mini
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+    temperature: 0.7
+    top_p: 1.0
+    max_tokens: 16384
+  model_info:
+    mode: chat
+    supports_function_calling: true
+    supports_vision: false
+    description: Azure OpenAI deployment 'o4-mini' running o4-mini
+    tags:
+    - azure
+    - enterprise
+    - reasoning
+- model_name: azure/sora
+  litellm_params:
+    model: azure/sora
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+  model_info:
+    mode: video_generation
+    supports_function_calling: false
+    supports_vision: false
+    description: Azure OpenAI deployment 'sora' running sora
+    tags:
+    - azure
+    - enterprise
+    - video
+- model_name: azure/text-embedding-3-large
+  litellm_params:
+    model: azure/text-embedding-3-large
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+  model_info:
+    mode: embedding
+    supports_function_calling: false
+    supports_vision: false
+    description: Azure OpenAI deployment 'text-embedding-3-large' running text-embedding-3-large
+    tags:
+    - azure
+    - enterprise
+    - embedding
+- model_name: azure/text-embedding-ada-002
+  litellm_params:
+    model: azure/text-embedding-ada-002
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+  model_info:
+    mode: embedding
+    supports_function_calling: false
+    supports_vision: false
+    description: Azure OpenAI deployment 'text-embedding-ada-002' running text-embedding-ada-002
+    tags:
+    - azure
+    - enterprise
+    - embedding
+- model_name: azure/whisper
+  litellm_params:
+    model: azure/whisper
+    api_key: os.environ/AZURE_OPENAI_API_KEY
+    api_base: os.environ/AZURE_OPENAI_ENDPOINT
+    api_version: 2024-08-01-preview
+  model_info:
+    mode: audio_transcription
+    supports_function_calling: false
+    supports_vision: false
+    description: Azure OpenAI deployment 'whisper' running whisper
+    tags:
+    - azure
+    - enterprise
+    - audio
 router_settings:
   routing_strategy: usage-based-routing-v2
   enable_pre_call_checks: true

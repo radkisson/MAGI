@@ -9,7 +9,7 @@ MAGI combines Open WebUI, LiteLLM, SearXNG, Qdrant, and n8n into a unified syste
 | Component | Purpose |
 |-----------|---------|
 | 🧠 **Open WebUI** | Chat interface |
-| 🔀 **LiteLLM** | Multi-model router (OpenRouter, OpenAI, Anthropic, local) |
+| 🔀 **LiteLLM** | Multi-model router (OpenRouter, Azure OpenAI, OpenAI, Anthropic, local) |
 | 🔍 **SearXNG** | Private web search |
 | 🔥 **FireCrawl** | Web scraping |
 | 💾 **Qdrant** | Vector memory (RAG) |
@@ -31,7 +31,14 @@ For Jupyter Lab, open http://localhost:8888
 
 Add API keys to `.env` and restart:
 ```bash
+# OpenRouter (100+ models)
 OPENROUTER_API_KEY=your_key
+
+# Azure OpenAI (optional)
+AZURE_OPENAI_API_KEY=your_key
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_MODELS=gpt-4o:gpt-4o,gpt-4o-mini:gpt-4o-mini
+
 ./magi restart
 ```
 

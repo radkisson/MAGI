@@ -1,0 +1,534 @@
+{
+  "name": "MAGI - Memory Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "memory-store",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "name": "Webhook: Store Memory",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 200],
+      "webhookId": "memory-store",
+      "id": "webhook-store"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "conversation-summary",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "name": "Webhook: Conversation Summary",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 500],
+      "webhookId": "conversation-summary",
+      "id": "webhook-summary"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "name": "Daily Memory Consolidation",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 800],
+      "id": "schedule-consolidation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://magi-memory:6333/collections/rin_memory/points",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": [\n    {\n      \"id\": \"{{ $json.memory_id }}\",\n      \"vector\": {{ $json.embedding }},\n      \"payload\": {\n        \"content\": \"{{ $json.content }}\",\n        \"metadata\": {\n          \"user_id\": \"{{ $json.user_id }}\",\n          \"user_name\": \"{{ $json.user_name }}\",\n          \"source\": \"n8n-automation\",\n          \"category\": \"{{ $json.category }}\",\n          \"timestamp\": {{ Date.now() / 1000 }}\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "name": "Store in Qdrant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 200],
+      "id": "store-qdrant"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AZURE_EMBEDDING_ENDPOINT }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.AZURE_EMBEDDING_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": \"{{ $json.content }}\"\n}",
+        "options": {}
+      },
+      "name": "Get Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 200],
+      "id": "get-embedding"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse incoming memory request\nconst data = $input.first().json.body || $input.first().json;\n\nconst memoryId = require('crypto').randomUUID();\n\nreturn {\n  json: {\n    memory_id: memoryId,\n    content: data.content || '',\n    user_id: data.user_id || 'system',\n    user_name: data.user_name || 'n8n',\n    category: data.category || 'general',\n    source: data.source || 'webhook'\n  }\n};"
+      },
+      "name": "Prepare Memory",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 200],
+      "id": "prepare-memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge embedding with memory data\nconst embedding = $input.first().json.data[0].embedding;\nconst memory = $('Prepare Memory').first().json;\n\nreturn {\n  json: {\n    ...memory,\n    embedding: JSON.stringify(embedding)\n  }\n};"
+      },
+      "name": "Merge Embedding",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "id": "merge-embedding"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"memory_id\": \"{{ $json.memory_id }}\",\n  \"message\": \"Memory stored successfully\"\n}",
+        "options": {}
+      },
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1050, 200],
+      "id": "respond-success"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse conversation and extract key facts\nconst data = $input.first().json.body || $input.first().json;\n\nconst conversation = data.messages || [];\nconst userId = data.user_id || 'system';\nconst userName = data.user_name || 'unknown';\n\n// Extract the last few exchanges\nconst recentMessages = conversation.slice(-10);\n\n// Build summary prompt\nconst conversationText = recentMessages\n  .map(m => `${m.role}: ${m.content}`)\n  .join('\\n');\n\nreturn {\n  json: {\n    conversation_text: conversationText,\n    user_id: userId,\n    user_name: userName,\n    message_count: recentMessages.length\n  }\n};"
+      },
+      "name": "Parse Conversation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 500],
+      "id": "parse-conversation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://magi-router:4000/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a memory extraction assistant. Extract key facts, preferences, decisions, and important information from the conversation that should be remembered for future interactions. Return a JSON array of memory objects with 'content' and 'category' fields. Categories: preferences, facts, decisions, context, goals. Only extract truly important information worth remembering. If nothing important, return empty array [].\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Extract memories from this conversation:\\n\\n{{ $json.conversation_text }}\"\n    }\n  ],\n  \"response_format\": { \"type\": \"json_object\" },\n  \"temperature\": 0.3\n}",
+        "options": {}
+      },
+      "name": "Extract Memories via LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 500],
+      "id": "extract-memories"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse LLM response and prepare memories for storage\nconst llmResponse = $input.first().json;\nconst conversationData = $('Parse Conversation').first().json;\n\nlet memories = [];\ntry {\n  const content = JSON.parse(llmResponse.choices[0].message.content);\n  memories = content.memories || content || [];\n} catch (e) {\n  // If parsing fails, return empty\n  return [];\n}\n\nif (!Array.isArray(memories) || memories.length === 0) {\n  return [];\n}\n\n// Return each memory as separate item for batch processing\nreturn memories.map(memory => ({\n  json: {\n    content: memory.content,\n    category: memory.category || 'general',\n    user_id: conversationData.user_id,\n    user_name: conversationData.user_name,\n    source: 'conversation-summary'\n  }\n}));"
+      },
+      "name": "Parse Extracted Memories",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 500],
+      "id": "parse-extracted"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AZURE_EMBEDDING_ENDPOINT }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.AZURE_EMBEDDING_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": \"{{ $json.content }}\"\n}",
+        "options": {}
+      },
+      "name": "Get Embedding (Batch)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 500],
+      "id": "get-embedding-batch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare for Qdrant storage\nconst embedding = $input.first().json.data[0].embedding;\nconst memory = $('Parse Extracted Memories').first().json;\nconst memoryId = require('crypto').randomUUID();\n\nreturn {\n  json: {\n    memory_id: memoryId,\n    content: memory.content,\n    embedding: JSON.stringify(embedding),\n    user_id: memory.user_id,\n    user_name: memory.user_name,\n    category: memory.category\n  }\n};"
+      },
+      "name": "Prepare Batch Storage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 500],
+      "id": "prepare-batch"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://magi-memory:6333/collections/rin_memory/points",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": [\n    {\n      \"id\": \"{{ $json.memory_id }}\",\n      \"vector\": {{ $json.embedding }},\n      \"payload\": {\n        \"content\": \"{{ $json.content }}\",\n        \"metadata\": {\n          \"user_id\": \"{{ $json.user_id }}\",\n          \"user_name\": \"{{ $json.user_name }}\",\n          \"source\": \"conversation-summary\",\n          \"category\": \"{{ $json.category }}\",\n          \"timestamp\": {{ Date.now() / 1000 }}\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "name": "Store Batch in Qdrant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 500],
+      "id": "store-batch-qdrant"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"memories_stored\": {{ $runIndex + 1 }},\n  \"message\": \"Conversation memories extracted and stored\"\n}",
+        "options": {}
+      },
+      "name": "Respond Summary Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1650, 500],
+      "id": "respond-summary-success"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://magi-memory:6333/collections/rin_memory/points/scroll",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"limit\": 100,\n  \"with_payload\": true,\n  \"with_vector\": false\n}",
+        "options": {}
+      },
+      "name": "Fetch Recent Memories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 800],
+      "id": "fetch-memories"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Group memories by user and category for consolidation analysis\nconst response = $input.first().json;\nconst points = response.result?.points || [];\n\nif (points.length < 10) {\n  // Not enough memories to consolidate\n  return [{ json: { skip: true, reason: 'Not enough memories to consolidate' } }];\n}\n\n// Group by user_id\nconst byUser = {};\nfor (const point of points) {\n  const userId = point.payload?.metadata?.user_id || 'unknown';\n  if (!byUser[userId]) byUser[userId] = [];\n  byUser[userId].push({\n    id: point.id,\n    content: point.payload?.content,\n    category: point.payload?.metadata?.category,\n    timestamp: point.payload?.metadata?.timestamp\n  });\n}\n\nreturn Object.entries(byUser).map(([userId, memories]) => ({\n  json: {\n    user_id: userId,\n    memories: memories,\n    count: memories.length\n  }\n}));"
+      },
+      "name": "Group Memories",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 800],
+      "id": "group-memories"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Check Skip",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 800],
+      "id": "check-skip"
+    },
+    {
+      "parameters": {},
+      "name": "No Action Needed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1050, 900],
+      "id": "no-action"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://magi-router:4000/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a memory consolidation assistant. Review these memories and identify: 1) Duplicates or near-duplicates that can be merged 2) Outdated information that contradicts newer info 3) Related memories that could be consolidated into one. Return JSON with 'consolidations' array containing objects with 'action' (merge/update/delete), 'ids' (memory IDs affected), and 'new_content' (for merge/update). If no consolidation needed, return { 'consolidations': [] }\"\n    },\n    {\n      \"role\": \"user\", \n      \"content\": \"Review these memories for user {{ $json.user_id }}:\\n\\n{{ JSON.stringify($json.memories) }}\"\n    }\n  ],\n  \"response_format\": { \"type\": \"json_object\" },\n  \"temperature\": 0.2\n}",
+        "options": {}
+      },
+      "name": "Analyze for Consolidation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 700],
+      "id": "analyze-consolidation"
+    }
+  ],
+  "connections": {
+    "Webhook: Store Memory": {
+      "main": [
+        [
+          {
+            "node": "Prepare Memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Memory": {
+      "main": [
+        [
+          {
+            "node": "Get Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Embedding": {
+      "main": [
+        [
+          {
+            "node": "Merge Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Embedding": {
+      "main": [
+        [
+          {
+            "node": "Store in Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store in Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Conversation Summary": {
+      "main": [
+        [
+          {
+            "node": "Parse Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Conversation": {
+      "main": [
+        [
+          {
+            "node": "Extract Memories via LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Memories via LLM": {
+      "main": [
+        [
+          {
+            "node": "Parse Extracted Memories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Extracted Memories": {
+      "main": [
+        [
+          {
+            "node": "Get Embedding (Batch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Embedding (Batch)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Batch Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Batch Storage": {
+      "main": [
+        [
+          {
+            "node": "Store Batch in Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Batch in Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Respond Summary Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Memory Consolidation": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recent Memories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent Memories": {
+      "main": [
+        [
+          {
+            "node": "Group Memories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group Memories": {
+      "main": [
+        [
+          {
+            "node": "Check Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Skip": {
+      "main": [
+        [
+          {
+            "node": "Analyze for Consolidation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Action Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rin-memory-automation"
+  },
+  "tags": [
+    {
+      "name": "memory"
+    },
+    {
+      "name": "qdrant"
+    },
+    {
+      "name": "automation"
+    }
+  ]
+}

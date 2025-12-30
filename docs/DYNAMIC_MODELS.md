@@ -1,39 +1,40 @@
-# Dynamic OpenRouter Model Loading
+# Dynamic Model Loading
 
 ## Overview
 
-Starting with this release, RIN automatically fetches and updates the list of available models from the OpenRouter API. This ensures you always have access to the latest models without manual configuration updates.
+Starting with this release, RIN automatically fetches and updates the list of available models from multiple providers. This ensures you always have access to the latest models without manual configuration updates.
+
+## Supported Providers
+
+- **OpenRouter** - Access to 100+ models from multiple providers
+- **Azure OpenAI** - Enterprise Azure-hosted OpenAI models
+- **OpenAI** (Direct) - Direct OpenAI API access
+- **Anthropic** (Direct) - Direct Anthropic API access
 
 ## How It Works
 
 ### Automatic Sync on Startup
 
 When you run `./start.sh`, RIN automatically:
-1. Connects to the OpenRouter API
-2. Fetches the complete list of available models
+1. Connects to provider APIs (OpenRouter, Azure OpenAI)
+2. Fetches available models and deployments
 3. Filters models based on availability and quality criteria
 4. Updates the LiteLLM configuration with fresh model entries
-5. Preserves your existing non-OpenRouter models (OpenAI, Anthropic direct)
+5. Preserves your existing direct API models (OpenAI, Anthropic)
 
 ### Manual Sync
 
 You can manually sync models at any time:
 
 ```bash
-# Quick sync with default limit (from OPENROUTER_MODEL_LIMIT)
+# Sync all providers (OpenRouter + Azure OpenAI)
 ./magi models sync
 
-# Sync with custom limit (top 25 models)
+# Or run directly
+./scripts/sync_models.sh
+
+# Sync with custom limit for OpenRouter
 ./magi models sync 25
-
-# Sync all available models (no limit)
-./magi models sync 0
-
-# Or run the Python script directly
-python3 scripts/sync_openrouter_models.py
-
-# With custom limit
-python3 scripts/sync_openrouter_models.py 50
 ```
 
 After syncing, restart LiteLLM to apply changes:
@@ -44,7 +45,66 @@ After syncing, restart LiteLLM to apply changes:
 docker-compose restart litellm
 ```
 
-## Configuration
+## Azure OpenAI Configuration
+
+### Prerequisites
+
+1. **Azure OpenAI Resource** - Create one in the Azure portal
+2. **Deploy Models** - Deploy models to your resource
+3. **Get API Key and Endpoint** - From your Azure OpenAI resource
+
+### Environment Variables
+
+Add to your `.env` file:
+
+```bash
+# Azure OpenAI API key
+AZURE_OPENAI_API_KEY=your-api-key-here
+
+# Azure OpenAI endpoint (e.g., https://your-resource.openai.azure.com)
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+
+# API version (optional, defaults to 2024-08-01-preview)
+AZURE_OPENAI_API_VERSION=2024-08-01-preview
+
+# Your deployed models - comma-separated list of deployment:model pairs
+# Format: deployment_name:model_name,deployment2:model2
+AZURE_OPENAI_MODELS=my-gpt4o:gpt-4o,my-gpt4o-mini:gpt-4o-mini,my-o1:o1-preview
+```
+
+### Model Naming
+
+Azure models are automatically named using the pattern:
+- **Format**: `azure/{deployment_name}`
+- **Example**: `azure/my-gpt4o`
+
+### Capability Detection
+
+The sync script automatically detects model capabilities based on the model name:
+- **Vision Support**: gpt-4o, gpt-4-turbo
+- **Function Calling**: gpt-4o, gpt-4, gpt-3.5-turbo, o1, o3
+- **Extended Tokens**: o1, o3 reasoning models
+
+### Example Azure Configuration
+
+```bash
+# .env file
+AZURE_OPENAI_API_KEY=abc123...
+AZURE_OPENAI_ENDPOINT=https://mycompany-openai.openai.azure.com
+AZURE_OPENAI_API_VERSION=2024-08-01-preview
+AZURE_OPENAI_MODELS=prod-gpt4o:gpt-4o,prod-gpt4o-mini:gpt-4o-mini,prod-o1:o1-preview
+
+# After setting these, run:
+./scripts/sync_models.sh
+docker-compose restart litellm
+```
+
+Models will appear in Open WebUI as:
+- `azure/prod-gpt4o`
+- `azure/prod-gpt4o-mini`
+- `azure/prod-o1`
+
+## OpenRouter Configuration
 
 ### Prerequisites
 

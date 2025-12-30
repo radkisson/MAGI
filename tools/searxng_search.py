@@ -8,6 +8,7 @@ allowing RIN to search the web anonymously without tracking.
 import json
 import requests
 from typing import Callable, Any
+from pydantic import BaseModel, Field
 
 try:
     from .utils import get_service_url
@@ -15,11 +16,38 @@ except ImportError:
     from utils import get_service_url
 
 
+class Valves(BaseModel):
+    """Configuration valves for SearXNG integration"""
+
+    SEARXNG_URL: str = Field(
+        default="",
+        description="SearXNG instance URL (leave empty to auto-detect from Docker)"
+    )
+    REQUEST_TIMEOUT: int = Field(
+        default=10,
+        description="Timeout in seconds for API requests"
+    )
+    MAX_RESULTS: int = Field(
+        default=10,
+        description="Maximum number of search results to return"
+    )
+    DEFAULT_LANGUAGE: str = Field(
+        default="en",
+        description="Default language for search results"
+    )
+
+
 class Tools:
     """Open WebUI Tool: Anonymous Web Search via SearXNG"""
 
     def __init__(self):
-        self.searxng_url = get_service_url("searxng", 8080)
+        self.valves = Valves()
+
+    def _get_searxng_url(self) -> str:
+        """Get SearXNG URL from valves or auto-detect."""
+        if self.valves.SEARXNG_URL:
+            return self.valves.SEARXNG_URL
+        return get_service_url("searxng", 8080)
 
     def web_search(
         self,
@@ -56,14 +84,15 @@ class Tools:
 
         try:
             # Query SearXNG
+            searxng_url = self._get_searxng_url()
             response = requests.get(
-                f"{self.searxng_url}/search",
+                f"{searxng_url}/search",
                 params={
                     "q": query,
                     "format": "json",
-                    "language": "en",
+                    "language": self.valves.DEFAULT_LANGUAGE,
                 },
-                timeout=10,
+                timeout=self.valves.REQUEST_TIMEOUT,
             )
             response.raise_for_status()
 
@@ -123,7 +152,7 @@ class Tools:
 
             # Format results for LLM consumption
             formatted_results = []
-            for idx, result in enumerate(results.get("results", [])[:10], 1):
+            for idx, result in enumerate(results.get("results", [])[:self.valves.MAX_RESULTS], 1):
                 formatted_results.append(
                     f"{idx}. **{result.get('title', 'No title')}**\n"
                     f"   URL: {result.get('url', 'N/A')}\n"

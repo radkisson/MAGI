@@ -1,5 +1,5 @@
 #!/bin/bash
-# Convenience script to sync OpenRouter models
+# Convenience script to sync models from OpenRouter and Azure OpenAI
 # Usage: ./scripts/sync_models.sh
 
 set -e
@@ -7,7 +7,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "🔄 Syncing OpenRouter models..."
+echo "🔄 Syncing AI models..."
 echo ""
 
 # Make sure we have python3 and requirements
@@ -28,15 +28,27 @@ python3 -c "import requests, yaml" 2>/dev/null || {
 
 # Load environment variables if .env exists
 if [ -f "$BASE_DIR/.env" ]; then
-    export $(grep -E '^OPENROUTER_API_KEY=' "$BASE_DIR/.env" | xargs)
+    export $(grep -E '^(OPENROUTER_API_KEY|AZURE_OPENAI_API_KEY|AZURE_OPENAI_ENDPOINT|AZURE_OPENAI_API_VERSION|AZURE_OPENAI_MODELS)=' "$BASE_DIR/.env" | xargs)
 fi
 
-# Run the sync script
-python3 "$SCRIPT_DIR/sync_openrouter_models.py"
-SYNC_EXIT=$?
+SYNC_EXIT=0
 
+# Run OpenRouter sync
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📡 Syncing OpenRouter models..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+python3 "$SCRIPT_DIR/sync_openrouter_models.py" || SYNC_EXIT=$?
+
+# Run Azure OpenAI sync
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "☁️  Syncing Azure OpenAI models..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+python3 "$SCRIPT_DIR/sync_azure_models.py" || SYNC_EXIT=$?
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ $SYNC_EXIT -eq 0 ]; then
-    echo ""
     echo "✅ Model sync complete!"
     echo ""
     echo "To apply changes, restart LiteLLM:"
@@ -45,9 +57,9 @@ if [ $SYNC_EXIT -eq 0 ]; then
     echo "Or restart all services:"
     echo "  docker-compose down && docker-compose up -d"
 else
-    echo ""
-    echo "⚠️  Model sync did not complete successfully"
+    echo "⚠️  Model sync completed with warnings"
     echo "   Check the output above for details"
 fi
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 exit $SYNC_EXIT

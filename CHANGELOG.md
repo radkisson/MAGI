@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Azure OpenAI Integration**: Full support for Azure OpenAI deployments
+  - New `scripts/sync_azure_models.py` - Sync Azure OpenAI models to LiteLLM config
+  - Auto-discovery of Azure deployments via API (with manual fallback)
+  - Support for all Azure model types: GPT-4/5, o1/o4 reasoning, DeepSeek, Grok, Cohere rerank, Sora, Whisper, embeddings
+  - Automatic capability detection (vision, function calling, reasoning, embeddings, etc.)
+  - Model-specific tags for easy filtering (azure, enterprise, gpt-5, reasoning, etc.)
+  - Updated `sync_models.sh` to sync both OpenRouter and Azure models
+  - `./magi models sync` now handles both providers
+  - Environment variables: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_MODELS`
+  - Documentation added to `docs/DYNAMIC_MODELS.md`
+
 - **Jupyter Lab Integration**: Interactive notebook environment for code execution and data analysis
   - Full scipy stack (NumPy, Pandas, Matplotlib, SciPy) pre-installed
   - OpenRouter API integration via environment variables

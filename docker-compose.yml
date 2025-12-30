@@ -23,6 +23,8 @@ services:
       # Base URL Configuration (for Tailscale or reverse proxy with subpaths)
       - WEBUI_URL=${WEBUI_URL:-}
       - ENABLE_PERSISTENT_CONFIG=${ENABLE_PERSISTENT_CONFIG:-true}
+      # Default System Prompt for Memory Integration
+      - DEFAULT_SYSTEM_PROMPT=${DEFAULT_SYSTEM_PROMPT:-}
       # HTTPS Configuration
       - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
       - SSL_CERT_PATH=${SSL_CERT_PATH:-/app/ssl/cert.pem}
