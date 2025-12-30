@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # n8n entrypoint wrapper to configure HTTPS/HTTP dynamically
 set -e
 
@@ -12,7 +12,7 @@ if [ "${ENABLE_HTTPS}" = "true" ]; then
     export WEBHOOK_URL="https://localhost:${N8N_PORT}"
     export N8N_EDITOR_BASE_URL="https://localhost:${N8N_PORT}"
     
-    echo "🔒 n8n starting with HTTPS enabled"
+    echo "n8n starting with HTTPS enabled"
     echo "   SSL Certificate: ${N8N_SSL_CERT}"
     echo "   SSL Key: ${N8N_SSL_KEY}"
 else
@@ -24,7 +24,7 @@ else
     export WEBHOOK_URL="http://localhost:${N8N_PORT}"
     export N8N_EDITOR_BASE_URL="http://localhost:${N8N_PORT}"
     
-    echo "📡 n8n starting with HTTP (development mode)"
+    echo "n8n starting with HTTP (development mode)"
 fi
 
 # Execute the original n8n entrypoint

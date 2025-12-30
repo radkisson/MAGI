@@ -295,7 +295,7 @@ services:
         pip install --quiet -r /home/jovyan/requirements.txt 2>/dev/null || true;
       fi &&
       chown -R jovyan:users /home/jovyan/work &&
-      exec su jovyan -c 'start-notebook.sh'
+      exec /usr/local/bin/start-notebook.sh
       "
     env_file: .env
     depends_on:
