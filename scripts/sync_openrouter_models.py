@@ -14,6 +14,7 @@ from typing import Dict, List, Any, Optional
 
 # Configuration constants
 YAML_LINE_WIDTH = 1000  # Width for YAML output formatting
+DEFAULT_MODEL_LIMIT = 50  # Default number of models to sync if not specified
 
 # ANSI color codes for terminal output
 GREEN = '\033[0;32m'
@@ -436,7 +437,8 @@ def generate_model_recommendations(models: List[Dict[str, Any]]) -> Dict[str, Li
 def update_litellm_config(
     config_path: Path,
     openrouter_models: List[Dict[str, Any]],
-    backup: bool = True
+    backup: bool = True,
+    limit: Optional[int] = None
 ) -> bool:
     """
     Update the LiteLLM config file with OpenRouter models
@@ -445,6 +447,7 @@ def update_litellm_config(
         config_path: Path to litellm config.yaml
         openrouter_models: List of models to add
         backup: Whether to backup existing config
+        limit: Optional limit on number of models to add (uses top N by popularity)
 
     Returns:
         True if successful, False otherwise
@@ -475,6 +478,12 @@ def update_litellm_config(
             convert_openrouter_model_to_litellm(model)
             for model in openrouter_models
         ]
+
+        # Apply limit if specified (take top N by popularity)
+        if limit and limit > 0 and len(new_openrouter_models) > limit:
+            # Models should already be sorted by popularity from rank_models_by_popularity
+            new_openrouter_models = new_openrouter_models[:limit]
+            print_info(f"Limited to top {limit} models by popularity")
 
         # Combine: keep non-OpenRouter models, add new OpenRouter models
         updated_models = non_openrouter_models + new_openrouter_models
@@ -513,6 +522,42 @@ def main():
         return 1
 
     print_success(f"Found config file: {config_path}")
+
+    # Get model limit from environment variable
+    limit = None
+    limit_env = os.environ.get('OPENROUTER_MODEL_LIMIT', str(DEFAULT_MODEL_LIMIT))
+    if limit_env and limit_env.strip():
+        try:
+            limit = int(limit_env)
+            if limit > 0:
+                print_info(f"Model limit set to: {limit} (from OPENROUTER_MODEL_LIMIT)")
+            else:
+                print_info("No model limit (syncing all available models)")
+                limit = None
+        except ValueError:
+            print_warning(f"Invalid OPENROUTER_MODEL_LIMIT value: {limit_env}, using default ({DEFAULT_MODEL_LIMIT})")
+            limit = DEFAULT_MODEL_LIMIT
+
+    # Allow command line override
+    if len(sys.argv) > 1:
+        limit_arg = sys.argv[1]
+        try:
+            limit = int(limit_arg)
+            if limit > 0:
+                print_info(f"Model limit overridden from command line: {limit}")
+            else:
+                print_info("No model limit (syncing all available models) [overridden from command line]")
+                limit = None
+        except ValueError:
+            print_warning(
+                f"Invalid command line argument for model limit: {limit_arg}, "
+                f"keeping previous value ({'no limit' if limit is None else limit})"
+            )
+        except IndexError:
+            print_warning(
+                "Unexpected missing command line argument for model limit; "
+                f"keeping previous value ({'no limit' if limit is None else limit})"
+            )
 
     # Get OpenRouter API key (optional)
     api_key = os.environ.get('OPENROUTER_API_KEY')
@@ -595,7 +640,7 @@ def main():
 
     # Update config
     print_info("\nUpdating LiteLLM configuration...")
-    success = update_litellm_config(config_path, ranked_models, backup=True)
+    success = update_litellm_config(config_path, ranked_models, backup=True, limit=limit)
 
     if success:
         print_success("\n✅ Configuration updated successfully!")
