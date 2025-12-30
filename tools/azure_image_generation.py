@@ -39,6 +39,10 @@ class Tools:
             default="standard",
             description="Image quality (standard or hd)"
         )
+        TIMEOUT_SECONDS: int = Field(
+            default=180,
+            description="Request timeout in seconds"
+        )
 
     def __init__(self):
         self.valves = self.Valves(
@@ -47,8 +51,18 @@ class Tools:
             DEPLOYMENT_NAME=os.getenv("AZURE_IMAGE_DEPLOYMENT", "FLUX.2-pro"),
             API_VERSION=os.getenv("AZURE_IMAGE_API_VERSION", "preview"),
             DEFAULT_SIZE=os.getenv("AZURE_IMAGE_SIZE", "1024x1024"),
-            DEFAULT_QUALITY=os.getenv("AZURE_IMAGE_QUALITY", "standard")
+            DEFAULT_QUALITY=os.getenv("AZURE_IMAGE_QUALITY", "standard"),
+            TIMEOUT_SECONDS=int(os.getenv("AZURE_IMAGE_TIMEOUT", "180"))
         )
+        
+        # Aspect ratio presets
+        self.size_presets = {
+            "square": "1024x1024",
+            "landscape": "1792x1024",
+            "portrait": "1024x1792",
+            "wide": "1792x1024",
+            "tall": "1024x1792"
+        }
 
     async def generate_image(
         self,
@@ -61,7 +75,7 @@ class Tools:
         Generate an image from a text description using Azure FLUX.2-pro.
         
         :param prompt: Detailed description of the image to generate. Be specific about style, colors, composition, lighting, and subject matter.
-        :param size: Image dimensions - 1024x1024 (square), 1792x1024 (landscape), 1024x1792 (portrait). Default: 1024x1024
+        :param size: Image dimensions - 1024x1024 (square), 1792x1024 (landscape), 1024x1792 (portrait), or presets: 'square', 'landscape', 'portrait', 'wide', 'tall'
         :param style: Image style - 'natural' for realistic or 'vivid' for dramatic/artistic
         :return: The generated image displayed inline
         """
@@ -73,8 +87,10 @@ class Tools:
         api_version = self.valves.API_VERSION
         api_key = self.valves.AZURE_API_KEY
         
-        # Use default size if not specified
-        if not size:
+        # Handle size presets
+        if size.lower() in self.size_presets:
+            size = self.size_presets[size.lower()]
+        elif not size:
             size = self.valves.DEFAULT_SIZE
 
         if not api_key:
@@ -102,7 +118,7 @@ class Tools:
                     'Content-Type': 'application/json',
                 },
                 json=body,
-                timeout=180  # 3 minutes for image generation
+                timeout=self.valves.TIMEOUT_SECONDS
             )
             
             if __event_emitter__:

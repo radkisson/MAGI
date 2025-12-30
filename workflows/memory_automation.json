@@ -136,13 +136,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://magi-router:4000/chat/completions",
+        "url": "={{ $env.AZURE_OPENAI_ENDPOINT }}openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-02-15-preview",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "Authorization",
-              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+              "name": "api-key",
+              "value": "={{ $env.AZURE_OPENAI_API_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -152,7 +152,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a memory extraction assistant. Extract key facts, preferences, decisions, and important information from the conversation that should be remembered for future interactions. Return a JSON array of memory objects with 'content' and 'category' fields. Categories: preferences, facts, decisions, context, goals. Only extract truly important information worth remembering. If nothing important, return empty array [].\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Extract memories from this conversation:\\n\\n{{ $json.conversation_text }}\"\n    }\n  ],\n  \"response_format\": { \"type\": \"json_object\" },\n  \"temperature\": 0.3\n}",
+        "jsonBody": "={\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a memory extraction assistant. Extract key facts, preferences, decisions, and important information from the conversation that should be remembered for future interactions. Return a JSON array of memory objects with 'content' and 'category' fields. Categories: preferences, facts, decisions, context, goals. Only extract truly important information worth remembering. If nothing important, return empty array [].\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Extract memories from this conversation:\\n\\n{{ $json.conversation_text }}\"\n    }\n  ],\n  \"response_format\": { \"type\": \"json_object\" },\n  \"temperature\": 0.3\n}",
         "options": {}
       },
       "name": "Extract Memories via LLM",
@@ -301,13 +301,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://magi-router:4000/chat/completions",
+        "url": "={{ $env.AZURE_OPENAI_ENDPOINT }}openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-02-15-preview",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "Authorization",
-              "value": "Bearer {{ $env.LITELLM_MASTER_KEY }}"
+              "name": "api-key",
+              "value": "={{ $env.AZURE_OPENAI_API_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -317,7 +317,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a memory consolidation assistant. Review these memories and identify: 1) Duplicates or near-duplicates that can be merged 2) Outdated information that contradicts newer info 3) Related memories that could be consolidated into one. Return JSON with 'consolidations' array containing objects with 'action' (merge/update/delete), 'ids' (memory IDs affected), and 'new_content' (for merge/update). If no consolidation needed, return { 'consolidations': [] }\"\n    },\n    {\n      \"role\": \"user\", \n      \"content\": \"Review these memories for user {{ $json.user_id }}:\\n\\n{{ JSON.stringify($json.memories) }}\"\n    }\n  ],\n  \"response_format\": { \"type\": \"json_object\" },\n  \"temperature\": 0.2\n}",
+        "jsonBody": "={\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a memory consolidation assistant. Review these memories and identify: 1) Duplicates or near-duplicates that can be merged 2) Outdated information that contradicts newer info 3) Related memories that could be consolidated into one. Return JSON with 'consolidations' array containing objects with 'action' (merge/update/delete), 'ids' (memory IDs affected), and 'new_content' (for merge/update). If no consolidation needed, return { 'consolidations': [] }\"\n    },\n    {\n      \"role\": \"user\", \n      \"content\": \"Review these memories for user {{ $json.user_id }}:\\n\\n{{ JSON.stringify($json.memories) }}\"\n    }\n  ],\n  \"response_format\": { \"type\": \"json_object\" },\n  \"temperature\": 0.2\n}",
         "options": {}
       },
       "name": "Analyze for Consolidation",
