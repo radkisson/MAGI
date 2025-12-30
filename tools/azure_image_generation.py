@@ -18,7 +18,6 @@ class Tools:
         AZURE_COGNITIVE_ENDPOINT: str = Field(
             default="",
             description="Azure Cognitive Services endpoint URL (set via AZURE_COGNITIVE_ENDPOINT env var)"
-            description="Azure Cognitive Services endpoint"
         )
         AZURE_API_KEY: str = Field(
             default="",

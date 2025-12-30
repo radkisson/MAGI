@@ -65,7 +65,7 @@ Automatically:
 The workflow uses these environment variables (already in your `.env`):
 
 ```bash
-AZURE_EMBEDDING_ENDPOINT=https://rizzai-02.cognitiveservices.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15
+AZURE_EMBEDDING_ENDPOINT=https://YOUR-RESOURCE.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15
 AZURE_EMBEDDING_API_KEY=your-key
 LITELLM_MASTER_KEY=your-litellm-key
 ```
@@ -200,7 +200,7 @@ Content-Type: application/json
 - Check endpoint URL format
 - Test embedding manually:
   ```bash
-  curl -X POST "https://rizzai-02.cognitiveservices.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15" \
+  curl -X POST "https://YOUR-RESOURCE.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15" \
     -H "api-key: YOUR_KEY" \
     -H "Content-Type: application/json" \
     -d '{"input": "test"}'
