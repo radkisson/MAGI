@@ -16,7 +16,8 @@ from pydantic import BaseModel, Field
 class Tools:
     class Valves(BaseModel):
         AZURE_COGNITIVE_ENDPOINT: str = Field(
-            default="https://rizzai-02.cognitiveservices.azure.com/",
+            default="",
+            description="Azure Cognitive Services endpoint URL (set via AZURE_COGNITIVE_ENDPOINT env var)"
             description="Azure Cognitive Services endpoint"
         )
         AZURE_API_KEY: str = Field(
@@ -46,7 +47,7 @@ class Tools:
 
     def __init__(self):
         self.valves = self.Valves(
-            AZURE_COGNITIVE_ENDPOINT=os.getenv("AZURE_COGNITIVE_ENDPOINT", "https://rizzai-02.cognitiveservices.azure.com/"),
+            AZURE_COGNITIVE_ENDPOINT=os.getenv("AZURE_COGNITIVE_ENDPOINT", ""),
             AZURE_API_KEY=os.getenv("AZURE_OPENAI_API_KEY", ""),
             DEPLOYMENT_NAME=os.getenv("AZURE_IMAGE_DEPLOYMENT", "FLUX.2-pro"),
             API_VERSION=os.getenv("AZURE_IMAGE_API_VERSION", "preview"),
@@ -148,6 +149,9 @@ class Tools:
             elif response.status_code == 400:
                 error_data = response.json() if response.text else {}
                 error_msg = error_data.get('error', {}).get('message', response.text)
+                # Check for content filter
+                if 'content' in error_msg.lower() or 'filter' in error_msg.lower() or 'policy' in error_msg.lower():
+                    return f"🚫 Content filtered: The prompt may contain restricted content. Please rephrase.\n\n*Details: {error_msg}*"
                 return f"❌ Bad request: {error_msg}\n\nTry rephrasing your prompt or using a different size."
                 
             elif response.status_code == 429:
