@@ -88,6 +88,22 @@ The coordination and messaging system that enables asynchronous task execution a
 - Caching for performance
 - Real-time event coordination
 
+### E. The Laboratory (Experimentation)
+
+The computational workspace for code execution, data analysis, and AI model experimentation.
+
+**Components:**
+
+- **Jupyter Lab**: An interactive notebook environment providing a full Python scientific computing stack (NumPy, Pandas, Matplotlib, SciPy). Jupyter enables direct experimentation with AI models, data analysis workflows, and integration testing.
+
+**Key Functions:**
+- Interactive Python code execution
+- Data analysis and visualization
+- AI model experimentation and testing
+- Direct access to OpenRouter and LiteLLM APIs
+- Secure code execution via pydiode
+- Integration with other MAGI services
+
 ## Technical Stack
 
 ### Core Technologies:
@@ -95,6 +111,7 @@ The coordination and messaging system that enables asynchronous task execution a
 - **Sensorium**: SearXNG (metasearch) + FireCrawl (web scraping)
 - **Memory**: Qdrant (vector database)
 - **Nervous System**: Redis (message bus)
+- **Laboratory**: Jupyter Lab (code execution and analysis)
 - **Orchestration**: Docker Compose
 - **Language**: Python 3.9+ for custom integrations
 - **LLM Providers**: GPT-4o, Claude 3.5, Llama 3 (configurable via LiteLLM)
@@ -112,6 +129,7 @@ services:
   - firecrawl (Sensorium)
   - qdrant (Memory)
   - redis (Nervous System)
+  - jupyter (Laboratory)
 ```
 
 ### Self-Hosted Infrastructure:
@@ -253,12 +271,12 @@ The organism requires **tool definitions** to connect the Cortex (Open WebUI) to
          │
          │ Tool Definitions (Synaptic Wiring)
          │
-    ┌────┴────┬────────┬────────────┐
-    │         │        │            │
-┌───▼──┐  ┌──▼───┐ ┌──▼─────┐  ┌──▼────┐
-│SearXNG│ │FireCrawl│Qdrant│  │ Redis │
-│(Vision)│(Digestion)│(Memory)│ │(Reflex)│
-└───────┘  └──────┘ └────────┘  └───────┘
+    ┌────┴────┬────────┬────────────┬─────────┐
+    │         │        │            │         │
+┌───▼──┐  ┌──▼───┐ ┌──▼─────┐  ┌──▼────┐ ┌──▼─────┐
+│SearXNG│ │FireCrawl│Qdrant│  │ Redis │ │Jupyter │
+│(Vision)│(Digestion)│(Memory)│ │(Reflex)││(Lab)   │
+└───────┘  └──────┘ └────────┘  └───────┘ └────────┘
 ```
 
 ### Available Tools

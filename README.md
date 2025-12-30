@@ -15,6 +15,7 @@ MAGI combines Open WebUI, LiteLLM, SearXNG, Qdrant, and n8n into a unified syste
 | 💾 **Qdrant** | Vector memory (RAG) |
 | ⚡ **Redis** | Message bus |
 | 🔄 **n8n** | Workflow automation |
+| 📓 **Jupyter Lab** | Code execution and data analysis |
 
 ## Quick Start
 
@@ -25,6 +26,8 @@ cd Rhyzomic-Intelligence-Node-RIN-
 ```
 
 Open http://localhost:3000
+
+For Jupyter Lab, open http://localhost:8888
 
 Add API keys to `.env` and restart:
 ```bash
@@ -66,6 +69,7 @@ Caddy automatically obtains and renews SSL certificates. No manual certificate m
 | ⚡ n8n | Workflow triggers |
 | 🧠 Sequential Thinking | Chain-of-thought reasoning |
 | 📺 YouTube Transcript | Video analysis |
+| 📓 Jupyter Lab | Code execution with OpenRouter/pydiode integration |
 
 ## Documentation
 
@@ -76,6 +80,7 @@ Caddy automatically obtains and renews SSL certificates. No manual certificate m
 - **[Workflows](docs/WORKFLOWS.md)** — n8n automation, Python support
 - **[Model Config](docs/MODEL_CONFIGURATION.md)** — LLM provider setup
 - **[HTTPS Setup](docs/HTTPS_CONFIGURATION.md)** — Production TLS
+- **[Jupyter Security](docs/JUPYTER_SECURITY.md)** — Production security for Jupyter Lab
 - **[Architecture](docs/ARCHITECTURE.md)** — System design
 - **[Roadmap](docs/ROADMAP.md)** — Future plans through v3.0
 

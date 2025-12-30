@@ -244,6 +244,83 @@ services:
     # This service allows the AI to "watch" videos by reading YouTube subtitle tracks.
     # Uses the mcpo image which includes Node.js, npm, and mcpo pre-installed.
 
+  # --- JUPYTER NOTEBOOK (Code Execution & Analysis) ---
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: magi-jupyter
+    restart: always
+    ports:
+      - "${PORT_JUPYTER:-8888}:8888"
+    volumes:
+      - ./data/jupyter/notebooks:/home/jovyan/work
+      - ./config/ssl:/home/jovyan/ssl:ro
+      # Mount requirements for custom package installation
+      - ./requirements.txt:/home/jovyan/requirements.txt:ro
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      # OpenRouter integration via environment variables
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LITELLM_BASE_URL=http://litellm:4000
+      # HTTPS Configuration
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      # Jupyter authentication token (set to empty for no auth, or provide a token)
+      # For production, set JUPYTER_TOKEN in .env to a secure random string
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
+      # Grant sudo access to install packages (can be disabled for production)
+      - GRANT_SUDO=yes
+    user: root
+    command: >
+      bash -c "
+      if [ ! -f /home/jovyan/.jupyter/jupyter_lab_config.py ]; then
+        mkdir -p /home/jovyan/.jupyter &&
+        echo \"c.ServerApp.ip = '0.0.0.0'\" > /home/jovyan/.jupyter/jupyter_lab_config.py &&
+        echo \"c.ServerApp.allow_origin = '*'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
+        if [ -n \"$$JUPYTER_TOKEN\" ]; then
+          echo \"c.ServerApp.token = '$$JUPYTER_TOKEN'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
+        else
+          echo \"c.ServerApp.token = ''\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
+          echo \"c.ServerApp.password = ''\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
+        fi &&
+        if [ \"$$ENABLE_HTTPS\" = \"true\" ]; then
+          echo \"c.ServerApp.certfile = '/home/jovyan/ssl/cert.pem'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py &&
+          echo \"c.ServerApp.keyfile = '/home/jovyan/ssl/key.pem'\" >> /home/jovyan/.jupyter/jupyter_lab_config.py;
+        fi &&
+        chown -R jovyan:users /home/jovyan/.jupyter;
+      fi &&
+      pip install --quiet requests openai anthropic litellm 2>/dev/null &&
+      pip install --quiet pydiode 2>/dev/null || echo 'Warning: pydiode installation failed, skipping' &&
+      if [ -f /home/jovyan/requirements.txt ]; then
+        pip install --quiet -r /home/jovyan/requirements.txt 2>/dev/null || true;
+      fi &&
+      chown -R jovyan:users /home/jovyan/work &&
+      exec su jovyan -c 'start-notebook.sh'
+      "
+    env_file: .env
+    depends_on:
+      - litellm
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8888/api || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # This service provides Jupyter Lab for code execution, data analysis, and AI model interaction.
+    # Integrates with OpenRouter via pydiode and can directly access LiteLLM for model inference.
+    # Supports HTTPS when enabled via SSL certificates.
+    # 
+    # ⚠️ SECURITY CONSIDERATIONS FOR PRODUCTION:
+    # 1. Authentication: Set JUPYTER_TOKEN in .env to enable token-based authentication
+    # 2. CORS: allow_origin='*' permits requests from any origin - consider restricting in production
+    # 3. Root Access: Container runs as root with sudo for package installation flexibility
+    #    - For production, consider removing 'user: root' and 'GRANT_SUDO=yes'
+    #    - Pre-install all needed packages in a custom Docker image instead
+    # 4. Network: Bind to localhost only in production (not 0.0.0.0) via reverse proxy
+    # 5. Firewall: Restrict port 8888 access to trusted networks only
+    # 
+    # This configuration prioritizes development convenience. Harden before production deployment.
+
   # --- SUPPORT ---
   redis:
     image: redis:alpine
