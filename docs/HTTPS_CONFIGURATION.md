@@ -7,8 +7,9 @@ This guide explains how to enable HTTPS/TLS encryption for all RIN services.
 RIN provides multiple options for HTTPS/TLS encryption:
 
 1. **Automatic HTTPS with Let's Encrypt** (RECOMMENDED) - Zero configuration, fully automated
-2. **Manual HTTPS Setup** - Use your own reverse proxy and certificates
-3. **HTTP Only** - For local development
+2. **Tailscale HTTPS** - Zero configuration for Tailscale users, path-based routing
+3. **Manual HTTPS Setup** - Use your own reverse proxy and certificates
+4. **HTTP Only** - For local development
 
 HTTPS is especially important for:
 - Production deployments
@@ -103,6 +104,53 @@ After setup completes and services start, access via HTTPS:
 ```
 
 Certificates are obtained automatically on first access!
+
+## Tailscale HTTPS
+
+For users with Tailscale, you can use Tailscale Serve for automatic HTTPS without exposing ports to the internet.
+
+### Overview
+
+Tailscale Serve provides:
+- ✅ **Automatic HTTPS** - Valid certificates for your `*.ts.net` domain
+- ✅ **Zero Port Exposure** - No public internet access required
+- ✅ **Path-Based Routing** - All services under one domain
+- ✅ **Tailnet Access Only** - Secure by default
+
+### Quick Setup
+
+```bash
+./rin setup-tailscale-https
+```
+
+Or configure manually:
+
+```bash
+# Configure Tailscale Serve with path-based routing
+sudo tailscale serve --bg --set-path / http://localhost:3000
+sudo tailscale serve --bg --set-path /n8n http://localhost:5678
+sudo tailscale serve --bg --set-path /jupyter http://localhost:8888
+sudo tailscale serve --bg --set-path /litellm http://localhost:4000
+```
+
+### Access Your Services
+
+After setup, access services at:
+
+```
+🧠 Cortex (Open WebUI):  https://your-machine.tailnet-name.ts.net/
+🔄 Reflex (n8n):         https://your-machine.tailnet-name.ts.net/n8n
+📓 Jupyter:              https://your-machine.tailnet-name.ts.net/jupyter
+🚦 LiteLLM:              https://your-machine.tailnet-name.ts.net/litellm
+```
+
+> **Important:** LiteLLM uses `/litellm` instead of `/api` to avoid conflicts with Open WebUI's internal API routes.
+
+### Verify Configuration
+
+```bash
+tailscale serve status
+```
 
 ## Manual HTTPS Setup
 

@@ -110,11 +110,11 @@ else
     echo -e "${RED}  ✗ Failed to configure /n8n path${NC}"
 fi
 
-# LiteLLM API
-if tailscale serve --bg --set-path /api "http://localhost:${PORT_LITELLM}" 2>/dev/null; then
-    echo "  ✓ /api → LiteLLM API (port $PORT_LITELLM)"
+# LiteLLM API (use /litellm to avoid conflict with Open WebUI's internal /api routes)
+if tailscale serve --bg --set-path /litellm "http://localhost:${PORT_LITELLM}" 2>/dev/null; then
+    echo "  ✓ /litellm → LiteLLM API (port $PORT_LITELLM)"
 else
-    echo -e "${RED}  ✗ Failed to configure /api path${NC}"
+    echo -e "${RED}  ✗ Failed to configure /litellm path${NC}"
 fi
 
 # Jupyter notebooks
@@ -241,7 +241,7 @@ echo -e "${BLUE}📋 Your MAGI services are now available at:${NC}"
 echo ""
 echo "  🧠 OpenWebUI:  https://$FULL_DOMAIN/"
 echo "  🔄 n8n:        https://$FULL_DOMAIN/n8n"
-echo "  🚦 LiteLLM:    https://$FULL_DOMAIN/api"
+echo "  🚦 LiteLLM:    https://$FULL_DOMAIN/litellm"
 echo "  📓 Jupyter:    https://$FULL_DOMAIN/jupyter"
 echo ""
 echo -e "${GREEN}All services use automatic HTTPS via Tailscale!${NC}"

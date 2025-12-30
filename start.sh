@@ -556,7 +556,7 @@ if [ "${ENABLE_TAILSCALE_HTTPS}" = "true" ] && [ -n "$TAILSCALE_DOMAIN" ]; then
     echo ""
     echo "🧠 Cortex (UI):        https://$TAILSCALE_DOMAIN/"
     echo "🔄 Reflex (n8n):       https://$TAILSCALE_DOMAIN/n8n"
-    echo "🚦 Router (API):       https://$TAILSCALE_DOMAIN/api"
+    echo "🚦 Router (LiteLLM):   https://$TAILSCALE_DOMAIN/litellm"
     echo "📓 Jupyter:            https://$TAILSCALE_DOMAIN/jupyter"
     echo ""
     echo "Direct localhost access (for debugging):"

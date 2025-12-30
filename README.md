@@ -37,7 +37,7 @@ OPENROUTER_API_KEY=your_key
 
 ## Production Setup (HTTPS)
 
-Enable automatic HTTPS with Let's Encrypt:
+**Option 1: Let's Encrypt (Public Domain)**
 
 ```bash
 ./rin setup-https
@@ -45,9 +45,17 @@ Enable automatic HTTPS with Let's Encrypt:
 ./rin start
 ```
 
-Caddy automatically obtains and renews SSL certificates. No manual certificate management!
+Caddy automatically obtains and renews SSL certificates.
 
-> **Port Note:** HTTPS defaults to ports 8880/8443 to avoid conflicts. Customize via `PORT_HTTP` and `PORT_HTTPS` in `.env`.
+**Option 2: Tailscale (Private Network)**
+
+```bash
+./rin setup-tailscale-https
+```
+
+Access via `https://your-machine.ts.net/` — no public ports required.
+
+> **Port Note:** Let's Encrypt defaults to ports 8880/8443. Customize via `PORT_HTTP` and `PORT_HTTPS` in `.env`.
 
 ## CLI
 
