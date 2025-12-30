@@ -365,9 +365,9 @@ services:
     profiles:
       - auto-https
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"  # HTTP/3
+      - "${PORT_HTTP:-8880}:80"
+      - "${PORT_HTTPS:-8443}:443"
+      - "${PORT_HTTPS:-8443}:443/udp"  # HTTP/3
     volumes:
       - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./data/caddy/data:/data
