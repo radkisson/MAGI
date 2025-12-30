@@ -51,7 +51,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://magi-memory:6333/collections/rin_memory/points",
+        "url": "http://magi-memory:6333/collections/rin_pending_memories/points",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"points\": [\n    {\n      \"id\": \"{{ $json.memory_id }}\",\n      \"vector\": {{ $json.embedding }},\n      \"payload\": {\n        \"content\": \"{{ $json.content }}\",\n        \"metadata\": {\n          \"user_id\": \"{{ $json.user_id }}\",\n          \"user_name\": \"{{ $json.user_name }}\",\n          \"source\": \"n8n-automation\",\n          \"category\": \"{{ $json.category }}\",\n          \"timestamp\": {{ Date.now() / 1000 }}\n        }\n      }\n    }\n  ]\n}",
@@ -212,7 +212,7 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "http://magi-memory:6333/collections/rin_memory/points",
+        "url": "http://magi-memory:6333/collections/rin_pending_memories/points",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"points\": [\n    {\n      \"id\": \"{{ $json.memory_id }}\",\n      \"vector\": {{ $json.embedding }},\n      \"payload\": {\n        \"content\": \"{{ $json.content }}\",\n        \"metadata\": {\n          \"user_id\": \"{{ $json.user_id }}\",\n          \"user_name\": \"{{ $json.user_name }}\",\n          \"source\": \"conversation-summary\",\n          \"category\": \"{{ $json.category }}\",\n          \"timestamp\": {{ Date.now() / 1000 }}\n        }\n      }\n    }\n  ]\n}",
@@ -239,7 +239,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://magi-memory:6333/collections/rin_memory/points/scroll",
+        "url": "http://magi-memory:6333/collections/rin_pending_memories/points/scroll",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\n  \"limit\": 100,\n  \"with_payload\": true,\n  \"with_vector\": false\n}",

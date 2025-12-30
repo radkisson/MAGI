@@ -155,12 +155,14 @@ class Tools:
                     
                     # Return as markdown image with prompt as alt text
                     short_prompt = prompt[:100] + "..." if len(prompt) > 100 else prompt
-                    return f"![{short_prompt}](data:image/png;base64,{b64_data})\n\n*Generated with FLUX.2-pro ({size})*"
+                    metadata = f"\n\n*Generated with {deployment} ({size})*" if self.valves.SHOW_METADATA else ""
+                    return f"![{short_prompt}](data:image/png;base64,{b64_data}){metadata}"
                     
                 elif images and 'url' in images[0]:
                     if __event_emitter__:
                         await __event_emitter__({"type": "status", "data": {"description": "✅ Image generated!", "done": True}})
-                    return f"![Generated Image]({images[0]['url']})\n\n*Generated with FLUX.2-pro ({size})*"
+                    metadata = f"\n\n*Generated with {deployment} ({size})*" if self.valves.SHOW_METADATA else ""
+                    return f"![Generated Image]({images[0]['url']}){metadata}"
                 else:
                     return f"⚠️ Image generated but no data returned: {data}"
                     
@@ -188,16 +190,21 @@ class Tools:
     async def generate_image_variations(
         self,
         prompt: str,
-        count: int = 2,
+        count: int = 0,
         __event_emitter__: Callable[[dict], Any] = None
     ) -> str:
         """
         Generate multiple image variations from a prompt.
         
         :param prompt: Description of the image to generate
-        :param count: Number of variations (2-4)
+        :param count: Number of variations (2-4). Uses OPTIONS_COUNT valve if 0.
         :return: Multiple generated images
         """
+        # Use valve default if not specified
+        if count <= 0:
+            count = self.valves.OPTIONS_COUNT
+        count = min(max(count, 2), 4)
+        
         if __event_emitter__:
             await __event_emitter__({"type": "status", "data": {"description": f"🎨 Generating {count} variations...", "done": False}})
         
@@ -222,35 +229,46 @@ class Tools:
         self,
         prompt: str,
         size: str = "",
+        count: int = 0,
         __event_emitter__: Callable[[dict], Any] = None
     ) -> str:
         """
-        Generate two different image options from the same prompt for comparison.
+        Generate multiple image options from the same prompt for comparison.
         Useful when you want to pick the best result.
         
         :param prompt: Description of the image to generate
         :param size: Image size - 'square', 'landscape', 'portrait', or dimensions like '1024x1024'
-        :return: Two generated images side by side for comparison
+        :param count: Number of options to generate (2-4). Uses OPTIONS_COUNT valve if 0.
+        :return: Multiple generated images for comparison
         """
         import asyncio
         
-        if __event_emitter__:
-            await __event_emitter__({"type": "status", "data": {"description": "🎨 Generating 2 options...", "done": False}})
+        # Use valve default if not specified
+        if count <= 0:
+            count = self.valves.OPTIONS_COUNT
+        count = min(max(count, 2), 4)
         
-        # Generate two images in parallel
+        if __event_emitter__:
+            await __event_emitter__({"type": "status", "data": {"description": f"🎨 Generating {count} options...", "done": False}})
+        
+        # Generate images in parallel
         async def gen_option(option_num: int):
             if __event_emitter__:
                 await __event_emitter__({"type": "status", "data": {"description": f"🎨 Generating option {option_num}...", "done": False}})
             return await self._generate_single_image(prompt, size)
         
-        # Run both generations concurrently
-        results = await asyncio.gather(gen_option(1), gen_option(2))
+        # Run all generations concurrently
+        tasks = [gen_option(i + 1) for i in range(count)]
+        results = await asyncio.gather(*tasks)
         
         if __event_emitter__:
-            await __event_emitter__({"type": "status", "data": {"description": "✅ Both options ready!", "done": True}})
+            await __event_emitter__({"type": "status", "data": {"description": f"✅ All {count} options ready!", "done": True}})
         
+        # Build output with letter labels (A, B, C, D)
+        labels = ['A', 'B', 'C', 'D']
         output = f"## 🎨 Image Options for: *{prompt[:80]}{'...' if len(prompt) > 80 else ''}*\n\n"
-        output += f"### Option A\n{results[0]}\n\n---\n\n### Option B\n{results[1]}"
+        parts = [f"### Option {labels[i]}\n{results[i]}" for i in range(count)]
+        output += "\n\n---\n\n".join(parts)
         return output
 
     async def _generate_single_image(self, prompt: str, size: str = "") -> str:
