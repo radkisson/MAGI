@@ -279,3 +279,39 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  # --- AUTOMATIC HTTPS (REVERSE PROXY) ---
+  caddy:
+    image: caddy:2-alpine
+    container_name: magi-caddy
+    restart: always
+    profiles:
+      - auto-https
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
+    environment:
+      - DOMAIN=${MAGI_DOMAIN:-localhost}
+      - ADMIN_EMAIL=${MAGI_ADMIN_EMAIL:-admin@localhost}
+    depends_on:
+      - open-webui
+      - litellm
+      - searxng
+      - n8n
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2019/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # This service provides automatic HTTPS with Let's Encrypt
+    # When enabled with --profile auto-https, it automatically:
+    # - Obtains SSL certificates from Let's Encrypt
+    # - Renews certificates before expiration
+    # - Routes traffic to internal services
+    # - Handles all TLS termination

@@ -741,6 +741,21 @@ cmd_setup_accounts() {
     bash "$BASE_DIR/scripts/setup_initial_accounts.sh" "$@"
 }
 
+cmd_setup_https() {
+    print_header "Setup Automatic HTTPS"
+    
+    validate_base_dir
+    
+    # Check if setup script exists
+    if [ ! -f "$BASE_DIR/scripts/setup-auto-https.sh" ]; then
+        print_error "Auto-HTTPS setup script not found"
+        exit 1
+    fi
+    
+    # Run setup script
+    bash "$BASE_DIR/scripts/setup-auto-https.sh" "$@"
+}
+
 cmd_help() {
     cat <<EOF
 Rhyzomic Intelligence Node (RIN) - CLI Management Tool
@@ -764,6 +779,7 @@ COMMANDS:
     models              Model management (sync, search, list, filter, etc.)
     reset-password <service> [email]  Reset admin password for a service
     setup-accounts      Setup initial admin accounts (interactive)
+    setup-https         Setup automatic HTTPS with Let's Encrypt
     version             Show version information
     help                Show this help message
 
@@ -788,6 +804,7 @@ EXAMPLES:
     ./rin reset-password openwebui  # Reset OpenWebUI admin password
     ./rin reset-password n8n        # Reset n8n owner password
     ./rin setup-accounts            # Setup initial accounts
+    ./rin setup-https               # Setup automatic HTTPS with Let's Encrypt
 
 SERVICES:
     open-webui      - Open WebUI (Cortex)
@@ -798,6 +815,7 @@ SERVICES:
     qdrant          - Qdrant (Memory)
     redis           - Redis (Nervous System)
     playwright      - Playwright (Browser)
+    caddy           - Caddy (Automatic HTTPS Reverse Proxy)
 
 INTEGRATED TOOLS (Available in Open WebUI):
     searxng_search.py   - Anonymous web search via SearXNG
@@ -870,6 +888,9 @@ main() {
             ;;
         setup-accounts)
             cmd_setup_accounts "$@"
+            ;;
+        setup-https)
+            cmd_setup_https "$@"
             ;;
         version)
             cmd_version "$@"

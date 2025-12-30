@@ -32,15 +32,28 @@ OPENROUTER_API_KEY=your_key
 ./rin restart
 ```
 
+## Production Setup (HTTPS)
+
+Enable automatic HTTPS with Let's Encrypt:
+
+```bash
+./rin setup-https
+# Enter your domain and email
+./rin start
+```
+
+Caddy automatically obtains and renews SSL certificates. No manual certificate management!
+
 ## CLI
 
 ```bash
-./rin start      # Start all services
-./rin stop       # Stop all services
-./rin status     # Health check
-./rin logs       # View logs
-./rin backup     # Backup data
-./rin help       # All commands
+./rin start        # Start all services
+./rin stop         # Stop all services
+./rin status       # Health check
+./rin logs         # View logs
+./rin setup-https  # Configure automatic HTTPS
+./rin backup       # Backup data
+./rin help         # All commands
 ```
 
 ## Tools (Auto-Registered)

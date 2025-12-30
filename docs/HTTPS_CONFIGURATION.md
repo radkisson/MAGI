@@ -4,32 +4,116 @@ This guide explains how to enable HTTPS/TLS encryption for all RIN services.
 
 ## Overview
 
-RIN provides infrastructure for HTTPS/TLS encryption for secure communication. **HTTPS requires a reverse proxy (nginx, Traefik, or Caddy) for SSL termination.** This is especially important for:
+RIN provides multiple options for HTTPS/TLS encryption:
 
+1. **Automatic HTTPS with Let's Encrypt** (RECOMMENDED) - Zero configuration, fully automated
+2. **Manual HTTPS Setup** - Use your own reverse proxy and certificates
+3. **HTTP Only** - For local development
+
+HTTPS is especially important for:
 - Production deployments
 - Accessing RIN over the internet
 - Compliance requirements
 - Preventing man-in-the-middle attacks
 
-By default, RIN runs with HTTP for ease of local development. When you enable HTTPS mode, RIN's internal tools will generate HTTPS URLs, and you'll need to configure a reverse proxy to handle SSL termination.
+## Automatic HTTPS with Let's Encrypt (RECOMMENDED)
 
-## Architecture
+### Overview
+
+The easiest way to enable HTTPS is using the built-in automatic HTTPS feature powered by Caddy and Let's Encrypt. This provides:
+
+✅ **Zero Configuration** - Just provide your domain and email
+✅ **Automatic Certificate Issuance** - Caddy obtains certificates from Let's Encrypt
+✅ **Automatic Renewal** - Certificates renew before expiration
+✅ **No Manual Management** - Everything is handled automatically
+
+### Requirements
+
+Before enabling automatic HTTPS, ensure:
+
+1. **Domain Name**: You own a domain name (e.g., `magi.example.com`)
+2. **DNS Configuration**: Your domain points to your server's public IP
+3. **Open Ports**: Ports 80 and 443 are accessible from the internet
+4. **Valid Email**: For Let's Encrypt notifications
+
+### Quick Setup
+
+**Option 1: During Initial Setup**
+
+When running `./rin start` for the first time, select option 1 for automatic HTTPS:
+
+```bash
+./rin start
+
+# When prompted:
+🔒 HTTPS/TLS Configuration
+
+Choose your HTTPS setup:
+1. Automatic HTTPS with Let's Encrypt (RECOMMENDED for production)
+2. Manual HTTPS setup (for custom reverse proxy)
+3. HTTP only (for local development)
+
+Select option [1/2/3]: 1
+```
+
+**Option 2: Setup After Installation**
+
+Run the automatic HTTPS setup script:
+
+```bash
+./rin setup-https
+```
+
+You'll be prompted for:
+- Your domain name (e.g., `magi.example.com`)
+- Your email address (for Let's Encrypt notifications)
+- Whether to use staging (for testing)
+
+### DNS Configuration
+
+Before running setup, configure DNS A records pointing to your server's public IP:
+
+```
+magi.example.com     → YOUR_SERVER_IP
+n8n.magi.example.com → YOUR_SERVER_IP
+search.magi.example.com → YOUR_SERVER_IP
+api.magi.example.com → YOUR_SERVER_IP
+```
+
+### Testing with Let's Encrypt Staging
+
+To avoid rate limits while testing (50 certificates per domain per week), use the staging environment:
+
+```bash
+./rin setup-https
+# When prompted, answer 'y' to "Use Let's Encrypt STAGING for testing?"
+```
+
+⚠️ **Note**: Staging certificates are not trusted by browsers. Switch to production once testing is complete.
+
+### Access Your Services
+
+After setup completes and services start, access via HTTPS:
+
+```
+🧠 Cortex (Open WebUI):  https://magi.example.com
+🔄 Reflex (n8n):         https://n8n.magi.example.com
+🔍 Vision (SearXNG):     https://search.magi.example.com
+🚦 API (LiteLLM):        https://api.magi.example.com
+```
+
+Certificates are obtained automatically on first access!
+
+## Manual HTTPS Setup
+
+For advanced users who want to use their own reverse proxy configuration.
+
+### Architecture
 
 ```
 Internet → [Reverse Proxy with SSL] → [RIN Services over HTTP]
           (nginx/Traefik/Caddy)        (Docker containers)
 ```
-
-RIN provides:
-- Certificate management and mounting
-- Protocol awareness for tools and URLs
-- Configuration infrastructure
-
-You provide:
-- Reverse proxy for SSL termination
-- Domain name and DNS configuration (for production)
-
-## Quick Start
 
 ### 1. Generate SSL Certificates
 
