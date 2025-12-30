@@ -271,6 +271,155 @@ def test_tools_readme_documents_firecrawl():
         assert 'firecrawl_scraper.py' in content
 
 
+def test_semantic_scholar_tool_import():
+    """Test that Semantic Scholar tool can be imported"""
+    from semantic_scholar import Tools as SemanticScholarTools
+    assert SemanticScholarTools is not None
+
+
+def test_semantic_scholar_tool_initialization():
+    """Test Semantic Scholar tool initialization"""
+    from semantic_scholar import Tools as SemanticScholarTools
+    semantic_scholar = SemanticScholarTools()
+    assert semantic_scholar is not None
+    assert hasattr(semantic_scholar, 'valves')
+    assert hasattr(semantic_scholar.valves, 'S2_API_URL')
+    assert semantic_scholar.valves.S2_API_URL == "https://api.semanticscholar.org/graph/v1"
+
+
+def test_semantic_scholar_tool_methods_exist():
+    """Test that Semantic Scholar tool has required methods"""
+    from semantic_scholar import Tools as SemanticScholarTools
+    semantic_scholar = SemanticScholarTools()
+    
+    assert hasattr(semantic_scholar, 'search_papers')
+    assert hasattr(semantic_scholar, 'get_paper')
+    assert hasattr(semantic_scholar, 'get_author')
+    assert hasattr(semantic_scholar, 'get_recommendations')
+    assert hasattr(semantic_scholar, 'search_by_title')
+    assert hasattr(semantic_scholar, 'get_citations')
+    assert hasattr(semantic_scholar, 'get_references')
+    assert hasattr(semantic_scholar, 'get_influential_citations')
+    assert hasattr(semantic_scholar, 'search_recent')
+    assert hasattr(semantic_scholar, 'get_paper_batch')
+    
+    assert callable(semantic_scholar.search_papers)
+    assert callable(semantic_scholar.get_paper)
+    assert callable(semantic_scholar.get_author)
+
+
+def test_semantic_scholar_tool_without_api_key():
+    """Test Semantic Scholar tool behavior without API key"""
+    from semantic_scholar import Tools as SemanticScholarTools
+    
+    # Temporarily remove API key if it exists
+    original_key = os.environ.get('S2_API_KEY')
+    if 'S2_API_KEY' in os.environ:
+        del os.environ['S2_API_KEY']
+    
+    try:
+        semantic_scholar = SemanticScholarTools()
+        # Should initialize successfully even without API key (it's optional)
+        assert semantic_scholar.valves.S2_API_KEY == ""
+    finally:
+        # Restore original key if it existed
+        if original_key:
+            os.environ['S2_API_KEY'] = original_key
+
+
+def test_semantic_scholar_valves():
+    """Test that Semantic Scholar valves are properly configured"""
+    from semantic_scholar import Tools as SemanticScholarTools, Valves as SemanticScholarValves
+    
+    semantic_scholar = SemanticScholarTools()
+    
+    # Check valves exist
+    assert hasattr(semantic_scholar.valves, 'S2_API_KEY')
+    assert hasattr(semantic_scholar.valves, 'S2_API_URL')
+    assert hasattr(semantic_scholar.valves, 'REQUEST_TIMEOUT')
+    assert hasattr(semantic_scholar.valves, 'MAX_RETRIES')
+    assert hasattr(semantic_scholar.valves, 'MAX_OUTPUT_LENGTH')
+    
+    # Check default values
+    assert semantic_scholar.valves.S2_API_URL == "https://api.semanticscholar.org/graph/v1"
+    assert semantic_scholar.valves.REQUEST_TIMEOUT == 15
+    assert semantic_scholar.valves.MAX_RETRIES == 2
+    assert semantic_scholar.valves.MAX_OUTPUT_LENGTH == 15000
+    
+    # Test Valves class has fields
+    valves_fields = SemanticScholarValves.model_fields.keys() if hasattr(SemanticScholarValves, 'model_fields') else []
+    assert 'S2_API_KEY' in valves_fields
+    assert 'S2_API_URL' in valves_fields
+    assert 'REQUEST_TIMEOUT' in valves_fields
+    assert 'MAX_RETRIES' in valves_fields
+    assert 'MAX_OUTPUT_LENGTH' in valves_fields
+
+
+def test_semantic_scholar_helper_methods():
+    """Test that Semantic Scholar has helper methods"""
+    from semantic_scholar import Tools as SemanticScholarTools
+    
+    semantic_scholar = SemanticScholarTools()
+    
+    # Check helper methods exist
+    assert hasattr(semantic_scholar, '_normalize_paper_id')
+    assert hasattr(semantic_scholar, '_make_request')
+    assert hasattr(semantic_scholar, '_truncate_output')
+    assert hasattr(semantic_scholar, '_format_paper')
+    
+    assert callable(semantic_scholar._normalize_paper_id)
+    assert callable(semantic_scholar._make_request)
+    assert callable(semantic_scholar._truncate_output)
+
+
+def test_semantic_scholar_normalize_paper_id():
+    """Test paper ID normalization"""
+    from semantic_scholar import Tools as SemanticScholarTools
+    
+    semantic_scholar = SemanticScholarTools()
+    
+    # Test DOI normalization
+    assert semantic_scholar._normalize_paper_id("10.1234/test") == "DOI:10.1234/test"
+    # DOI URL returns DOI with prefix
+    assert semantic_scholar._normalize_paper_id("https://doi.org/10.1234/test") == "DOI:10.1234/test"
+    
+    # Test arXiv normalization
+    result = semantic_scholar._normalize_paper_id("https://arxiv.org/abs/1234.5678")
+    assert "arXiv:" in result
+    assert "1234.5678" in result
+    
+    # Test Semantic Scholar URL
+    result = semantic_scholar._normalize_paper_id("https://www.semanticscholar.org/paper/abc123")
+    assert result == "abc123"
+    
+    # Test empty string
+    assert semantic_scholar._normalize_paper_id("") == ""
+    assert semantic_scholar._normalize_paper_id("   ") == ""
+
+
+def test_env_example_has_s2_key():
+    """Test that .env.example includes S2_API_KEY"""
+    env_example_path = os.path.join(
+        os.path.dirname(__file__), '..', '.env.example'
+    )
+    
+    with open(env_example_path, 'r') as f:
+        content = f.read()
+        assert 'S2_API_KEY' in content
+
+
+def test_tools_readme_documents_semantic_scholar():
+    """Test that tools/README.md documents Semantic Scholar integration"""
+    readme_path = os.path.join(
+        os.path.dirname(__file__), '..', 'tools', 'README.md'
+    )
+    
+    with open(readme_path, 'r') as f:
+        content = f.read()
+        assert 'Semantic Scholar' in content or 'semantic_scholar' in content
+        assert 'semantic_scholar.py' in content
+
+
 if __name__ == "__main__":
     # Note: For proper pytest execution, run: pytest tests/test_tools_integration.py -v
     # This fallback is for environments without pytest installed
