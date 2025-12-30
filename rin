@@ -817,6 +817,21 @@ cmd_setup_https() {
     bash "$BASE_DIR/scripts/setup-auto-https.sh" "$@"
 }
 
+cmd_setup_tailscale() {
+    print_header "Setup Tailscale HTTPS"
+    
+    validate_base_dir
+    
+    # Check if setup script exists
+    if [ ! -f "$BASE_DIR/scripts/setup-tailscale-https.sh" ]; then
+        print_error "Tailscale HTTPS setup script not found"
+        exit 1
+    fi
+    
+    # Run setup script
+    bash "$BASE_DIR/scripts/setup-tailscale-https.sh" "$@"
+}
+
 cmd_help() {
     cat <<EOF
 Rhyzomic Intelligence Node (RIN) - CLI Management Tool
@@ -841,6 +856,7 @@ COMMANDS:
     reset-password <service> [email]  Reset admin password for a service
     setup-accounts      Setup initial admin accounts (interactive)
     setup-https         Setup automatic HTTPS with Let's Encrypt
+    setup-tailscale     Setup Tailscale HTTPS with path-based routing
     version             Show version information
     help                Show this help message
 
@@ -868,6 +884,7 @@ EXAMPLES:
     ./rin reset-password n8n        # Reset n8n owner password
     ./rin setup-accounts            # Setup initial accounts
     ./rin setup-https               # Setup automatic HTTPS with Let's Encrypt
+    ./rin setup-tailscale           # Setup Tailscale HTTPS with path-based routing
 
 SERVICES:
     open-webui      - Open WebUI (Cortex)
@@ -954,6 +971,9 @@ main() {
             ;;
         setup-https)
             cmd_setup_https "$@"
+            ;;
+        setup-tailscale)
+            cmd_setup_tailscale "$@"
             ;;
         version)
             cmd_version "$@"

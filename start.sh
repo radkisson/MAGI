@@ -164,17 +164,43 @@ if [ -t 0 ]; then
     echo "🔒 HTTPS/TLS Configuration"
     echo ""
     echo "   Choose your HTTPS setup:"
-    echo "   1. Automatic HTTPS with Let's Encrypt (RECOMMENDED for production)"
+    echo "   1. Tailscale HTTPS (RECOMMENDED - zero config, private network)"
+    echo "      ↳ Automatic HTTPS via Tailscale Serve with path-based routing"
+    echo "   2. Automatic HTTPS with Let's Encrypt (public internet)"
     echo "      ↳ Fully automated certificate management via Caddy"
-    echo "   2. Manual HTTPS setup (for custom reverse proxy)"
+    echo "   3. Manual HTTPS setup (for custom reverse proxy)"
     echo "      ↳ Use your own nginx/Traefik/Caddy configuration"
-    echo "   3. HTTP only (for local development)"
+    echo "   4. HTTP only (for local development)"
     echo ""
-    read -r -p "   Select option [1/2/3]: " HTTPS_OPTION
-    HTTPS_OPTION=${HTTPS_OPTION:-3}
+    read -r -p "   Select option [1/2/3/4]: " HTTPS_OPTION
+    HTTPS_OPTION=${HTTPS_OPTION:-4}
     
     case "$HTTPS_OPTION" in
         1)
+            # Tailscale HTTPS
+            echo ""
+            echo "   🚀 Setting up Tailscale HTTPS..."
+            echo ""
+            
+            # Check if already configured
+            if [ -f "$BASE_DIR/.env" ] && grep -q "^ENABLE_TAILSCALE_HTTPS=true" "$BASE_DIR/.env" 2>/dev/null; then
+                echo "   ✅ Tailscale HTTPS is already configured"
+                ENABLE_TAILSCALE_HTTPS="true"
+            else
+                # Run Tailscale HTTPS setup script
+                if [ -f "$BASE_DIR/scripts/setup-tailscale-https.sh" ]; then
+                    bash "$BASE_DIR/scripts/setup-tailscale-https.sh"
+                    ENABLE_TAILSCALE_HTTPS="true"
+                else
+                    echo "   ❌ Error: Tailscale HTTPS setup script not found"
+                    echo "   Falling back to HTTP..."
+                    ENABLE_TAILSCALE_HTTPS="false"
+                fi
+            fi
+            ENABLE_AUTO_HTTPS="false"
+            ENABLE_HTTPS="false"
+            ;;
+        2)
             # Automatic HTTPS with Let's Encrypt
             echo ""
             echo "   🚀 Setting up automatic HTTPS with Let's Encrypt..."
@@ -196,10 +222,12 @@ if [ -t 0 ]; then
                     ENABLE_HTTPS="true"
                 fi
             fi
+            ENABLE_TAILSCALE_HTTPS="false"
             ;;
-        2)
+        3)
             # Manual HTTPS
             ENABLE_AUTO_HTTPS="false"
+            ENABLE_TAILSCALE_HTTPS="false"
             ENABLE_HTTPS="true"
             
             # Check if SSL certificates exist
@@ -219,6 +247,7 @@ if [ -t 0 ]; then
         *)
             # HTTP only
             ENABLE_AUTO_HTTPS="false"
+            ENABLE_TAILSCALE_HTTPS="false"
             ENABLE_HTTPS="false"
             ;;
     esac
@@ -230,6 +259,7 @@ else
     ENABLE_FIRECRAWL="Y"      # Uses Y/N for docker-compose profiles
     ENABLE_HTTPS="false"      # Uses true/false for boolean logic
     ENABLE_AUTO_HTTPS="false" # Disable auto-HTTPS in non-interactive mode
+    ENABLE_TAILSCALE_HTTPS="false" # Disable Tailscale HTTPS in non-interactive mode
 fi
 
 # Store selections in .env for persistence
@@ -245,6 +275,12 @@ if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
         else
             sed -i '' "s/^ENABLE_AUTO_HTTPS=.*/ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}/" "$BASE_DIR/.env"
         fi
+        # Add ENABLE_TAILSCALE_HTTPS if not exists
+        if ! grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env"; then
+            echo "ENABLE_TAILSCALE_HTTPS=${ENABLE_TAILSCALE_HTTPS:-false}" >> "$BASE_DIR/.env"
+        else
+            sed -i '' "s/^ENABLE_TAILSCALE_HTTPS=.*/ENABLE_TAILSCALE_HTTPS=${ENABLE_TAILSCALE_HTTPS:-false}/" "$BASE_DIR/.env"
+        fi
     else
         # Linux doesn't need extension
         sed -i "s/^ENABLE_FIRECRAWL=.*/ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}/" "$BASE_DIR/.env"
@@ -254,6 +290,12 @@ if grep -q "^ENABLE_FIRECRAWL=" "$BASE_DIR/.env" 2>/dev/null; then
             echo "ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}" >> "$BASE_DIR/.env"
         else
             sed -i "s/^ENABLE_AUTO_HTTPS=.*/ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}/" "$BASE_DIR/.env"
+        fi
+        # Add ENABLE_TAILSCALE_HTTPS if not exists
+        if ! grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env"; then
+            echo "ENABLE_TAILSCALE_HTTPS=${ENABLE_TAILSCALE_HTTPS:-false}" >> "$BASE_DIR/.env"
+        else
+            sed -i "s/^ENABLE_TAILSCALE_HTTPS=.*/ENABLE_TAILSCALE_HTTPS=${ENABLE_TAILSCALE_HTTPS:-false}/" "$BASE_DIR/.env"
         fi
     fi
 else
@@ -265,6 +307,7 @@ else
         echo "ENABLE_FIRECRAWL=${ENABLE_FIRECRAWL}"
         echo "ENABLE_HTTPS=${ENABLE_HTTPS}"
         echo "ENABLE_AUTO_HTTPS=${ENABLE_AUTO_HTTPS:-false}"
+        echo "ENABLE_TAILSCALE_HTTPS=${ENABLE_TAILSCALE_HTTPS:-false}"
     } >> "$BASE_DIR/.env"
 fi
 
@@ -272,6 +315,7 @@ fi
 export ENABLE_FIRECRAWL
 export ENABLE_HTTPS
 export ENABLE_AUTO_HTTPS
+export ENABLE_TAILSCALE_HTTPS
 
 # --- 5. CONFIGURATION INJECTION ---
 
@@ -463,8 +507,17 @@ PORT_SEARXNG=${PORT_SEARXNG:-8080}
 PORT_FIRECRAWL=${PORT_FIRECRAWL:-3002}
 PORT_LITELLM=${PORT_LITELLM:-4000}
 
+# Load Tailscale domain if configured
+TAILSCALE_DOMAIN=$(grep "^TAILSCALE_DOMAIN=" "$BASE_DIR/.env" 2>/dev/null | cut -d'=' -f2 || echo "")
+
 # Determine protocol based on HTTPS setting
-if [ "${ENABLE_HTTPS}" = "true" ]; then
+if [ "${ENABLE_TAILSCALE_HTTPS}" = "true" ] && [ -n "$TAILSCALE_DOMAIN" ]; then
+    PROTOCOL="https"
+    echo ""
+    echo -e "${GREEN}🔒 TAILSCALE HTTPS MODE ENABLED${NC}"
+    echo "   All services available via Tailscale Serve at:"
+    echo "   https://$TAILSCALE_DOMAIN/"
+elif [ "${ENABLE_HTTPS}" = "true" ]; then
     PROTOCOL="https"
     echo ""
     echo -e "${GREEN}🔒 HTTPS MODE ENABLED${NC}"
@@ -498,6 +551,16 @@ if [ -f "$BASE_DIR/scripts/setup_initial_accounts.sh" ]; then
 fi
 
 echo "=== Post-Deployment Verification ==="
+if [ "${ENABLE_TAILSCALE_HTTPS}" = "true" ] && [ -n "$TAILSCALE_DOMAIN" ]; then
+    echo "Access via Tailscale HTTPS (from any device on your tailnet):"
+    echo ""
+    echo "🧠 Cortex (UI):        https://$TAILSCALE_DOMAIN/"
+    echo "🔄 Reflex (n8n):       https://$TAILSCALE_DOMAIN/n8n"
+    echo "🚦 Router (API):       https://$TAILSCALE_DOMAIN/api"
+    echo "📓 Jupyter:            https://$TAILSCALE_DOMAIN/jupyter"
+    echo ""
+    echo "Direct localhost access (for debugging):"
+fi
 echo "Verify the biological subsystems are active (direct HTTP access to containers):"
 echo ""
 echo "🧠 Cortex (UI):        http://localhost:${PORT_WEBUI}      (Open WebUI login screen)"
