@@ -106,28 +106,65 @@ class Tools:
             truncated = truncated[:last_separator + 5]
         
         return truncated + "\n\n> ⚠️ **Output truncated** to fit context limits.\n"
+    
+    def _reconstruct_abstract(self, abstract_inverted_index: dict) -> str:
+        """Reconstruct abstract text from OpenAlex inverted index format.
+        
+        Args:
+            abstract_inverted_index: Dictionary mapping words to position lists
+            
+        Returns:
+            Reconstructed abstract text
+        """
+        if not abstract_inverted_index or not isinstance(abstract_inverted_index, dict):
+            return ""
+        
+        word_positions = []
+        for word, positions in abstract_inverted_index.items():
+            if positions and isinstance(positions, list):
+                for pos in positions:
+                    if isinstance(pos, int):
+                        word_positions.append((pos, word))
+        word_positions.sort()
+        return " ".join([w for _, w in word_positions])
 
-    def _format_work(self, work: dict, idx: int) -> str:
-        """Format a single work for display."""
+    def _format_work(self, work: dict, idx: int, verbose: bool = False) -> str:
+        """Format a single work for display.
+        
+        Args:
+            work: The work data from OpenAlex
+            idx: Index number for display
+            verbose: If True, show more details (affiliations with authors)
+        """
         title = work.get("title", "No title")
         
         # Get publication year
         year = work.get("publication_year", "N/A")
         
-        # Get authors (first 3)
+        # Get authors with affiliations (show 5 instead of 3)
         authorships = work.get("authorships", [])
         authors = []
-        for auth in authorships[:3]:
+        for auth in authorships[:5]:
             author_name = auth.get("author", {}).get("display_name", "Unknown")
+            # Add affiliation if verbose mode
+            institutions = auth.get("institutions", [])
+            if institutions and verbose:
+                inst_name = institutions[0].get("display_name", "")
+                if inst_name:
+                    author_name += f" ({inst_name})"
             authors.append(author_name)
-        if len(authorships) > 3:
-            authors.append(f"et al. (+{len(authorships) - 3})")
+        if len(authorships) > 5:
+            authors.append(f"et al. (+{len(authorships) - 5})")
         authors_str = ", ".join(authors) if authors else "Unknown authors"
         
         # Get venue/journal
         primary_location = work.get("primary_location", {}) or {}
         source = primary_location.get("source", {}) or {}
         venue = source.get("display_name", "Unknown venue")
+        
+        # Publication type
+        pub_type = work.get("type", "")
+        type_display = pub_type.replace("-", " ").title() if pub_type else ""
         
         # Get DOI and URLs
         doi = work.get("doi", "")
@@ -138,31 +175,41 @@ class Tools:
         oa_status = "🔓 Open Access" if oa.get("is_oa") else "🔒 Closed"
         oa_url = oa.get("oa_url", "")
         
-        # Citation count
-        cited_by = work.get("cited_by_count", 0)
+        # Citation count (with comma formatting)
+        cited_by = work.get("cited_by_count", 0) or 0
         
-        # Abstract (if available)
+        # Referenced works count
+        referenced_works = work.get("referenced_works", []) or []
+        ref_count = len(referenced_works)
+        
+        # Concepts/Topics (filter by relevance score > 0.3)
+        concepts = work.get("concepts", []) or []
+        top_concepts = [c.get("display_name", "") for c in concepts[:4] if c.get("score", 0) > 0.3]
+        
+        # Abstract (full, not truncated - output truncation handles overall length)
         abstract_inverted = work.get("abstract_inverted_index") or {}
-        abstract = ""
-        if abstract_inverted and isinstance(abstract_inverted, dict):
-            # Reconstruct abstract from inverted index
-            word_positions = []
-            for word, positions in abstract_inverted.items():
-                if positions and isinstance(positions, list):
-                    for pos in positions:
-                        if isinstance(pos, int):
-                            word_positions.append((pos, word))
-            word_positions.sort()
-            abstract = " ".join([w for _, w in word_positions])
-            # Truncate at word boundary
-            if len(abstract) > 300:
-                abstract = abstract[:300].rsplit(" ", 1)[0] + "..."
+        abstract = self._reconstruct_abstract(abstract_inverted)
         
         # Build output
         output = f"### {idx}. {title}\n"
         output += f"**Authors**: {authors_str}\n"
-        output += f"**Year**: {year} | **Venue**: {venue}\n"
-        output += f"**Citations**: {cited_by} | {oa_status}\n"
+        
+        # Venue line with type if available
+        venue_line = f"**Year**: {year} | **Venue**: {venue}"
+        if type_display:
+            venue_line += f" | **Type**: {type_display}"
+        output += venue_line + "\n"
+        
+        # Citations line with references count
+        cite_line = f"**Citations**: {cited_by:,}"
+        if ref_count > 0:
+            cite_line += f" | **References**: {ref_count}"
+        cite_line += f" | {oa_status}"
+        output += cite_line + "\n"
+        
+        # Topics/Concepts
+        if top_concepts:
+            output += f"**Topics**: {', '.join([f'`{c}`' for c in top_concepts])}\n"
         
         if abstract:
             output += f"\n> {abstract}\n"
@@ -558,6 +605,566 @@ class Tools:
 
             if not works:
                 output += "No recent papers found matching your query.\n"
+            else:
+                for idx, work in enumerate(works, 1):
+                    output += self._format_work(work, idx)
+                    output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error connecting to OpenAlex: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Search failed: {error_msg}"
+
+    def get_by_doi(
+        self,
+        doi: str,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Get full details for a paper by its DOI
+
+        Args:
+            doi: The DOI of the paper (e.g., "10.1038/nature12373" or full URL)
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            Detailed information about the paper including abstract, citations, and references
+        """
+        import re
+
+        # Clean up DOI input
+        doi = doi.strip()
+        if doi.startswith("http"):
+            doi = doi.split("doi.org/")[-1]
+        if not doi.startswith("10."):
+            match = re.search(r'(10\.\d{4,}/[^\s]+)', doi)
+            if match:
+                doi = match.group(1)
+            else:
+                return f"❌ Invalid DOI format: {doi}\n\nExpected format: 10.1038/nature12373"
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"🔍 Looking up DOI: {doi}...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            result = self._make_request("works", {
+                "filter": f"doi:https://doi.org/{doi}",
+                "per_page": 1,
+            })
+
+            works = result.get("results", [])
+            if not works:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {"description": "⚠️ DOI not found", "done": True},
+                        }
+                    )
+                return f"No paper found with DOI: {doi}"
+
+            work = works[0]
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": "✅ Paper found", "done": True},
+                    }
+                )
+
+            title = work.get("title", "No title")
+            year = work.get("publication_year", "N/A")
+            cited_by = work.get("cited_by_count", 0)
+
+            authorships = work.get("authorships", [])
+            authors_list = []
+            for auth in authorships:
+                name = auth.get("author", {}).get("display_name", "Unknown")
+                institution = ""
+                institutions = auth.get("institutions", [])
+                if institutions:
+                    institution = f" ({institutions[0].get('display_name', '')})"
+                authors_list.append(f"- {name}{institution}")
+
+            primary_location = work.get("primary_location", {}) or {}
+            source = primary_location.get("source", {}) or {}
+            venue = source.get("display_name", "Unknown venue")
+
+            oa = work.get("open_access", {}) or {}
+            oa_status = "🔓 Open Access" if oa.get("is_oa") else "🔒 Closed Access"
+            oa_url = oa.get("oa_url", "")
+
+            abstract_inverted = work.get("abstract_inverted_index") or {}
+            abstract = self._reconstruct_abstract(abstract_inverted)
+
+            concepts = work.get("concepts", [])[:5]
+            topics = [f"`{c.get('display_name', '')}`" for c in concepts if c.get("display_name") and c.get("score", 0) > 0.3]
+            referenced_works = work.get("referenced_works", [])
+
+            output = f"# {title}\n\n"
+            output += f"**DOI**: https://doi.org/{doi}\n"
+            output += f"**Year**: {year} | **Venue**: {venue}\n"
+            output += f"**Citations**: {cited_by:,} | {oa_status}\n"
+            if oa_url:
+                output += f"**PDF**: {oa_url}\n"
+            output += "\n"
+
+            output += f"## Authors ({len(authorships)})\n"
+            output += "\n".join(authors_list[:10])
+            if len(authorships) > 10:
+                output += f"\n- ... and {len(authorships) - 10} more\n"
+            output += "\n\n"
+
+            if abstract:
+                output += f"## Abstract\n{abstract}\n\n"
+
+            if topics:
+                output += f"## Topics\n{', '.join(topics)}\n\n"
+
+            output += f"## References\nThis paper cites **{len(referenced_works)}** other works.\n"
+            output += f"Use `get_references()` to see them.\n\n"
+
+            output += f"## Cited By\n**{cited_by:,}** papers cite this work.\n"
+            output += f"Use `get_citations()` to see them.\n"
+
+            return output
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error connecting to OpenAlex: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Lookup failed: {error_msg}"
+
+    def get_references(
+        self,
+        paper_title: str,
+        max_results: int = 10,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Find papers that a given paper cites (its references/bibliography)
+
+        This is the reverse of get_citations() - shows what sources the paper used.
+
+        Args:
+            paper_title: Title of the paper to find references for
+            max_results: Maximum number of references to return (default: 10)
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            List of papers cited by the specified work
+        """
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"📖 Finding references for: {paper_title}...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            paper_result = self._make_request("works", {
+                "search": paper_title,
+                "per_page": 1,
+            })
+
+            papers = paper_result.get("results", [])
+            if not papers:
+                return f"No paper found matching: {paper_title}"
+
+            paper = papers[0]
+            paper_title_actual = paper.get("title", paper_title)
+            referenced_works = paper.get("referenced_works", [])
+
+            if not referenced_works:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {"description": "⚠️ No references found", "done": True},
+                        }
+                    )
+                return f"# References for: {paper_title_actual}\n\nNo references found in OpenAlex for this paper."
+
+            ref_ids = [r.replace("https://openalex.org/", "") for r in referenced_works[:max_results]]
+            ref_filter = "|".join(ref_ids)
+
+            refs_result = self._make_request("works", {
+                "filter": f"openalex:{ref_filter}",
+                "per_page": min(max_results, 50),
+            })
+
+            refs = refs_result.get("results", [])
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {len(referenced_works)} references, showing {len(refs)}",
+                            "done": True,
+                        },
+                    }
+                )
+
+            output = f"# References for: {paper_title_actual}\n\n"
+            output += f"This paper cites **{len(referenced_works)}** works. Showing top {len(refs)}.\n\n"
+            output += "---\n\n"
+
+            if not refs:
+                output += "Could not retrieve reference details.\n"
+            else:
+                for idx, work in enumerate(refs, 1):
+                    output += self._format_work(work, idx)
+                    output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error connecting to OpenAlex: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Search failed: {error_msg}"
+
+    def search_by_institution(
+        self,
+        institution_name: str,
+        query: str = "",
+        max_results: int = 10,
+        year_from: Optional[int] = None,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Search for papers from a specific university or research institution
+
+        Args:
+            institution_name: Name of the institution (e.g., "MIT", "Stanford University")
+            query: Optional topic to filter by (e.g., "machine learning")
+            max_results: Maximum number of results (default: 10)
+            year_from: Only include papers from this year onwards (optional)
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            Papers from the specified institution
+        """
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"🏛️ Searching for institution: {institution_name}...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            inst_result = self._make_request("institutions", {
+                "search": institution_name,
+                "per_page": 1,
+            })
+
+            institutions = inst_result.get("results", [])
+            if not institutions:
+                return f"No institution found matching: {institution_name}"
+
+            institution = institutions[0]
+            inst_id = institution.get("id", "").replace("https://openalex.org/", "")
+            inst_display = institution.get("display_name", institution_name)
+            inst_country = institution.get("country_code", "")
+            inst_type = institution.get("type", "")
+            works_count = institution.get("works_count", 0)
+            cited_by = institution.get("cited_by_count", 0)
+
+            filters = [f"institutions.id:{inst_id}"]
+            if year_from:
+                filters.append(f"publication_year:>{year_from - 1}")
+
+            params = {
+                "filter": ",".join(filters),
+                "per_page": min(max_results, 50),
+                "sort": "cited_by_count:desc",
+            }
+
+            if query and query.strip():
+                params["search"] = query.strip()
+
+            works_result = self._make_request("works", params)
+            works = works_result.get("results", [])
+            total_count = works_result.get("meta", {}).get("count", 0)
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {total_count:,} papers from {inst_display}",
+                            "done": True,
+                        },
+                    }
+                )
+
+            output = f"# Papers from {inst_display}\n\n"
+            if inst_country:
+                output += f"**Country**: {inst_country} | **Type**: {inst_type}\n"
+            output += f"**Total Works**: {works_count:,} | **Total Citations**: {cited_by:,}\n"
+            if query:
+                output += f"**Topic Filter**: {query}\n"
+            output += f"\nShowing {len(works)} of {total_count:,} matching papers.\n\n"
+            output += "---\n\n"
+
+            if not works:
+                output += "No papers found matching your criteria.\n"
+            else:
+                for idx, work in enumerate(works, 1):
+                    output += self._format_work(work, idx)
+                    output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error connecting to OpenAlex: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Search failed: {error_msg}"
+
+    def get_related_works(
+        self,
+        paper_title: str,
+        max_results: int = 10,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Find papers similar to a given paper based on OpenAlex's related works
+
+        Args:
+            paper_title: Title of the paper to find related works for
+            max_results: Maximum number of related papers to return (default: 10)
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            List of papers related to the specified work
+        """
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"🔗 Finding related works for: {paper_title}...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            paper_result = self._make_request("works", {
+                "search": paper_title,
+                "per_page": 1,
+            })
+
+            papers = paper_result.get("results", [])
+            if not papers:
+                return f"No paper found matching: {paper_title}"
+
+            paper = papers[0]
+            paper_title_actual = paper.get("title", paper_title)
+            related_works = paper.get("related_works", [])
+
+            if not related_works:
+                if __event_emitter__:
+                    __event_emitter__(
+                        {
+                            "type": "status",
+                            "data": {"description": "⚠️ No related works found", "done": True},
+                        }
+                    )
+                return f"# Related Works for: {paper_title_actual}\n\nNo related works found in OpenAlex."
+
+            related_ids = [r.replace("https://openalex.org/", "") for r in related_works[:max_results]]
+            related_filter = "|".join(related_ids)
+
+            related_result = self._make_request("works", {
+                "filter": f"openalex:{related_filter}",
+                "per_page": min(max_results, 50),
+                "sort": "cited_by_count:desc",
+            })
+
+            related = related_result.get("results", [])
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {len(related_works)} related works, showing {len(related)}",
+                            "done": True,
+                        },
+                    }
+                )
+
+            output = f"# Related Works for: {paper_title_actual}\n\n"
+            output += f"OpenAlex identified **{len(related_works)}** related papers. Showing top {len(related)}.\n\n"
+            output += "---\n\n"
+
+            if not related:
+                output += "Could not retrieve related work details.\n"
+            else:
+                for idx, work in enumerate(related, 1):
+                    output += self._format_work(work, idx)
+                    output += "\n---\n\n"
+
+            return self._truncate_output(output)
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Error connecting to OpenAlex: {str(e)}"
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {"description": f"❌ {error_msg}", "done": True},
+                    }
+                )
+            return f"Search failed: {error_msg}"
+
+    def search_by_topic(
+        self,
+        topic: str,
+        max_results: int = 10,
+        year_from: Optional[int] = None,
+        min_citations: int = 0,
+        __user__: dict = {},
+        __event_emitter__: Callable[[dict], Any] = None,
+    ) -> str:
+        """
+        Search for papers by OpenAlex concept/topic (more precise than keyword search)
+
+        OpenAlex has a taxonomy of ~65,000 concepts. This searches for papers
+        tagged with specific concepts rather than just keyword matching.
+
+        Args:
+            topic: The topic/concept to search for (e.g., "Machine Learning", "CRISPR")
+            max_results: Maximum number of results (default: 10)
+            year_from: Only include papers from this year onwards (optional)
+            min_citations: Minimum citation count filter (default: 0)
+            __user__: User context (provided by Open WebUI)
+            __event_emitter__: Event emitter for streaming results
+
+        Returns:
+            Papers tagged with the specified concept
+        """
+
+        if __event_emitter__:
+            __event_emitter__(
+                {
+                    "type": "status",
+                    "data": {
+                        "description": f"🏷️ Searching by topic: {topic}...",
+                        "done": False,
+                    },
+                }
+            )
+
+        try:
+            # First find the concept
+            concept_result = self._make_request("concepts", {
+                "search": topic,
+                "per_page": 1,
+            })
+
+            concepts = concept_result.get("results", [])
+            if not concepts:
+                # Fall back to regular search
+                # Note: min_citations filter is not applied in fallback since search_papers doesn't support it
+                return self.search_papers(topic, max_results, year_from, __user__=__user__, __event_emitter__=__event_emitter__)
+
+            concept = concepts[0]
+            concept_id = concept.get("id", "").replace("https://openalex.org/", "")
+            concept_name = concept.get("display_name", topic)
+            concept_level = concept.get("level", 0)
+            works_count = concept.get("works_count", 0)
+
+            filters = [f"concepts.id:{concept_id}"]
+            if year_from:
+                filters.append(f"publication_year:>{year_from - 1}")
+            if min_citations > 0:
+                filters.append(f"cited_by_count:>{min_citations - 1}")
+
+            works_result = self._make_request("works", {
+                "filter": ",".join(filters),
+                "per_page": min(max_results, 50),
+                "sort": "cited_by_count:desc",
+            })
+
+            works = works_result.get("results", [])
+            total_count = works_result.get("meta", {}).get("count", 0)
+
+            if __event_emitter__:
+                __event_emitter__(
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": f"✅ Found {total_count:,} papers on {concept_name}",
+                            "done": True,
+                        },
+                    }
+                )
+
+            output = f"# Topic: {concept_name}\n\n"
+            output += f"**Concept Level**: {concept_level} (0=broad, 5=specific)\n"
+            output += f"**Total Works**: {works_count:,}\n"
+            if min_citations > 0:
+                output += f"**Min Citations Filter**: {min_citations}+\n"
+            output += f"\nShowing {len(works)} of {total_count:,} matching papers.\n\n"
+            output += "---\n\n"
+
+            if not works:
+                output += "No papers found matching your criteria.\n"
             else:
                 for idx, work in enumerate(works, 1):
                     output += self._format_work(work, idx)
