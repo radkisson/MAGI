@@ -62,7 +62,7 @@ Based on the evaluation criteria, provide ONE specific, actionable critique (2-3
 """.strip()
 
 EVAL_PROMPT = """
-Rate this content on the following custom criteria. Score each from 1-10.
+You are a {strictness_persona} content evaluator. Rate this content on the following criteria.
 
 GOAL: {goal}
 
@@ -72,16 +72,45 @@ EVALUATION CRITERIA:
 CONTENT TO EVALUATE:
 {answer}
 
-SCORING GUIDE:
-- 1-3: Poor - Major issues, fails to meet the criterion
-- 4-5: Below Average - Significant gaps
-- 6-7: Good - Meets expectations with room for improvement
-- 8-9: Very Good - Exceeds expectations
-- 10: Excellent - Exceptional, couldn't be better
+{comparative_section}
+
+SCORING CALIBRATION ({strictness}):
+{scoring_guide}
 
 Reply with ONLY the scores in this exact format (one per line):
 {metrics_format}
 """.strip()
+
+STRICTNESS_GUIDES = {
+    "relaxed": """- 1-3: Major problems
+- 4-5: Needs work
+- 6-7: Acceptable
+- 8-9: Good (most decent content lands here)
+- 10: Great""",
+    "normal": """- 1-3: Poor - Major issues, fails to meet the criterion
+- 4-5: Below Average - Significant gaps
+- 6-7: Good - Meets expectations with room for improvement
+- 8-9: Very Good - Exceeds expectations
+- 10: Excellent - Exceptional, couldn't be better""",
+    "strict": """- 1-3: Fails completely
+- 4-5: Below average - Most content is here
+- 6-7: Good - Actually meets the bar (don't give this easily)
+- 8-9: Very Good - RARE. Requires excellence with minor gaps
+- 10: Perfect - Almost never give this""",
+    "brutal": """- 1-3: Garbage, unusable
+- 4-5: Mediocre - This is where MOST content belongs
+- 6-7: Actually good - Requires clear evidence of quality
+- 8: Excellent - RARE. Near-professional quality
+- 9: Exceptional - Almost never give this
+- 10: NEVER give a 10 unless it's truly flawless"""
+}
+
+STRICTNESS_PERSONAS = {
+    "relaxed": "supportive and encouraging",
+    "normal": "fair and balanced", 
+    "strict": "critical and demanding",
+    "brutal": "ruthlessly critical (your reputation depends on finding flaws)"
+}
 
 UPDATE_PROMPT = """
 Improve this content by applying the critique below.
@@ -178,6 +207,26 @@ class Tools:
             description="Content preview length in intermediate results",
         )
         debug: bool = Field(default=False, description="Enable debug logging")
+        
+        # Grading strictness
+        grading_strictness: str = Field(
+            default="strict",
+            description="How harsh the evaluator is: relaxed, normal, strict, brutal"
+        )
+        comparative_eval: bool = Field(
+            default=True,
+            description="Compare against previous best score"
+        )
+        
+        # Depth control
+        min_depth: int = Field(
+            default=3, ge=1, le=10,
+            description="Minimum tree depth before early stopping"
+        )
+        depth_bonus: float = Field(
+            default=0.3, ge=0.0, le=2.0,
+            description="UCT bonus for exploring deeper nodes"
+        )
 
     def __init__(self):
         self.valves = self.Valves()
@@ -187,6 +236,10 @@ class Tools:
         self._metrics = None  # Dynamic metrics for this run
         self._metrics_desc = None  # Human-readable metric descriptions
         self._goal = None
+        self._best_score_history = []  # Track score progression
+        self._paused = False  # For interactive checkpoints
+        self._pending_command = None  # User command during pause
+        self._session_state = {}  # Persist state for resume
 
     # ==========================================================================
     # PUBLIC API
@@ -397,7 +450,21 @@ class Tools:
         exploration = self.valves.exploration_weight * math.sqrt(
             math.log(parent["visits"] + 1) / node["visits"]
         )
-        return exploitation + exploration
+        
+        # Depth bonus: encourage exploring deeper nodes
+        depth = self._get_node_depth(node)
+        depth_bonus = self.valves.depth_bonus * (depth / (depth + 2))  # Asymptotic bonus
+        
+        return exploitation + exploration + depth_bonus
+
+    def _get_node_depth(self, node: dict) -> int:
+        """Get depth of a specific node."""
+        depth = 0
+        current = node
+        while current.get("parent"):
+            depth += 1
+            current = current["parent"]
+        return depth
 
     def _fully_expanded(self, node: dict) -> bool:
         return len(node["children"]) >= self.valves.max_children
@@ -440,16 +507,18 @@ class Tools:
         no_improvement = 0
         total_api_calls = 0
         iteration = 0
+        self._best_score_history = []
 
         # Evaluate root
         await self._emit_status("📊 Evaluating initial content...")
-        scores, calls = await self._evaluate_node(root)
+        scores, calls = await self._evaluate_node(root, prev_best_score=None)
         total_api_calls += calls
         root["scores"] = scores
 
         initial_score = self._get_total_score(scores)
         self._backprop(root, initial_score)
         best_score = initial_score
+        self._best_score_history.append({"iteration": 0, "score": initial_score, "node_id": root["id"]})
 
         # Show initial evaluation
         await self._emit_intermediate_result(root, 0, is_initial=True)
@@ -477,15 +546,15 @@ class Tools:
                 if expanded:
                     leaf = expanded
 
-                    # Evaluate the new node
-                    scores, eval_calls = await self._evaluate_node(leaf)
+                    # Evaluate the new node with comparative scoring
+                    scores, eval_calls = await self._evaluate_node(leaf, prev_best_score=best_score)
                     total_api_calls += eval_calls
                     leaf["scores"] = scores
 
                     score = self._get_total_score(scores)
                     self._backprop(leaf, score)
 
-                    # Show intermediate result
+                    # Show intermediate result with trajectory
                     if self.valves.show_intermediate:
                         await self._emit_intermediate_result(leaf, iteration)
 
@@ -494,12 +563,13 @@ class Tools:
                         best_score = score
                         best_node = leaf
                         no_improvement = 0
+                        self._best_score_history.append({"iteration": iteration, "score": score, "node_id": leaf["id"]})
                         await self._emit_status(f"⭐ New best: {score:.1f}/10!")
                     else:
                         no_improvement += 1
                 else:
                     # Expansion failed, still backprop on leaf
-                    scores, eval_calls = await self._evaluate_node(leaf)
+                    scores, eval_calls = await self._evaluate_node(leaf, prev_best_score=best_score)
                     total_api_calls += eval_calls
                     leaf["scores"] = scores
                     score = self._get_total_score(scores)
@@ -508,7 +578,7 @@ class Tools:
             else:
                 # Just simulate existing leaf
                 if not leaf.get("scores"):
-                    scores, eval_calls = await self._evaluate_node(leaf)
+                    scores, eval_calls = await self._evaluate_node(leaf, prev_best_score=best_score)
                     total_api_calls += eval_calls
                     leaf["scores"] = scores
 
@@ -516,19 +586,37 @@ class Tools:
                 self._backprop(leaf, score)
                 no_improvement += 1
 
-            # Update tree visualization
+            # Update tree visualization with score trajectory
             await self._emit_tree_update(root, leaf["id"], iteration, best_score)
 
-            # Early stopping
-            if best_score >= self.valves.early_stop_threshold:
-                await self._emit_status(f"🎯 Reached target score!")
+            # Check depth before early stopping
+            current_depth = self._get_max_depth(root)
+            
+            # Early stopping (but respect min_depth)
+            if best_score >= self.valves.early_stop_threshold and current_depth >= self.valves.min_depth:
+                await self._emit_status(f"🎯 Reached target score at depth {current_depth}!")
                 break
 
-            if no_improvement >= self.valves.early_stop_patience:
-                await self._emit_status(f"📈 Converged after {iteration} iterations")
+            if no_improvement >= self.valves.early_stop_patience and current_depth >= self.valves.min_depth:
+                await self._emit_status(f"📈 Converged after {iteration} iterations (depth {current_depth})")
                 break
 
         return best_node, self._build_stats(root, best_score, total_api_calls)
+    
+    def _get_max_depth(self, node: dict, current_depth: int = 0) -> int:
+        """Get the maximum depth of the tree."""
+        if not node["children"]:
+            return current_depth
+        return max(self._get_max_depth(c, current_depth + 1) for c in node["children"])
+    
+    def _get_node_depth(self, node: dict) -> int:
+        """Get depth of a specific node."""
+        depth = 0
+        current = node
+        while current.get("parent"):
+            depth += 1
+            current = current["parent"]
+        return depth
 
     def _build_stats(self, root: dict, best_score: float, api_calls: int) -> dict:
         return {
@@ -623,15 +711,35 @@ class Tools:
             self._last_error = str(e)
             return None, api_calls
 
-    async def _evaluate_node(self, node: dict) -> tuple:
+    async def _evaluate_node(self, node: dict, prev_best_score: float = None) -> tuple:
         """Evaluate node with dynamic metrics. Returns (scores_dict, api_calls)."""
         try:
+            # Build strictness-aware prompt
+            strictness = self.valves.grading_strictness
+            if strictness not in STRICTNESS_GUIDES:
+                strictness = "strict"
+            
+            scoring_guide = STRICTNESS_GUIDES[strictness]
+            persona = STRICTNESS_PERSONAS[strictness]
+            
+            # Comparative evaluation section
+            comparative_section = ""
+            if self.valves.comparative_eval and prev_best_score is not None:
+                comparative_section = f"""
+PREVIOUS BEST SCORE: {prev_best_score:.1f}/10
+If you score this higher, you MUST see clear improvement. Don't inflate scores.
+If similar quality, scores should be similar or lower."""
+            
             response = await self._llm_call(
                 EVAL_PROMPT,
                 goal=self._goal,
                 metrics_description=self._get_metrics_description(),
                 metrics_format=self._get_metrics_format(),
                 answer=node["content"],
+                strictness=strictness,
+                strictness_persona=persona,
+                scoring_guide=scoring_guide,
+                comparative_section=comparative_section,
             )
 
             if response:
@@ -732,23 +840,29 @@ class Tools:
             content_preview += "..."
 
         # Build output
+        depth = self._get_node_depth(node)
         if is_initial:
             header = f"### 📋 Initial Content (Score: {total:.1f}/10)"
         else:
-            header = f"### 🔄 Iteration {iteration} → Node {node['id']} (Score: {total:.1f}/10)"
+            header = f"### 🔄 Iteration {iteration} → Node {node['id']} (Score: {total:.1f}/10 | Depth: {depth})"
 
         critique_section = ""
         if node.get("critique"):
             critique_section = f"\n**Applied Critique:** {node['critique'][:200]}{'...' if len(node['critique']) > 200 else ''}\n"
 
+        # Score trajectory sparkline
+        trajectory = self._format_score_trajectory()
+
         output = f"""
 {header}
+
+{trajectory}
 
 | Metric | Score | Value |
 |--------|-------|-------|
 {scores_table}
 
-**Total: {total:.1f}/10** | Weakest: {weak.replace('_', ' ').title()}
+**Total: {total:.1f}/10** | Weakest: {weak.replace('_', ' ').title()} | Strictness: {self.valves.grading_strictness}
 {critique_section}
 <details>
 <summary>📄 Content Preview</summary>
@@ -761,16 +875,41 @@ class Tools:
 
 """
         await self._emit_append(output)
+    
+    def _format_score_trajectory(self) -> str:
+        """Format score history as ASCII sparkline."""
+        if not self._best_score_history:
+            return ""
+        
+        scores = [h["score"] for h in self._best_score_history]
+        if len(scores) < 2:
+            return f"📈 **Trajectory:** {scores[0]:.1f}"
+        
+        # ASCII sparkline
+        blocks = " ▁▂▃▄▅▆▇█"
+        min_s, max_s = min(scores), max(scores)
+        range_s = max_s - min_s if max_s > min_s else 1
+        
+        sparkline = ""
+        for s in scores:
+            idx = int((s - min_s) / range_s * 8)
+            sparkline += blocks[min(idx, 8)]
+        
+        # Node path
+        path = " → ".join([f"{h['node_id']}({h['score']:.1f})" for h in self._best_score_history[-5:]])
+        
+        return f"📈 **Trajectory:** {scores[0]:.1f} {sparkline} {scores[-1]:.1f}\n   Path: {path}"
 
     async def _emit_tree_update(
         self, root: dict, current_id: str, iteration: int, best_score: float
     ):
         """Emit tree visualization update."""
         tree = self._generate_mermaid(root, current_id)
+        max_depth = self._get_max_depth(root)
 
         output = f"""
 <details open>
-<summary>🌳 Search Tree (Iteration {iteration}) | Best: {best_score:.1f}/10 | Nodes: {self._count_nodes(root)}</summary>
+<summary>🌳 Search Tree (Iteration {iteration}) | Best: {best_score:.1f}/10 | Nodes: {self._count_nodes(root)} | Depth: {max_depth}</summary>
 
 {tree}
 

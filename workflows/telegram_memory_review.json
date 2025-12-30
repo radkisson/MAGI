@@ -1,0 +1,558 @@
+{
+  "name": "MAGI - Telegram Memory Review Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message", "callback_query"],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "name": "Telegram Trigger",
+      "webhookId": "telegram-memory-trigger",
+      "id": "telegram-trigger",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.message?.text || $json.callback_query?.data || '' }}",
+              "rightValue": "/review",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [400, 200],
+      "name": "Is Review Command?",
+      "id": "check-review"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.callback_query?.data || '' }}",
+              "rightValue": "approve_",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [400, 400],
+      "name": "Is Approve?",
+      "id": "check-approve"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.callback_query?.data || '' }}",
+              "rightValue": "reject_",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [400, 600],
+      "name": "Is Reject?",
+      "id": "check-reject"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/scroll",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"limit\": 5,\n  \"with_payload\": true,\n  \"with_vector\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 200],
+      "name": "Fetch Pending Memories",
+      "id": "fetch-pending"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format memories for Telegram with inline buttons\nconst response = $input.first().json;\nconst points = response.result?.points || [];\nconst chatId = $('Telegram Trigger').first().json.message?.chat?.id || \n               $('Telegram Trigger').first().json.callback_query?.message?.chat?.id;\n\nif (points.length === 0) {\n  return {\n    json: {\n      chat_id: chatId,\n      text: '✅ No pending memories to review!',\n      reply_markup: null\n    }\n  };\n}\n\nlet text = `📋 *${points.length} Pending Memories*\\n\\n`;\nconst buttons = [];\n\nfor (const point of points) {\n  const id = point.id;\n  const content = point.payload?.content || 'No content';\n  const category = point.payload?.metadata?.category || 'general';\n  const shortId = String(id).slice(0, 8);\n  \n  text += `*[${category.toUpperCase()}]* ${content.slice(0, 100)}${content.length > 100 ? '...' : ''}\\n`;\n  text += `ID: \\`${shortId}\\`\\n\\n`;\n  \n  buttons.push([\n    { text: `✅ Approve ${shortId}`, callback_data: `approve_${id}` },\n    { text: `❌ Reject ${shortId}`, callback_data: `reject_${id}` }\n  ]);\n}\n\nbuttons.push([\n  { text: '✅ Approve All', callback_data: 'approve_all' },\n  { text: '❌ Reject All', callback_data: 'reject_all' }\n]);\n\nreturn {\n  json: {\n    chat_id: chatId,\n    text: text,\n    parse_mode: 'Markdown',\n    reply_markup: {\n      inline_keyboard: buttons\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 200],
+      "name": "Format Review Message",
+      "id": "format-review"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 200],
+      "name": "Send Review Message",
+      "id": "send-review"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract memory ID from callback data\nconst callbackData = $('Telegram Trigger').first().json.callback_query?.data || '';\nconst memoryId = callbackData.replace('approve_', '').replace('reject_', '');\nconst chatId = $('Telegram Trigger').first().json.callback_query?.message?.chat?.id;\nconst messageId = $('Telegram Trigger').first().json.callback_query?.message?.message_id;\nconst callbackId = $('Telegram Trigger').first().json.callback_query?.id;\n\nreturn {\n  json: {\n    memory_id: memoryId,\n    chat_id: chatId,\n    message_id: messageId,\n    callback_id: callbackId,\n    is_all: memoryId === 'all'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 400],
+      "name": "Parse Approve Callback",
+      "id": "parse-approve"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "leftValue": "={{ $json.is_all }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [800, 400],
+      "name": "Approve All?",
+      "id": "check-approve-all"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/scroll",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"limit\": 1,\n  \"with_payload\": true,\n  \"with_vector\": true,\n  \"filter\": {\n    \"must\": [{ \"has_id\": [\"{{ $json.memory_id }}\"] }]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 350],
+      "name": "Fetch Memory to Approve",
+      "id": "fetch-to-approve"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare memory for approved collection\nconst response = $input.first().json;\nconst points = response.result?.points || [];\nconst context = $('Parse Approve Callback').first().json;\n\nif (points.length === 0) {\n  return { json: { error: true, message: 'Memory not found' } };\n}\n\nconst point = points[0];\nconst payload = point.payload || {};\n\nif (!payload.metadata) payload.metadata = {};\npayload.metadata.approved_at = Date.now() / 1000;\npayload.metadata.approved_via = 'telegram';\n\nreturn {\n  json: {\n    point: {\n      id: point.id,\n      vector: point.vector,\n      payload: payload\n    },\n    memory_id: point.id,\n    chat_id: context.chat_id,\n    message_id: context.message_id,\n    callback_id: context.callback_id,\n    content_preview: payload.content?.slice(0, 30) || ''\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 350],
+      "name": "Prepare Approved Memory",
+      "id": "prepare-approved"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_memory/points",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": [{{ JSON.stringify($json.point) }}]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1400, 350],
+      "name": "Store Approved Memory",
+      "id": "store-approved"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/delete",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": [\"{{ $('Prepare Approved Memory').first().json.memory_id }}\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1600, 350],
+      "name": "Delete from Pending",
+      "id": "delete-pending"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": \"{{ $('Prepare Approved Memory').first().json.callback_id }}\",\n  \"text\": \"✅ Memory approved: {{ $('Prepare Approved Memory').first().json.content_preview }}...\",\n  \"show_alert\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1800, 350],
+      "name": "Confirm Approval",
+      "id": "confirm-approval"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract memory ID from reject callback\nconst callbackData = $('Telegram Trigger').first().json.callback_query?.data || '';\nconst memoryId = callbackData.replace('reject_', '');\nconst chatId = $('Telegram Trigger').first().json.callback_query?.message?.chat?.id;\nconst callbackId = $('Telegram Trigger').first().json.callback_query?.id;\n\nreturn {\n  json: {\n    memory_id: memoryId,\n    chat_id: chatId,\n    callback_id: callbackId,\n    is_all: memoryId === 'all'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 600],
+      "name": "Parse Reject Callback",
+      "id": "parse-reject"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "leftValue": "={{ $json.is_all }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [800, 600],
+      "name": "Reject All?",
+      "id": "check-reject-all"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/delete",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": [\"{{ $json.memory_id }}\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 550],
+      "name": "Delete Rejected Memory",
+      "id": "delete-rejected"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": \"{{ $('Parse Reject Callback').first().json.callback_id }}\",\n  \"text\": \"🗑️ Memory rejected\",\n  \"show_alert\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1200, 550],
+      "name": "Confirm Rejection",
+      "id": "confirm-rejection"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/scroll",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"limit\": 100,\n  \"with_payload\": true,\n  \"with_vector\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 450],
+      "name": "Fetch All Pending",
+      "id": "fetch-all-pending"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare all memories for batch approval\nconst response = $input.first().json;\nconst points = response.result?.points || [];\nconst context = $('Parse Approve Callback').first().json;\n\nif (points.length === 0) {\n  return { json: { error: true, count: 0 } };\n}\n\nconst approvedPoints = points.map(point => {\n  const payload = point.payload || {};\n  if (!payload.metadata) payload.metadata = {};\n  payload.metadata.approved_at = Date.now() / 1000;\n  payload.metadata.approved_via = 'telegram-batch';\n  \n  return {\n    id: point.id,\n    vector: point.vector,\n    payload: payload\n  };\n});\n\nreturn {\n  json: {\n    points: approvedPoints,\n    point_ids: points.map(p => p.id),\n    count: points.length,\n    chat_id: context.chat_id,\n    callback_id: context.callback_id\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 450],
+      "name": "Prepare All Approved",
+      "id": "prepare-all-approved"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_memory/points",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": {{ JSON.stringify($json.points) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1400, 450],
+      "name": "Store All Approved",
+      "id": "store-all-approved"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/delete",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": {{ JSON.stringify($('Prepare All Approved').first().json.point_ids) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1600, 450],
+      "name": "Delete All Pending",
+      "id": "delete-all-pending"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": \"{{ $('Prepare All Approved').first().json.callback_id }}\",\n  \"text\": \"✅ Approved {{ $('Prepare All Approved').first().json.count }} memories\",\n  \"show_alert\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1800, 450],
+      "name": "Confirm All Approved",
+      "id": "confirm-all-approved"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/scroll",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"limit\": 100,\n  \"with_payload\": false,\n  \"with_vector\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 650],
+      "name": "Fetch All to Reject",
+      "id": "fetch-all-reject"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all IDs for batch rejection\nconst response = $input.first().json;\nconst points = response.result?.points || [];\nconst context = $('Parse Reject Callback').first().json;\n\nreturn {\n  json: {\n    point_ids: points.map(p => p.id),\n    count: points.length,\n    callback_id: context.callback_id\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 650],
+      "name": "Prepare All Reject",
+      "id": "prepare-all-reject"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QDRANT_URL || 'http://magi-memory:6333' }}/collections/rin_pending_memories/points/delete",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"points\": {{ JSON.stringify($json.point_ids) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1400, 650],
+      "name": "Delete All Rejected",
+      "id": "delete-all-rejected"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": \"{{ $('Prepare All Reject').first().json.callback_id }}\",\n  \"text\": \"🗑️ Rejected {{ $('Prepare All Reject').first().json.count }} memories\",\n  \"show_alert\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1600, 650],
+      "name": "Confirm All Rejected",
+      "id": "confirm-all-rejected"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          { "node": "Is Review Command?", "type": "main", "index": 0 },
+          { "node": "Is Approve?", "type": "main", "index": 0 },
+          { "node": "Is Reject?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Is Review Command?": {
+      "main": [
+        [{ "node": "Fetch Pending Memories", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Fetch Pending Memories": {
+      "main": [
+        [{ "node": "Format Review Message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Review Message": {
+      "main": [
+        [{ "node": "Send Review Message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Approve?": {
+      "main": [
+        [{ "node": "Parse Approve Callback", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Parse Approve Callback": {
+      "main": [
+        [{ "node": "Approve All?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Approve All?": {
+      "main": [
+        [{ "node": "Fetch All Pending", "type": "main", "index": 0 }],
+        [{ "node": "Fetch Memory to Approve", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Memory to Approve": {
+      "main": [
+        [{ "node": "Prepare Approved Memory", "type": "main", "index": 0 }]
+      ]
+    },
+    "Prepare Approved Memory": {
+      "main": [
+        [{ "node": "Store Approved Memory", "type": "main", "index": 0 }]
+      ]
+    },
+    "Store Approved Memory": {
+      "main": [
+        [{ "node": "Delete from Pending", "type": "main", "index": 0 }]
+      ]
+    },
+    "Delete from Pending": {
+      "main": [
+        [{ "node": "Confirm Approval", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch All Pending": {
+      "main": [
+        [{ "node": "Prepare All Approved", "type": "main", "index": 0 }]
+      ]
+    },
+    "Prepare All Approved": {
+      "main": [
+        [{ "node": "Store All Approved", "type": "main", "index": 0 }]
+      ]
+    },
+    "Store All Approved": {
+      "main": [
+        [{ "node": "Delete All Pending", "type": "main", "index": 0 }]
+      ]
+    },
+    "Delete All Pending": {
+      "main": [
+        [{ "node": "Confirm All Approved", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Reject?": {
+      "main": [
+        [{ "node": "Parse Reject Callback", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Parse Reject Callback": {
+      "main": [
+        [{ "node": "Reject All?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Reject All?": {
+      "main": [
+        [{ "node": "Fetch All to Reject", "type": "main", "index": 0 }],
+        [{ "node": "Delete Rejected Memory", "type": "main", "index": 0 }]
+      ]
+    },
+    "Delete Rejected Memory": {
+      "main": [
+        [{ "node": "Confirm Rejection", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch All to Reject": {
+      "main": [
+        [{ "node": "Prepare All Reject", "type": "main", "index": 0 }]
+      ]
+    },
+    "Prepare All Reject": {
+      "main": [
+        [{ "node": "Delete All Rejected", "type": "main", "index": 0 }]
+      ]
+    },
+    "Delete All Rejected": {
+      "main": [
+        [{ "node": "Confirm All Rejected", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "magi-telegram-memory-review"
+  },
+  "tags": [
+    { "name": "telegram" },
+    { "name": "memory" },
+    { "name": "review" }
+  ]
+}
