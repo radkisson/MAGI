@@ -12,6 +12,7 @@ This directory contains the **"nerve endings"** that connect the Cortex (Open We
 |------|-----------|---------|
 | **FireCrawl Scraper** | `scrape_webpage()`, `crawl_website()` | Web scraping with headless browser |
 | **Tavily Search** | `web_search()`, `quick_search()`, `deep_search()` | AI-optimized search |
+| **Semantic Scholar** | `search_papers()`, `get_paper()`, `get_recommendations()` | Academic paper search |
 | **SearXNG Search** | `web_search()` | Anonymous metasearch |
 | **Qdrant Memory** | `store_memory()`, `recall_memory()` | Long-term RAG memory |
 | **n8n Reflex** | `trigger_workflow()`, `list_workflows()` | Workflow automation |
@@ -99,7 +100,40 @@ Tavily is a premium AI-native search engine designed specifically for LLM applic
 
 **Configuration**: Requires TAVILY_API_KEY in .env (get from https://tavily.com)
 
-### 3. FireCrawl Scraper (`firecrawl_scraper.py`)
+### 3. Semantic Scholar (`semantic_scholar.py`)
+**Purpose**: Academic paper search with AI-powered features
+
+**Functions**:
+- `search_papers(query: str, max_results: int, year_from: int, year_to: int, open_access_only: bool, fields_of_study: list, sort_by: str)` - Comprehensive paper search with filters
+- `get_paper(paper_id: str)` - Get detailed information about a specific paper (supports DOI, arXiv, Semantic Scholar IDs, and URLs)
+- `get_author(author_id: str)` - Get author profile and publication list
+- `get_recommendations(paper_id: str, max_results: int)` - Get paper recommendations based on a given paper
+- `search_by_title(title: str)` - Search for papers by title with exact matching
+- `get_citations(paper_id: str, max_results: int)` - Get papers that cite a given paper
+- `get_references(paper_id: str, max_results: int)` - Get papers referenced by a given paper
+- `get_influential_citations(paper_id: str, max_results: int)` - Get influential citations for a paper
+- `search_recent(query: str, days: int, max_results: int, fields_of_study: list)` - Search for recent papers within a time range
+- `get_paper_batch(paper_ids: list)` - Get multiple papers in a single request
+
+Semantic Scholar is a free academic search engine with over 200 million papers. It provides:
+- AI-generated paper summaries (TLDRs)
+- Citation graph analysis with influential citation detection
+- Paper recommendations based on citation networks
+- Author profiles with h-index and citation counts
+- Field of study categorization
+- Open access filtering
+
+**Example Usage in Open WebUI**:
+```
+"Search Semantic Scholar for papers about transformer architectures published after 2020"
+"Get the paper details for DOI 10.1145/3597503.3639186"
+"Find papers that cite 'Attention is All You Need'"
+"Get paper recommendations based on arXiv:1706.03762"
+```
+
+**Configuration**: Optional S2_API_KEY in .env (get from https://www.semanticscholar.org/product/api) for higher rate limits
+
+### 4. FireCrawl Scraper (`firecrawl_scraper.py`)
 **Purpose**: Web scraping and content extraction (The Sensorium's Digestion)
 
 **Functions**:
@@ -118,7 +152,7 @@ Uses headless browsers to handle JavaScript-heavy sites and converts content to 
 - Self-hosted mode (default): Uses Docker service, FIRECRAWL_API_KEY auto-generated
 - Cloud mode: Set FIRECRAWL_API_URL=https://api.firecrawl.dev and provide your API key
 
-### 4. Qdrant Memory (`qdrant_memory.py`)
+### 5. Qdrant Memory (`qdrant_memory.py`)
 **Purpose**: Long-term memory with RAG (The Memory)
 
 **Functions**:
