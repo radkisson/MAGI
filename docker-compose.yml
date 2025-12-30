@@ -280,6 +280,9 @@ services:
       # Grant sudo access to install packages (can be disabled for production)
       - GRANT_SUDO=yes
     user: root
+    # Note: Jupyter config is only created on first launch. To change JUPYTER_BASE_URL
+    # after initial setup, remove /home/jovyan/.jupyter/jupyter_lab_config.py from the
+    # data volume and restart the container to regenerate the configuration.
     command: >
       bash -c "
       if [ ! -f /home/jovyan/.jupyter/jupyter_lab_config.py ]; then

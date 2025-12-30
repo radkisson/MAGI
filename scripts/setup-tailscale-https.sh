@@ -160,12 +160,15 @@ elif grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env" 2>/dev/null; then
         else
             echo "JUPYTER_BASE_URL=/jupyter" >> "$BASE_DIR/.env"
         fi
-        # Configure OpenWebUI base URL and disable persistent config
+        # Configure OpenWebUI base URL
         if grep -q "^WEBUI_URL=" "$BASE_DIR/.env" 2>/dev/null; then
             sed -i '' "s|^WEBUI_URL=.*|WEBUI_URL=https://$FULL_DOMAIN|" "$BASE_DIR/.env"
         else
             echo "WEBUI_URL=https://$FULL_DOMAIN" >> "$BASE_DIR/.env"
         fi
+        # Disable persistent config so WEBUI_URL changes take effect immediately
+        # OpenWebUI stores config in database on first launch; setting to false
+        # ensures environment variable changes are always respected
         if grep -q "^ENABLE_PERSISTENT_CONFIG=" "$BASE_DIR/.env" 2>/dev/null; then
             sed -i '' "s|^ENABLE_PERSISTENT_CONFIG=.*|ENABLE_PERSISTENT_CONFIG=false|" "$BASE_DIR/.env"
         else
@@ -195,12 +198,15 @@ elif grep -q "^ENABLE_TAILSCALE_HTTPS=" "$BASE_DIR/.env" 2>/dev/null; then
         else
             echo "JUPYTER_BASE_URL=/jupyter" >> "$BASE_DIR/.env"
         fi
-        # Configure OpenWebUI base URL and disable persistent config
+        # Configure OpenWebUI base URL
         if grep -q "^WEBUI_URL=" "$BASE_DIR/.env" 2>/dev/null; then
             sed -i "s|^WEBUI_URL=.*|WEBUI_URL=https://$FULL_DOMAIN|" "$BASE_DIR/.env"
         else
             echo "WEBUI_URL=https://$FULL_DOMAIN" >> "$BASE_DIR/.env"
         fi
+        # Disable persistent config so WEBUI_URL changes take effect immediately
+        # OpenWebUI stores config in database on first launch; setting to false
+        # ensures environment variable changes are always respected
         if grep -q "^ENABLE_PERSISTENT_CONFIG=" "$BASE_DIR/.env" 2>/dev/null; then
             sed -i "s|^ENABLE_PERSISTENT_CONFIG=.*|ENABLE_PERSISTENT_CONFIG=false|" "$BASE_DIR/.env"
         else
