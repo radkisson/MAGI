@@ -2,7 +2,7 @@
 title: Azure Image Generation
 description: Generate images using Azure FLUX.2-pro, DALL-E, or other image models
 author: MAGI
-version: 1.1.0
+version: 1.2.0
 license: MIT
 """
 
@@ -17,7 +17,7 @@ class Tools:
     class Valves(BaseModel):
         AZURE_COGNITIVE_ENDPOINT: str = Field(
             default="",
-            description="Azure Cognitive Services endpoint URL (set via AZURE_COGNITIVE_ENDPOINT env var)"
+            description="Azure Cognitive Services endpoint"
         )
         AZURE_API_KEY: str = Field(
             default="",
@@ -43,6 +43,18 @@ class Tools:
             default=180,
             description="Request timeout in seconds"
         )
+        DEFAULT_STYLE: str = Field(
+            default="natural",
+            description="Default image style (natural or vivid)"
+        )
+        OPTIONS_COUNT: int = Field(
+            default=2,
+            description="Number of images to generate for options/variations"
+        )
+        SHOW_METADATA: bool = Field(
+            default=True,
+            description="Show generation metadata (size, model) in output"
+        )
 
     def __init__(self):
         self.valves = self.Valves(
@@ -52,7 +64,10 @@ class Tools:
             API_VERSION=os.getenv("AZURE_IMAGE_API_VERSION", "preview"),
             DEFAULT_SIZE=os.getenv("AZURE_IMAGE_SIZE", "1024x1024"),
             DEFAULT_QUALITY=os.getenv("AZURE_IMAGE_QUALITY", "standard"),
-            TIMEOUT_SECONDS=int(os.getenv("AZURE_IMAGE_TIMEOUT", "180"))
+            TIMEOUT_SECONDS=int(os.getenv("AZURE_IMAGE_TIMEOUT", "180")),
+            DEFAULT_STYLE=os.getenv("AZURE_IMAGE_STYLE", "natural"),
+            OPTIONS_COUNT=int(os.getenv("AZURE_IMAGE_OPTIONS_COUNT", "2")),
+            SHOW_METADATA=os.getenv("AZURE_IMAGE_SHOW_METADATA", "true").lower() == "true"
         )
         
         # Aspect ratio presets
@@ -68,7 +83,7 @@ class Tools:
         self,
         prompt: str,
         size: str = "",
-        style: str = "natural",
+        style: str = "",
         __event_emitter__: Callable[[dict], Any] = None
     ) -> str:
         """
@@ -76,7 +91,7 @@ class Tools:
         
         :param prompt: Detailed description of the image to generate. Be specific about style, colors, composition, lighting, and subject matter.
         :param size: Image dimensions - 1024x1024 (square), 1792x1024 (landscape), 1024x1792 (portrait), or presets: 'square', 'landscape', 'portrait', 'wide', 'tall'
-        :param style: Image style - 'natural' for realistic or 'vivid' for dramatic/artistic
+        :param style: Image style - 'natural' for realistic or 'vivid' for dramatic/artistic (uses default from valves if empty)
         :return: The generated image displayed inline
         """
         if __event_emitter__:
@@ -88,10 +103,14 @@ class Tools:
         api_key = self.valves.AZURE_API_KEY
         
         # Handle size presets
-        if size.lower() in self.size_presets:
+        if size and size.lower() in self.size_presets:
             size = self.size_presets[size.lower()]
         elif not size:
             size = self.valves.DEFAULT_SIZE
+        
+        # Use default style if not specified
+        if not style:
+            style = self.valves.DEFAULT_STYLE
 
         if not api_key:
             return "❌ Error: Azure API key not configured. Set AZURE_OPENAI_API_KEY in environment."
@@ -198,3 +217,92 @@ class Tools:
             await __event_emitter__({"type": "status", "data": {"description": "✅ All variations generated!", "done": True}})
         
         return "\n\n---\n\n".join(results)
+
+    async def generate_image_options(
+        self,
+        prompt: str,
+        size: str = "",
+        __event_emitter__: Callable[[dict], Any] = None
+    ) -> str:
+        """
+        Generate two different image options from the same prompt for comparison.
+        Useful when you want to pick the best result.
+        
+        :param prompt: Description of the image to generate
+        :param size: Image size - 'square', 'landscape', 'portrait', or dimensions like '1024x1024'
+        :return: Two generated images side by side for comparison
+        """
+        import asyncio
+        
+        if __event_emitter__:
+            await __event_emitter__({"type": "status", "data": {"description": "🎨 Generating 2 options...", "done": False}})
+        
+        # Generate two images in parallel
+        async def gen_option(option_num: int):
+            if __event_emitter__:
+                await __event_emitter__({"type": "status", "data": {"description": f"🎨 Generating option {option_num}...", "done": False}})
+            return await self._generate_single_image(prompt, size)
+        
+        # Run both generations concurrently
+        results = await asyncio.gather(gen_option(1), gen_option(2))
+        
+        if __event_emitter__:
+            await __event_emitter__({"type": "status", "data": {"description": "✅ Both options ready!", "done": True}})
+        
+        output = f"## 🎨 Image Options for: *{prompt[:80]}{'...' if len(prompt) > 80 else ''}*\n\n"
+        output += f"### Option A\n{results[0]}\n\n---\n\n### Option B\n{results[1]}"
+        return output
+
+    async def _generate_single_image(self, prompt: str, size: str = "") -> str:
+        """Internal helper to generate a single image without event emitter."""
+        endpoint = self.valves.AZURE_COGNITIVE_ENDPOINT.rstrip('/')
+        deployment = self.valves.DEPLOYMENT_NAME
+        api_version = self.valves.API_VERSION
+        api_key = self.valves.AZURE_API_KEY
+        
+        # Handle size presets
+        if size and size.lower() in self.size_presets:
+            size = self.size_presets[size.lower()]
+        elif not size:
+            size = self.valves.DEFAULT_SIZE
+
+        if not api_key:
+            return "❌ Error: Azure API key not configured."
+
+        if not endpoint:
+            return "❌ Error: Azure endpoint not configured."
+
+        url = f"{endpoint}/openai/deployments/{deployment}/images/generations?api-version={api_version}"
+        
+        body = {
+            "prompt": prompt,
+            "n": 1,
+            "size": size,
+            "output_format": "png",
+            "quality": self.valves.DEFAULT_QUALITY
+        }
+
+        try:
+            response = requests.post(
+                url,
+                headers={'Api-Key': api_key, 'Content-Type': 'application/json'},
+                json=body,
+                timeout=self.valves.TIMEOUT_SECONDS
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                images = data.get('data', [])
+                
+                if images and 'b64_json' in images[0]:
+                    b64_data = images[0]['b64_json']
+                    short_prompt = prompt[:50] + "..." if len(prompt) > 50 else prompt
+                    return f"![{short_prompt}](data:image/png;base64,{b64_data})"
+                elif images and 'url' in images[0]:
+                    return f"![Generated Image]({images[0]['url']})"
+                else:
+                    return f"⚠️ No image data returned"
+            else:
+                return f"❌ Error {response.status_code}"
+        except Exception as e:
+            return f"❌ Error: {str(e)}"

@@ -65,10 +65,31 @@ Automatically:
 The workflow uses these environment variables (already in your `.env`):
 
 ```bash
-AZURE_EMBEDDING_ENDPOINT=https://YOUR-RESOURCE.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15
-AZURE_EMBEDDING_API_KEY=your-key
-LITELLM_MASTER_KEY=your-litellm-key
+# Azure OpenAI Embedding Endpoint
+# Format: https://<your-azure-resource-name>.openai.azure.com/openai/deployments/<deployment-name>/embeddings?api-version=2023-05-15
+# Example: If your Azure resource is "mycompany-ai" and deployment is "text-embedding-ada-002":
+AZURE_EMBEDDING_ENDPOINT=https://mycompany-ai.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15
+
+# Your Azure OpenAI API key (found in Azure Portal → Your Resource → Keys and Endpoint)
+AZURE_EMBEDDING_API_KEY=your-32-character-api-key-here
+
+# Azure OpenAI endpoint for chat completions (base URL without path)
+AZURE_OPENAI_ENDPOINT=https://mycompany-ai.openai.azure.com/
+
+# Azure OpenAI API key for chat models
+AZURE_OPENAI_API_KEY=your-32-character-api-key-here
+
+# Optional: Which Azure deployment to use for memory extraction (defaults to gpt-4o-mini)
+AZURE_MEMORY_MODEL=gpt-4o-mini
 ```
+
+**How to find your Azure values:**
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to your Azure OpenAI resource
+3. Click **Keys and Endpoint** in the sidebar
+4. Copy the **Endpoint** (e.g., `https://mycompany-ai.openai.azure.com/`)
+5. Copy **Key 1** or **Key 2**
+6. For deployment names, go to **Model deployments** → **Manage Deployments**
 
 ### 3. Set Up n8n Environment Variables
 
@@ -200,10 +221,18 @@ Content-Type: application/json
 - Check endpoint URL format
 - Test embedding manually:
   ```bash
-  curl -X POST "https://YOUR-RESOURCE.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15" \
-    -H "api-key: YOUR_KEY" \
+  # Replace with YOUR actual Azure resource name and API key
+  # Find these in Azure Portal → Your OpenAI Resource → Keys and Endpoint
+  curl -X POST "https://YOUR-AZURE-RESOURCE.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15" \
+    -H "api-key: YOUR_32_CHAR_API_KEY" \
     -H "Content-Type: application/json" \
     -d '{"input": "test"}'
+  
+  # Example with real format (use your own values):
+  # curl -X POST "https://mycompany-ai.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15" \
+  #   -H "api-key: abc123def456..." \
+  #   -H "Content-Type: application/json" \
+  #   -d '{"input": "test"}'
   ```
 
 ### Qdrant storage failing
