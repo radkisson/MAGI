@@ -14,8 +14,10 @@ MAGI combines Open WebUI, LiteLLM, SearXNG, Qdrant, and n8n into a unified syste
 | 🔥 **FireCrawl** | Web scraping |
 | 💾 **Qdrant** | Vector memory (RAG) |
 | ⚡ **Redis** | Message bus |
-| 🔄 **n8n** | Workflow automation |
+| 🔄 **n8n** | Workflow automation (custom build with latest stable n8n 2.1.4) |
 | 📓 **Jupyter Lab** | Code execution and data analysis |
+
+> **Note**: n8n uses a custom Docker image built on the official n8nio/n8n:latest base, with an nginx proxy for improved frontend/backend separation. See [docker/n8n/SETUP.md](docker/n8n/SETUP.md) for configuration details.
 
 ## Quick Start
 
@@ -26,6 +28,8 @@ cd Rhyzomic-Intelligence-Node-RIN-
 ```
 
 Open http://localhost:3000
+
+For n8n automation, open http://localhost:8081 (recommended proxy) or http://localhost:5678 (direct backend)
 
 For Jupyter Lab, open http://localhost:8888
 
